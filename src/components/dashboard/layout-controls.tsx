@@ -40,14 +40,13 @@ export function LayoutControls() {
                 type="single"
                 value={values.theme_mode}
                 onValueChange={(mode) => {
-                  if (mode === "light" || mode === "dark" || mode === "system") {
+                  if (mode === "light" || mode === "dark") {
                     setPreference("theme_mode", mode);
                   }
                 }}
               >
                 <ToggleGroupItem value="light">Light</ToggleGroupItem>
                 <ToggleGroupItem value="dark">Dark</ToggleGroupItem>
-                <ToggleGroupItem value="system">System</ToggleGroupItem>
               </ToggleGroup>
             </div>
             <div className="space-y-1">

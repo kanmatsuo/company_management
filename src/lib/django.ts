@@ -43,7 +43,31 @@ function asFieldDetails(details: unknown): Record<string, string[]> | null {
   return Object.keys(fields).length > 0 ? fields : null;
 }
 
-function messageFor(status: number, code: string | null, message: string | undefined) {
+function explainRule(status: number, code: string | null, details: unknown, message: string | undefined) {
+  if (code === "DAILY_LIMIT_REACHED" && details && typeof details === "object") {
+    const row = details as { max_slots_per_day?: number; already_booked?: number; remaining?: number };
+    return `Daily limit is ${row.max_slots_per_day ?? "the allowed"} slots. Already booked ${row.already_booked ?? 0}. ${row.remaining ?? 0} left today.`;
+  }
+  if (code === "ALREADY_BOOKED_THEN" && details && typeof details === "object") {
+    const row = details as { good?: string; start?: string; end?: string };
+    return `You already have ${row.good || "another court"} from ${row.start || "that time"} to ${row.end || "later"}. One person cannot hold two courts at the same time.`;
+  }
+  if (code === "SLOT_UNAVAILABLE") return "Someone booked that time first. Reload the slots and choose again.";
+  if (code === "RENTAL_NOT_AVAILABLE") return "This rental is not available to book.";
+  if (code === "CARD_NOT_PRESENTED") return "Please tap the card. There is no tap yet, or it expired.";
+  if (code === "INVALID_PIN" && details && typeof details === "object") {
+    const row = details as { attempts_remaining?: number };
+    return `Wrong PIN. ${row.attempts_remaining ?? 0} attempts left.`;
+  }
+  if (code === "PIN_LOCKED" && details && typeof details === "object") {
+    const row = details as { locked_until?: string };
+    return `PIN locked until ${row.locked_until || "later"}.`;
+  }
+  if (code === "PIN_NOT_SET") return "This developer has not set a PIN yet.";
+  if (code === "INSUFFICIENT_BALANCE" && details && typeof details === "object") {
+    const row = details as { balance?: string; required?: string };
+    return `Not enough balance. Balance ${row.balance ?? "—"}. This sale needs ${row.required ?? "—"}.`;
+  }
   if (status === 429 || code === "THROTTLED") {
     return "Too many attempts. Wait a minute and try again.";
   }
@@ -117,7 +141,7 @@ export async function djangoFetch<T>(
       }
     }
     const details = asFieldDetails(body?.error?.details);
-    let message = messageFor(response.status, code, body?.error?.message);
+    let message = explainRule(response.status, code, body?.error?.details, body?.error?.message);
     if (response.status >= 500 && requestId) {
       message = `${message} Request ID: ${requestId}.`;
     }

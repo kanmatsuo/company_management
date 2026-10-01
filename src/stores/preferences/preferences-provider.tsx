@@ -10,7 +10,6 @@ import {
   type PreferenceValueMap,
   parsePreference,
 } from "@/lib/preferences/preferences-config";
-import { applyThemeMode, subscribeToSystemTheme } from "@/lib/preferences/theme-utils";
 import { createPreferencesStore, type PreferencesState } from "@/stores/preferences/preferences-store";
 
 const PreferencesStoreContext = createContext<StoreApi<PreferencesState> | null>(null);
@@ -44,29 +43,6 @@ export function PreferencesStoreProvider({
       resolvedThemeMode: document.documentElement.classList.contains("dark") ? "dark" : "light",
       isSynced: true,
     });
-  }, [store]);
-
-  useEffect(() => {
-    let unsubscribeMedia: (() => void) | undefined;
-    const subscribeForMode = (mode: PreferenceValueMap["theme_mode"]) => {
-      unsubscribeMedia?.();
-      unsubscribeMedia = undefined;
-      if (mode === "system") {
-        unsubscribeMedia = subscribeToSystemTheme(() => {
-          store.setState({ resolvedThemeMode: applyThemeMode("system") });
-        });
-      }
-    };
-    subscribeForMode(store.getState().values.theme_mode);
-    const unsubscribeStore = store.subscribe((state, previous) => {
-      if (state.values.theme_mode !== previous.values.theme_mode) {
-        subscribeForMode(state.values.theme_mode);
-      }
-    });
-    return () => {
-      unsubscribeMedia?.();
-      unsubscribeStore();
-    };
   }, [store]);
 
   return <PreferencesStoreContext.Provider value={store}>{children}</PreferencesStoreContext.Provider>;

@@ -12,7 +12,7 @@ export default async function RentalsPage() {
     <RecordList
       title="Rentals"
       summary={`${data.count.toLocaleString()} rentals`}
-      description="Price is charged per time slot. Bookings are final."
+      description="Courts are booked at the desk. The developer taps a card and enters a PIN."
       error={data.error}
       empty="No rentals are bookable."
       headers={["Name", "Place", "Seller", "Price", "Slot"]}

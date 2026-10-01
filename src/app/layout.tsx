@@ -1,7 +1,9 @@
+import { cookies } from "next/headers";
 import type { Metadata } from "next";
+import { fontVariables } from "@/app/fonts";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeBootScript } from "@/components/theme-boot";
-import { PREFERENCE_DEFAULTS } from "@/lib/preferences/preferences-config";
+import { parsePreference } from "@/lib/preferences/preferences-config";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -9,17 +11,24 @@ export const metadata: Metadata = {
   description: "Company management console",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
-  const { theme_mode, content_layout, navbar_style, sidebar_variant, sidebar_collapsible } = PREFERENCE_DEFAULTS;
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const jar = await cookies();
+  const preferences = {
+    theme_mode: parsePreference("theme_mode", jar.get("theme_mode")?.value),
+    content_layout: parsePreference("content_layout", jar.get("content_layout")?.value),
+    navbar_style: parsePreference("navbar_style", jar.get("navbar_style")?.value),
+    sidebar_variant: parsePreference("sidebar_variant", jar.get("sidebar_variant")?.value),
+    sidebar_collapsible: parsePreference("sidebar_collapsible", jar.get("sidebar_collapsible")?.value),
+  };
   return (
     <html
       lang="en"
-      className="h-full antialiased"
-      data-theme-mode={theme_mode}
-      data-content-layout={content_layout}
-      data-navbar-style={navbar_style}
-      data-sidebar-variant={sidebar_variant}
-      data-sidebar-collapsible={sidebar_collapsible}
+      className={`${fontVariables} h-full antialiased${preferences.theme_mode === "dark" ? " dark" : ""}`}
+      data-theme-mode={preferences.theme_mode}
+      data-content-layout={preferences.content_layout}
+      data-navbar-style={preferences.navbar_style}
+      data-sidebar-variant={preferences.sidebar_variant}
+      data-sidebar-collapsible={preferences.sidebar_collapsible}
       suppressHydrationWarning
     >
       <head>

@@ -8,7 +8,6 @@ import { LoadError } from "@/components/no-access";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { can, canManage, getSession } from "@/lib/current-user";
 import { DjangoError, djangoFetch } from "@/lib/django";
-import { positionChoices } from "@/lib/choices";
 import { show, showTime } from "@/lib/load-all";
 import { loadOne } from "@/lib/page-data";
 
@@ -24,14 +23,12 @@ export default async function ReaderPage({ params }: { params: Promise<{ id: str
   const session = await getSession();
   const manage = session ? canManage(session.user, ["rfid"]) || can(session.user, "rfid.device.manage") : false;
   let buildings: Building[] = [];
-  let positions: { value: string; label: string }[] = [];
   if (session && manage) {
     try {
       buildings = await djangoFetch<Building[]>("/api/v1/rfid/buildings/", { accessToken: session.token });
     } catch (error) {
       if (!(error instanceof DjangoError)) throw error;
     }
-    positions = await positionChoices(session.token);
   }
   return (
     <div className="flex flex-col gap-4 md:gap-6">
@@ -44,14 +41,13 @@ export default async function ReaderPage({ params }: { params: Promise<{ id: str
       <Card>
         <CardHeader>
           <CardTitle>Settings</CardTitle>
-          <CardDescription>A door uses a building. A till reader uses a counter and a serial number.</CardDescription>
+          <CardDescription>A door uses a building. A till reader uses a serial number and is not tied to a counter.</CardDescription>
         </CardHeader>
         <CardContent>
           {manage ? (
             <DeviceForm
               id={device.id}
               buildings={buildings.map((building) => ({ id: building.id, label: `${building.code} · ${building.name}` }))}
-              positions={positions}
               defaults={{
                 code: device.code,
                 name: device.name ?? "",
@@ -70,7 +66,6 @@ export default async function ReaderPage({ params }: { params: Promise<{ id: str
               items={[
                 { label: "Serial number", value: show(device.sn) },
                 { label: "Building", value: device.building ? String(device.building) : "—" },
-                { label: "Counter", value: device.service_position ? String(device.service_position) : "—" },
                 { label: "Allowed IP", value: show(device.allowed_ip) },
                 { label: "Last IP", value: show(device.last_ip) },
                 { label: "Version", value: show(device.app_version) },

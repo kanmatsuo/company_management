@@ -1,6 +1,9 @@
 import Link from "next/link";
 import type { components } from "@/api/schema";
+import { SeriesChart } from "@/components/ui/chart";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { RecordList } from "@/components/record-list";
 import { canManage, getSession } from "@/lib/current-user";
 import { show, showTime } from "@/lib/load-all";
@@ -8,28 +11,236 @@ import { loadList } from "@/lib/page-data";
 
 type Purchase = components["schemas"]["Purchase"];
 
-export default async function PurchasesPage() {
+function iso(date: Date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function shift(day: string, days: number) {
+  const date = new Date(`${day}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return iso(date);
+}
+
+function startOfWeek(day: string) {
+  const date = new Date(`${day}T00:00:00Z`);
+  const weekday = date.getUTCDay();
+  return shift(day, weekday === 0 ? -6 : 1 - weekday);
+}
+
+function endOfMonth(day: string) {
+  const date = new Date(`${day.slice(0, 7)}-01T00:00:00Z`);
+  date.setUTCMonth(date.getUTCMonth() + 1);
+  date.setUTCDate(0);
+  return iso(date);
+}
+
+function daySpan(from: string, to: string) {
+  const start = new Date(`${from}T00:00:00Z`).getTime();
+  const end = new Date(`${to}T00:00:00Z`).getTime();
+  return Math.round((end - start) / 86400000) + 1;
+}
+
+function cents(value: string | null | undefined) {
+  if (!value) return 0;
+  const [whole, fraction = "00"] = value.split(".");
+  const sign = whole.startsWith("-") ? -1 : 1;
+  return sign * (Number(whole.replace("-", "")) * 100 + Number(fraction.padEnd(2, "0").slice(0, 2)));
+}
+
+function money(value: number) {
+  const sign = value < 0 ? "-" : "";
+  const abs = Math.abs(value);
+  return `${sign}${Math.floor(abs / 100).toLocaleString("en-US")}.${String(abs % 100).padStart(2, "0")}`;
+}
+
+function dayKey(value: string | null | undefined) {
+  return value ? value.slice(0, 10) : "";
+}
+
+export default async function PurchasesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ from?: string; to?: string }>;
+}) {
+  const query = await searchParams;
+  const today = iso(new Date());
+  const from = /^\d{4}-\d{2}-\d{2}$/.test(query.from ?? "") ? query.from! : today;
+  const to = /^\d{4}-\d{2}-\d{2}$/.test(query.to ?? "") ? query.to! : today;
+  const start = from <= to ? from : to;
+  const end = from <= to ? to : from;
+  const presets = [
+    { label: "Today", from: today, to: today },
+    { label: "This week", from: startOfWeek(today), to: shift(startOfWeek(today), 6) },
+    { label: "This month", from: `${today.slice(0, 7)}-01`, to: endOfMonth(today) },
+  ];
   const session = await getSession();
   const manage = session ? canManage(session.user, ["purchase", "seller"]) : false;
   const data = await loadList<Purchase>("/api/v1/purchases/?ordering=-created_at");
+  const inRange = data.results.filter((row) => {
+    const day = dayKey(row.status === "CONFIRMED" ? row.confirmed_at || row.created_at : row.created_at);
+    return day >= start && day <= end;
+  });
+  const paid = inRange.filter((row) => row.status === "CONFIRMED");
+  const drafts = inRange.filter((row) => row.status === "DRAFT");
+  const cancelled = inRange.filter((row) => row.status === "CANCELLED");
+  const taken = paid.reduce((sum, row) => sum + cents(row.total), 0);
+  const currency = paid[0]?.currency || inRange[0]?.currency || "";
+  const buyers = new Set(paid.map((row) => row.developer?.id).filter((id): id is number => typeof id === "number"));
+
+  const bySeller = new Map<string, { count: number; money: number }>();
+  const byCounter = new Map<string, { count: number; money: number }>();
+  const byReader = new Map<string, { count: number; money: number }>();
+  for (const row of paid) {
+    const seller = row.seller?.name || "No seller";
+    const counter = row.service_position_name || "No counter";
+    const reader = row.reader || "No reader";
+    for (const [map, key] of [[bySeller, seller], [byCounter, counter], [byReader, reader]] as const) {
+      const current = map.get(key) ?? { count: 0, money: 0 };
+      current.count += 1;
+      current.money += cents(row.total);
+      map.set(key, current);
+    }
+  }
+  const weekly = daySpan(start, end) > 31;
+  const byPeriod = new Map<string, { count: number; money: number }>();
+  for (const row of paid) {
+    const day = dayKey(row.confirmed_at || row.created_at);
+    const key = weekly ? startOfWeek(day) : day;
+    const current = byPeriod.get(key) ?? { count: 0, money: 0 };
+    current.count += 1;
+    current.money += cents(row.total);
+    byPeriod.set(key, current);
+  }
+  const sellerRows = [...bySeller.entries()].sort((left, right) => right[1].money - left[1].money);
+  const counterRows = [...byCounter.entries()].sort((left, right) => right[1].money - left[1].money);
+  const readerRows = [...byReader.entries()].sort((left, right) => right[1].money - left[1].money);
+  const periodRows = [...byPeriod.entries()].sort(([left], [right]) => left.localeCompare(right));
+
   return (
-    <RecordList
-      title="Purchases"
-      summary={`${data.count.toLocaleString()} purchases`}
-      description="Drafts are built at the till, then confirmed with a card and PIN."
-      error={data.error}
-      empty="No purchases yet."
-      extra={manage ? <Button asChild><Link href="/purchases/new">New purchase</Link></Button> : null}
-      headers={["When", "Status", "Buyer", "Seller", "Position", "Total"]}
-      hrefs={data.results.map((row) => `/purchases/${row.id}`)}
-      rows={data.results.map((row) => [
-        showTime(row.created_at),
-        row.status,
-        show(row.developer?.full_name),
-        show(row.seller?.name),
-        show(row.service_position_name),
-        `${row.total} ${row.currency}`,
-      ])}
-    />
+    <div className="flex flex-col gap-4 md:gap-6">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="font-semibold text-2xl tracking-tight">Purchases</h1>
+          <p className="text-muted-foreground text-sm">{start} to {end}. Paid sales are confirmed purchases. Money is the sum of those totals.</p>
+        </div>
+        {manage ? <Button asChild><Link href="/purchases/new">New purchase</Link></Button> : null}
+      </div>
+      <div className="flex flex-wrap items-end gap-2">
+        {presets.map((preset) => (
+          <Button key={preset.label} asChild size="sm" variant={preset.from === start && preset.to === end ? "default" : "outline"}>
+            <Link href={`/purchases?from=${preset.from}&to=${preset.to}`}>{preset.label}</Link>
+          </Button>
+        ))}
+        <form className="flex flex-wrap items-end gap-2" method="get">
+          <label className="grid gap-1 text-sm">
+            From
+            <Input type="date" name="from" defaultValue={start} required />
+          </label>
+          <label className="grid gap-1 text-sm">
+            To
+            <Input type="date" name="to" defaultValue={end} required />
+          </label>
+          <Button type="submit" size="sm">Show range</Button>
+        </form>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {[
+          ["Paid sales", paid.length, "Confirmed purchases"],
+          ["Money taken", `${money(taken)} ${currency}`.trim(), "Sum of paid totals"],
+          ["Buyers", buyers.size, "Different people who paid"],
+          ["Drafts", drafts.length, `${cancelled.length} cancelled`],
+        ].map(([label, value, hint]) => (
+          <Card key={label}>
+            <CardHeader>
+              <CardDescription>{label}</CardDescription>
+              <CardTitle className="text-3xl tabular-nums">{typeof value === "number" ? value.toLocaleString("en-US") : value}</CardTitle>
+              <p className="text-muted-foreground text-sm">{hint}</p>
+            </CardHeader>
+          </Card>
+        ))}
+      </div>
+      {data.error ? <p className="text-destructive text-sm">{data.error}</p> : null}
+      <Card>
+        <CardHeader>
+          <CardTitle>By seller</CardTitle>
+          <CardDescription>Paid sales and money taken for each seller.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <SeriesChart
+            data={sellerRows.map(([name, row]) => ({ name, sales: row.count, money: row.money / 100 }))}
+            series={[
+              { key: "sales", label: "Paid sales", color: "var(--chart-1)" },
+              { key: "money", label: `Money (${currency || "total"})`, color: "var(--chart-3)" },
+            ]}
+            layout="vertical"
+            height={Math.max(220, sellerRows.length * 56)}
+          />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>By counter</CardTitle>
+          <CardDescription>Paid sales at each service position.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <SeriesChart
+            data={counterRows.map(([name, row]) => ({ name, sales: row.count, money: row.money / 100 }))}
+            series={[
+              { key: "sales", label: "Paid sales", color: "var(--chart-1)" },
+              { key: "money", label: `Money (${currency || "total"})`, color: "var(--chart-4)" },
+            ]}
+            height={Math.max(240, counterRows.length * 48)}
+          />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>By till reader</CardTitle>
+          <CardDescription>Which reader was used for each paid sale.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <SeriesChart
+            data={readerRows.map(([name, row]) => ({ name, sales: row.count }))}
+            series={[{ key: "sales", label: "Paid sales", color: "var(--chart-5)" }]}
+            layout="vertical"
+            height={Math.max(200, readerRows.length * 48)}
+          />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>{weekly ? "By week" : "By day"}</CardTitle>
+          <CardDescription>Paid sales in each {weekly ? "week" : "day"} of this range.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <SeriesChart
+            data={periodRows.map(([period, row]) => ({ name: period.slice(5), sales: row.count, money: row.money / 100 }))}
+            series={[
+              { key: "sales", label: "Paid sales", color: "var(--chart-1)" },
+              { key: "money", label: `Money (${currency || "total"})`, color: "var(--chart-3)" },
+            ]}
+            height={280}
+          />
+        </CardContent>
+      </Card>
+      <RecordList
+        title="Sales in this range"
+        summary={`${inRange.length.toLocaleString()} purchases`}
+        description="Includes drafts and cancelled purchases from the same dates."
+        error={data.error}
+        empty="No purchases in this range."
+        headers={["When", "Status", "Buyer", "Seller", "Position", "Reader", "Total"]}
+        hrefs={inRange.map((row) => `/purchases/${row.id}`)}
+        rows={inRange.map((row) => [
+          showTime(row.status === "CONFIRMED" ? row.confirmed_at || row.created_at : row.created_at),
+          row.status,
+          show(row.developer?.full_name),
+          show(row.seller?.name),
+          show(row.service_position_name),
+          show(row.reader),
+          `${row.total} ${row.currency}`,
+        ])}
+      />
+    </div>
   );
 }

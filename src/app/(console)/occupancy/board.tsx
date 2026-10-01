@@ -1,8 +1,10 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import type { components } from "@/api/schema";
+import { refreshOccupancy } from "@/app/(console)/occupancy/actions";
+import { BuildingBars } from "@/components/building-bars";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 type Occupancy = components["schemas"]["Occupancy"];
@@ -19,32 +21,83 @@ type DoorScan = {
   event_time: string;
 };
 
-export function OccupancyBoard({ initial, socketBase }: { initial: Occupancy; socketBase: string }) {
+function LocalTime({ value }: { value: string }) {
+  const [label, setLabel] = useState("");
+  useEffect(() => {
+    const date = new Date(value);
+    setLabel(Number.isNaN(date.getTime()) ? "" : date.toLocaleTimeString());
+  }, [value]);
+  if (!label) return null;
+  return ` · ${label}`;
+}
+
+export function OccupancyBoard({
+  initial,
+  socketBase,
+  staff,
+}: {
+  initial: Occupancy;
+  socketBase: string;
+  staff: number;
+}) {
   const [occupancy, setOccupancy] = useState(initial);
   const [scans, setScans] = useState<DoorScan[]>([]);
   const [live, setLive] = useState("Connecting");
+  const [refreshError, setRefreshError] = useState("");
+  const [refreshing, startRefresh] = useTransition();
+
+  function applyOccupancy(next: Occupancy | null, error: string | null) {
+    if (next) {
+      setOccupancy(next);
+      setRefreshError("");
+      return;
+    }
+    if (error) setRefreshError(error);
+  }
+
+  function reload() {
+    startRefresh(async () => {
+      const result = await refreshOccupancy();
+      applyOccupancy(result.value, result.error);
+    });
+  }
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      void refreshOccupancy().then((result) => applyOccupancy(result.value, result.error));
+    }, 10000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     let stopped = false;
     let socket: WebSocket | null = null;
     let wait = 1000;
     let timer = 0;
+    let liveTimer = 0;
+    let attempt = 0;
 
     async function connect() {
+      const mine = ++attempt;
       const response = await fetch("/api/realtime/ticket", { method: "POST" });
+      if (stopped || mine !== attempt) return;
       if (!response.ok) {
         setLive("Live updates need attendance.view");
         return;
       }
       const body = (await response.json()) as { ticket?: string };
-      if (!body.ticket || stopped) return;
-      const url = `${socketBase}/ws/occupancy/?ticket=${encodeURIComponent(body.ticket)}`;
-      socket = new WebSocket(url);
-      socket.onopen = () => {
+      if (!body.ticket || stopped || mine !== attempt) return;
+      const next = new WebSocket(`${socketBase}/ws/occupancy/?ticket=${encodeURIComponent(body.ticket)}`);
+      socket = next;
+      next.onopen = () => {
+        if (stopped || socket !== next) return;
         wait = 1000;
-        setLive("Live");
+        window.clearTimeout(liveTimer);
+        liveTimer = window.setTimeout(() => {
+          if (socket === next && next.readyState === WebSocket.OPEN) setLive("Live");
+        }, 6000);
       };
-      socket.onmessage = (event) => {
+      next.onmessage = (event) => {
         const message = JSON.parse(String(event.data)) as { type?: string; data?: Occupancy | DoorScan };
         if (message.type === "occupancy" && message.data) setOccupancy(message.data as Occupancy);
         if (message.type === "attendance" && message.data) {
@@ -52,7 +105,9 @@ export function OccupancyBoard({ initial, socketBase }: { initial: Occupancy; so
           setScans((current) => [scan, ...current].slice(0, 12));
         }
       };
-      socket.onclose = () => {
+      next.onclose = () => {
+        if (socket !== next) return;
+        window.clearTimeout(liveTimer);
         setLive("Reconnecting");
         if (!stopped) timer = window.setTimeout(connect, wait);
         wait = Math.min(wait * 2, 10000);
@@ -62,40 +117,26 @@ export function OccupancyBoard({ initial, socketBase }: { initial: Occupancy; so
     void connect();
     return () => {
       stopped = true;
+      attempt += 1;
       window.clearTimeout(timer);
+      window.clearTimeout(liveTimer);
       socket?.close();
     };
   }, [socketBase]);
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-muted-foreground text-sm">{live} · {occupancy.total.toLocaleString()} inside</p>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {occupancy.buildings.map((building) => (
-          <Link key={building.id} href={`/occupancy/people?building=${building.id}`}>
-            <Card>
-              <CardHeader>
-                <CardTitle>{building.name}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="font-medium text-3xl tabular-nums">{building.count}</p>
-                <p className="text-muted-foreground text-sm">{building.code}</p>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
-        <Link href="/occupancy/people?building=none">
-          <Card>
-            <CardHeader>
-              <CardTitle>No building</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="font-medium text-3xl tabular-nums">{occupancy.unknown_building}</p>
-              <p className="text-muted-foreground text-sm">Last in had no door</p>
-            </CardContent>
-          </Card>
-        </Link>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-muted-foreground text-sm">
+          {live === "Live" ? "Live · counts update as doors scan" : `${live} · counts reload every 10 seconds`}
+          {occupancy.as_of ? <LocalTime value={occupancy.as_of} /> : null}
+          {refreshError ? ` · ${refreshError}` : ""}
+        </p>
+        <Button type="button" variant="outline" size="sm" disabled={refreshing} onClick={reload}>
+          {refreshing ? "Refreshing" : "Refresh"}
+        </Button>
       </div>
+      <BuildingBars occupancy={occupancy} staff={staff} />
       <Card>
         <CardHeader>
           <CardTitle>Door scans</CardTitle>

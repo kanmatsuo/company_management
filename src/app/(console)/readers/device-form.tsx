@@ -12,12 +12,10 @@ const PURPOSE = [
 export function DeviceForm({
   id,
   buildings,
-  positions,
   defaults,
 }: {
   id?: number;
   buildings: { id: number; label: string }[];
-  positions: { value: string; label: string }[];
   defaults?: {
     code: string;
     name: string;
@@ -46,10 +44,7 @@ export function DeviceForm({
       { name: "direction", label: "Direction", type: "select", options: [{ value: "IN", label: "In" }, { value: "OUT", label: "Out" }, { value: "BOTH", label: "Both" }], defaultValue: defaults?.direction || "BOTH" },
     );
   } else {
-    fields.push(
-      { name: "service_position", label: "Service position", type: "select", required: true, options: positions, defaultValue: defaults?.servicePosition },
-      { name: "sn", label: "Serial number", required: !id, defaultValue: defaults?.sn },
-    );
+    fields.push({ name: "sn", label: "Serial number", required: !id, defaultValue: defaults?.sn });
   }
   fields.push({ name: "is_active", label: "Active", type: "checkbox", defaultValue: defaults ? (defaults.active ? "on" : "") : "on" });
 
@@ -70,7 +65,7 @@ export function DeviceForm({
       <p className="max-w-md text-muted-foreground text-sm">
         {door
           ? "A door needs a building. It can sign in from a fixed IP, or with the API key shown once after you save."
-          : "A till reader needs the counter and the serial number on the device. It signs in with that serial number and its code."}
+          : "A till reader is not tied to a counter. It needs the serial number on the device and signs in with that serial number and its code."}
       </p>
       <FieldForm key={purpose} action={id ? updateReader.bind(null, id) : createReader} submitLabel={id ? "Save" : "Create device"} fields={fields} />
     </div>

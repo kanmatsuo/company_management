@@ -1,14 +1,6 @@
-import Link from "next/link";
 import type { components } from "@/api/schema";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable } from "@/components/data-table";
 import { DjangoError, djangoFetch } from "@/lib/django";
 import { can, getSession } from "@/lib/current-user";
 import { redirect } from "next/navigation";
@@ -52,28 +44,11 @@ export default async function RolesPage() {
           {error ? (
             <p className="text-destructive text-sm">{error}</p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Code</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Permissions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {roles.map((role) => (
-                  <TableRow key={role.code}>
-                    <TableCell className="font-medium">
-                      <Link href={`/users/roles/${role.code}`} className="underline-offset-4 hover:underline">
-                        {role.code}
-                      </Link>
-                    </TableCell>
-                    <TableCell>{role.name}</TableCell>
-                    <TableCell className="max-w-xl whitespace-normal">{role.permissions.join(", ")}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <DataTable
+              headers={["Code", "Name", "Permissions"]}
+              rows={roles.map((role) => [role.code, role.name, role.permissions.join(", ")])}
+              hrefs={roles.map((role) => `/users/roles/${role.code}`)}
+            />
           )}
         </CardContent>
       </Card>

@@ -48,7 +48,7 @@ export default async function ReadersPage({
       rows={data.results.map((device) => [
         device.code,
         show(device.purpose),
-        device.purpose === "TILL" ? (device.service_position ? `Counter ${device.service_position}` : "—") : (device.building ? `Building ${device.building}` : "—"),
+        device.purpose === "TILL" ? "Till" : (device.building ? `Building ${device.building}` : "—"),
         show(device.sn),
         show(device.allowed_ip),
         device.online ? "Yes" : "No",

@@ -8,10 +8,12 @@ export function UserSearch({
   value,
   isActive,
   ordering,
+  pageSize,
 }: {
   value: string;
   isActive?: string;
   ordering?: string;
+  pageSize?: number | "all";
 }) {
   const router = useRouter();
   const [text, setText] = useState(value);
@@ -22,13 +24,14 @@ export function UserSearch({
       const params = new URLSearchParams();
       if (isActive) params.set("is_active", isActive);
       if (ordering) params.set("ordering", ordering);
+      if (pageSize && pageSize !== 20) params.set("page_size", String(pageSize));
       const search = text.trim();
       if (search) params.set("search", search);
       const query = params.toString();
       router.replace(query ? `/users?${query}` : "/users");
     }, 300);
     return () => window.clearTimeout(timer);
-  }, [text, value, isActive, ordering, router]);
+  }, [text, value, isActive, ordering, pageSize, router]);
 
   return (
     <Input

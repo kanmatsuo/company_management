@@ -14,22 +14,23 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { parsePageSize, TablePager, type PageSize } from "@/components/table-pager";
 import { can, getSession } from "@/lib/current-user";
 import { DjangoError, djangoFetch } from "@/lib/django";
-import { listPath, one, show, showTime } from "@/lib/load-all";
+import { listPath, loadAll, one, show, showTime } from "@/lib/load-all";
 import { redirect } from "next/navigation";
 
 type User = components["schemas"]["User"];
 type UserPage = components["schemas"]["PaginatedUserList"];
 
-const PAGE_SIZE = 20;
 const SORTS = ["full_name", "email", "last_login"] as const;
 
-function usersHref(query: { is_active?: string; search?: string; ordering?: string; page?: number }) {
+function usersHref(query: { is_active?: string; search?: string; ordering?: string; page?: number; pageSize?: PageSize }) {
   const params = new URLSearchParams();
   if (query.is_active) params.set("is_active", query.is_active);
   if (query.search) params.set("search", query.search);
   if (query.ordering) params.set("ordering", query.ordering);
+  if (query.pageSize && query.pageSize !== 20) params.set("page_size", String(query.pageSize));
   if (query.page && query.page > 1) params.set("page", String(query.page));
   const text = params.toString();
   return text ? `/users?${text}` : "/users";
@@ -44,14 +45,15 @@ function nextSort(field: (typeof SORTS)[number], current: string) {
 export default async function UsersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ is_active?: string; search?: string; ordering?: string; page?: string }>;
+  searchParams: Promise<{ is_active?: string; search?: string; ordering?: string; page?: string; page_size?: string }>;
 }) {
   const raw = await searchParams;
   const isActive = one(raw.is_active);
   const search = one(raw.search) ?? "";
   const requested = one(raw.ordering);
   const ordering = requested && SORTS.some((field) => requested === field || requested === `-${field}`) ? requested : "full_name";
-  const page = Math.max(1, Number(one(raw.page)) || 1);
+  const pageSize = parsePageSize(one(raw.page_size));
+  const page = pageSize === "all" ? 1 : Math.max(1, Number(one(raw.page)) || 1);
   const session = await getSession();
   if (!session) redirect("/login");
   const canManage = can(session.user, "user.manage");
@@ -70,24 +72,23 @@ export default async function UsersPage({
   let count = 0;
   let error: string | null = null;
   try {
-    const loaded = await djangoFetch<UserPage>(
-      listPath("/api/v1/users/", {
-        ordering,
-        is_active: isActive,
-        search: search || undefined,
-        page: String(page),
-        page_size: String(PAGE_SIZE),
-      }),
-      { accessToken: session.token },
-    );
+    const path = listPath("/api/v1/users/", {
+      ordering,
+      is_active: isActive,
+      search: search || undefined,
+      ...(pageSize === "all" ? {} : { page: String(page), page_size: String(pageSize) }),
+    });
+    const loaded = pageSize === "all"
+      ? await loadAll<User>(session.token, path)
+      : await djangoFetch<UserPage>(path, { accessToken: session.token });
     users = loaded.results;
     count = loaded.count;
   } catch (caught) {
     error = caught instanceof DjangoError ? caught.message : "Could not load users.";
   }
 
-  const pages = Math.max(1, Math.ceil(count / PAGE_SIZE));
-  const here = usersHref({ is_active: isActive, search, ordering, page });
+  const pages = pageSize === "all" ? 1 : Math.max(1, Math.ceil(count / pageSize));
+  const here = usersHref({ is_active: isActive, search, ordering, page, pageSize });
 
   return (
     <div className="flex flex-col gap-4 md:gap-6">
@@ -97,7 +98,7 @@ export default async function UsersPage({
           <p className="text-muted-foreground text-sm">{count.toLocaleString()} users</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <UserSearch key={search} value={search} isActive={isActive} ordering={ordering === "full_name" ? undefined : ordering} />
+          <UserSearch key={search} value={search} isActive={isActive} ordering={ordering === "full_name" ? undefined : ordering} pageSize={pageSize === 20 ? undefined : pageSize} />
           {canManage ? (
             <Button asChild>
               <Link href="/users/new">New user</Link>
@@ -121,11 +122,11 @@ export default async function UsersPage({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <SortHead label="Name" field="full_name" ordering={ordering} isActive={isActive} search={search} />
-                  <SortHead label="Email" field="email" ordering={ordering} isActive={isActive} search={search} />
+                  <SortHead label="Name" field="full_name" ordering={ordering} isActive={isActive} search={search} pageSize={pageSize} />
+                  <SortHead label="Email" field="email" ordering={ordering} isActive={isActive} search={search} pageSize={pageSize} />
                   <TableHead>Roles</TableHead>
                   <TableHead>Active</TableHead>
-                  <SortHead label="Last sign-in" field="last_login" ordering={ordering} isActive={isActive} search={search} />
+                  <SortHead label="Last sign-in" field="last_login" ordering={ordering} isActive={isActive} search={search} pageSize={pageSize} />
                   {canManage ? <TableHead className="text-right">Actions</TableHead> : null}
                 </TableRow>
               </TableHeader>
@@ -151,25 +152,13 @@ export default async function UsersPage({
               </TableBody>
             </Table>
           )}
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-muted-foreground text-sm">Page {Math.min(page, pages)} of {pages}</p>
-            <div className="flex gap-2">
-              {page <= 1 ? (
-                <Button size="sm" variant="outline" disabled>Previous</Button>
-              ) : (
-                <Button asChild size="sm" variant="outline">
-                  <Link href={usersHref({ is_active: isActive, search, ordering, page: page - 1 })}>Previous</Link>
-                </Button>
-              )}
-              {page >= pages ? (
-                <Button size="sm" variant="outline" disabled>Next</Button>
-              ) : (
-                <Button asChild size="sm" variant="outline">
-                  <Link href={usersHref({ is_active: isActive, search, ordering, page: page + 1 })}>Next</Link>
-                </Button>
-              )}
-            </div>
-          </div>
+          <TablePager
+            page={page}
+            pages={pages}
+            pageSize={pageSize}
+            hrefForPage={(nextPage) => usersHref({ is_active: isActive, search, ordering, page: nextPage, pageSize })}
+            hrefForSize={(size) => usersHref({ is_active: isActive, search, ordering, pageSize: size, page: 1 })}
+          />
         </CardContent>
       </Card>
     </div>
@@ -182,19 +171,21 @@ function SortHead({
   ordering,
   isActive,
   search,
+  pageSize,
 }: {
   label: string;
   field: (typeof SORTS)[number];
   ordering: string;
   isActive?: string;
   search: string;
+  pageSize: PageSize;
 }) {
   const active = ordering === field || ordering === `-${field}`;
   const Icon = ordering === `-${field}` ? ArrowDown : ArrowUp;
   return (
     <TableHead>
       <Link
-        href={usersHref({ is_active: isActive, search, ordering: nextSort(field, ordering) })}
+        href={usersHref({ is_active: isActive, search, ordering: nextSort(field, ordering), pageSize })}
         className="inline-flex items-center gap-1"
       >
         {label}

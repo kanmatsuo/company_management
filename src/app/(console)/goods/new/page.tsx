@@ -19,7 +19,7 @@ export default async function NewGoodPage() {
       <Card>
         <CardHeader>
           <CardTitle>Good</CardTitle>
-          <CardDescription>Price is a decimal. The service position decides who sells it.</CardDescription>
+          <CardDescription>Price is a decimal and must be above 0 for a rental. The service position decides who sells it.</CardDescription>
         </CardHeader>
         <CardContent>
           <FieldForm
@@ -41,6 +41,7 @@ export default async function NewGoodPage() {
               { name: "opening_time", label: "Rental opens", placeholder: "08:00" },
               { name: "closing_time", label: "Rental closes", placeholder: "20:00" },
               { name: "max_slots_per_booking", label: "Max slots per booking", type: "number" },
+              { name: "max_slots_per_day", label: "Max slots per person per day", type: "number" },
               { name: "max_days_ahead", label: "Max days ahead", type: "number" },
               { name: "is_active", label: "Active", type: "checkbox", defaultValue: "on" },
               { name: "track_stock", label: "Track stock", type: "checkbox", defaultValue: "on" },

@@ -1,9 +1,12 @@
 "use server";
 
 import { randomUUID } from "node:crypto";
+import { redirect } from "next/navigation";
 import type { FormState } from "@/lib/form";
 import { checked, dateTime, idFrom, optionalInt, optionalText, text } from "@/lib/form";
 import { commit } from "@/lib/submit";
+import { DjangoError, djangoFetch } from "@/lib/django";
+import { getSession } from "@/lib/current-user";
 
 const idempotent = () => ({ "Idempotency-Key": randomUUID() });
 
@@ -174,9 +177,8 @@ function devicePayload(formData: FormData, patch: boolean) {
   if (purpose === "TILL") {
     return {
       ...shared,
-      service_position: optionalInt(formData, "service_position"),
       sn: optionalText(formData, "sn"),
-      ...(patch ? { building: null, allowed_ip: null } : {}),
+      ...(patch ? { building: null, allowed_ip: null, service_position: null } : {}),
     };
   }
   return {
@@ -330,6 +332,7 @@ export async function createGood(_prev: FormState, formData: FormData): Promise<
             opening_time: optionalText(formData, "opening_time"),
             closing_time: optionalText(formData, "closing_time"),
             max_slots_per_booking: optionalInt(formData, "max_slots_per_booking"),
+            max_slots_per_day: optionalInt(formData, "max_slots_per_day"),
             max_days_ahead: optionalInt(formData, "max_days_ahead"),
           }
         : undefined,
@@ -357,6 +360,7 @@ export async function updateGood(id: number, _prev: FormState, formData: FormDat
             opening_time: optionalText(formData, "opening_time"),
             closing_time: optionalText(formData, "closing_time"),
             max_slots_per_booking: optionalInt(formData, "max_slots_per_booking"),
+            max_slots_per_day: optionalInt(formData, "max_slots_per_day"),
             max_days_ahead: optionalInt(formData, "max_days_ahead"),
           }
         : undefined,
@@ -404,10 +408,113 @@ export async function deleteImage(goodId: number, imageId: number, _prev: FormSt
   });
 }
 
+export type TillReader = { code: string; name: string; online: boolean; last_seen_at: string | null };
+
+export async function developerBalance(developerId: number) {
+  const session = await getSession();
+  if (!session) return null;
+  try {
+    const page = await djangoFetch<{ results: { balance: string }[] }>(
+      `/api/v1/finance/accounts/?developer=${developerId}`,
+      { accessToken: session.token },
+    );
+    return page.results[0]?.balance ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function detectedReaders() {
+  const session = await getSession();
+  const empty = { ip: null as string | null, reader: null as TillReader | null, candidates: [] as TillReader[] };
+  if (!session) return empty;
+  try {
+    return await djangoFetch<typeof empty>("/api/v1/purchases/detected-reader/", { accessToken: session.token });
+  } catch {
+    return empty;
+  }
+}
+
+export type TestCard = {
+  developer: number;
+  employee_number: string;
+  full_name: string;
+  developer_status: string;
+  card_uid: string;
+  card_status: string;
+  balance: string | null;
+  account_status: string | null;
+  has_pin: boolean;
+};
+
+export type SimulatedTap =
+  | {
+      ok: true;
+      result: string;
+      accepted: boolean;
+      message: string;
+      purchase: number | null;
+    }
+  | { ok: false; error: string };
+
+function tapSimulatorEnabled() {
+  return process.env.TAP_SIMULATOR === "true";
+}
+
+export async function testCards(search: string): Promise<TestCard[]> {
+  if (!tapSimulatorEnabled()) return [];
+  const session = await getSession();
+  if (!session) return [];
+  try {
+    return await djangoFetch<TestCard[]>(
+      `/api/v1/test-console/cards/?search=${encodeURIComponent(search)}`,
+      { accessToken: session.token },
+    );
+  } catch {
+    return [];
+  }
+}
+
+export async function simulateTap(
+  purchaseId: number,
+  who: { developer: number } | { uid: string },
+): Promise<SimulatedTap> {
+  if (!tapSimulatorEnabled()) return { ok: false, error: "The tap simulator is disabled." };
+  const session = await getSession();
+  if (!session) return { ok: false, error: "Not signed in." };
+  try {
+    const reply = await djangoFetch<{
+      result: string;
+      accepted: boolean;
+      display_message: string;
+      purchase: number | null;
+    }>("/api/v1/test-console/simulate-tap/", {
+      method: "POST",
+      accessToken: session.token,
+      body: JSON.stringify({ purchase: purchaseId, ...who }),
+    });
+    return {
+      ok: true,
+      result: reply.result,
+      accepted: reply.accepted,
+      message: reply.display_message,
+      purchase: reply.purchase,
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof DjangoError ? error.message : "Could not simulate the tap.",
+    };
+  }
+}
+
 export async function createPurchase(_prev: FormState, formData: FormData): Promise<FormState> {
   return commit({
     path: "/api/v1/purchases/",
-    body: { service_position: optionalInt(formData, "service_position") },
+    body: {
+      service_position: optionalInt(formData, "service_position"),
+      reader: optionalText(formData, "reader") || null,
+    },
     redirectTo: (data) => `/purchases/${idFrom(data) ?? ""}`,
   });
 }
@@ -437,6 +544,14 @@ export async function deletePurchaseItem(id: number, itemId: number, _prev: Form
   });
 }
 
+export async function setPurchaseReader(id: number, _prev: FormState, formData: FormData): Promise<FormState> {
+  return commit({
+    path: `/api/v1/purchases/${id}/reader/`,
+    body: { reader: optionalText(formData, "reader") || null },
+    redirectTo: `/purchases/${id}`,
+  });
+}
+
 export async function cancelPurchase(id: number, _prev: FormState, _formData: FormData): Promise<FormState> {
   return commit({ path: `/api/v1/purchases/${id}/cancel/`, redirectTo: `/purchases/${id}` });
 }
@@ -450,18 +565,39 @@ export async function confirmPurchase(id: number, _prev: FormState, formData: Fo
   });
 }
 
-export async function createBooking(_prev: FormState, formData: FormData): Promise<FormState> {
-  return commit({
-    path: "/api/v1/bookings/",
-    headers: idempotent(),
-    body: {
-      good: optionalInt(formData, "good"),
-      start: text(formData, "start"),
-      slots: optionalInt(formData, "slots") ?? 1,
-      pin: text(formData, "pin"),
-    },
-    redirectTo: "/bookings/me",
-  });
+export async function openCourtBooking(_prev: FormState, formData: FormData): Promise<FormState> {
+  const session = await getSession();
+  if (!session) return { message: "Not signed in." };
+  const position = optionalInt(formData, "service_position");
+  const reader = optionalText(formData, "reader");
+  const good = optionalInt(formData, "good");
+  const start = text(formData, "start");
+  const slots = optionalInt(formData, "slots") ?? 1;
+  if (!position || !good || !start) return { message: "Choose a time first." };
+  let purchaseId: number | null = null;
+  try {
+    const purchase = await djangoFetch<{ id: number }>("/api/v1/purchases/", {
+      method: "POST",
+      accessToken: session.token,
+      body: JSON.stringify({ service_position: position, ...(reader ? { reader } : {}) }),
+    });
+    purchaseId = purchase.id;
+    await djangoFetch(`/api/v1/purchases/${purchase.id}/bookings/`, {
+      method: "POST",
+      accessToken: session.token,
+      body: JSON.stringify({ good, start, slots }),
+    });
+  } catch (error) {
+    if (purchaseId) {
+      try {
+        await djangoFetch(`/api/v1/purchases/${purchaseId}/cancel/`, { method: "POST", accessToken: session.token });
+      } catch {
+        // The draft may already be gone.
+      }
+    }
+    return { message: error instanceof DjangoError ? error.message : "Could not open this booking." };
+  }
+  redirect(`/purchases/${purchaseId}`);
 }
 
 export async function createSeller(_prev: FormState, formData: FormData): Promise<FormState> {

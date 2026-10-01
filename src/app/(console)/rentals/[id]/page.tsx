@@ -1,17 +1,18 @@
 import { redirect } from "next/navigation";
-import { createBooking } from "@/app/(console)/mutations";
+import { detectedReaders } from "@/app/(console)/mutations";
+import { BookCourt } from "@/app/(console)/rentals/book-court";
 import type { components } from "@/api/schema";
 import { Facts } from "@/components/facts";
-import { FieldForm } from "@/components/field-form";
 import { LoadError } from "@/components/no-access";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { show, showTime } from "@/lib/load-all";
+import { show } from "@/lib/load-all";
 import { loadList, loadOne } from "@/lib/page-data";
 
 type Rental = components["schemas"]["Rental"];
 type Slot = components["schemas"]["Slot"];
+type CourtGood = { service_position: number };
 
 export default async function RentalPage({
   params,
@@ -28,8 +29,11 @@ export default async function RentalPage({
   const loaded = await loadOne<Rental>(`/api/v1/rentals/${id}/`);
   if (!loaded.value) return <LoadError title="Rental" message={loaded.error ?? "Not found."} />;
   const rental = loaded.value;
-  const slots = await loadList<Slot>(`/api/v1/rentals/${id}/availability/?date=${date}`);
-  const open = slots.results.filter((slot) => slot.available);
+  const [slots, court, detected] = await Promise.all([
+    loadList<Slot>(`/api/v1/rentals/${id}/availability/?date=${date}`),
+    loadOne<CourtGood>(`/api/v1/goods/${id}/`),
+    detectedReaders(),
+  ]);
 
   return (
     <div className="flex flex-col gap-4 md:gap-6">
@@ -46,7 +50,8 @@ export default async function RentalPage({
             items={[
               { label: "Opens", value: rental.rental.opening_time },
               { label: "Closes", value: rental.rental.closing_time },
-              { label: "Max slots", value: String(rental.rental.max_slots_per_booking ?? "—") },
+              { label: "Max slots per booking", value: String(rental.rental.max_slots_per_booking ?? "—") },
+              { label: "Max slots per day", value: String(rental.rental.max_slots_per_day ?? "—") },
               { label: "Book ahead", value: rental.rental.max_days_ahead ? `${rental.rental.max_days_ahead} days` : "—" },
               { label: "Seller", value: show(rental.seller?.name) },
             ]}
@@ -56,7 +61,7 @@ export default async function RentalPage({
       <Card>
         <CardHeader>
           <CardTitle>Day</CardTitle>
-          <CardDescription>Only free slots can be booked. Combined slots must be consecutive.</CardDescription>
+          <CardDescription>The developer taps their card on the desk reader, then enters their PIN. Times already taken cannot be selected.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
           <form className="flex items-end gap-2" method="get">
@@ -67,21 +72,16 @@ export default async function RentalPage({
             <Button type="submit" variant="outline">Show slots</Button>
           </form>
           {slots.error ? <p className="text-destructive text-sm">{slots.error}</p> : null}
-          {open.length === 0 ? <p className="text-muted-foreground text-sm">No free slots on this day.</p> : (
-            <FieldForm
-              action={createBooking}
-              submitLabel="Book and pay"
-              fields={[
-                { name: "good", label: "Rental", type: "hidden", defaultValue: String(rental.id) },
-                { name: "start", label: "First slot", type: "select", required: true, options: open.map((slot) => ({
-                  value: slot.start,
-                  label: `${showTime(slot.start)} – ${showTime(slot.end)}`,
-                })) },
-                { name: "slots", label: "How many slots", type: "number", defaultValue: "1", required: true },
-                { name: "pin", label: "PIN", type: "password", required: true },
-              ]}
-            />
-          )}
+          <BookCourt
+            goodId={rental.id}
+            court={rental.name}
+            price={rental.price}
+            currency={rental.currency}
+            servicePosition={court.value?.service_position ?? null}
+            maxPerBooking={rental.rental.max_slots_per_booking ?? 1}
+            slots={slots.results}
+            reader={detected.reader}
+          />
         </CardContent>
       </Card>
     </div>

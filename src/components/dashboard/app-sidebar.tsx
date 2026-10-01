@@ -98,9 +98,9 @@ const GROUPS: Group[] = [
     title: "Attendance",
     icon: CalendarCheck,
     children: [
-      { title: "Who is inside", href: "/occupancy", permission: "attendance.view" },
-      { title: "Daily", href: "/attendance", permission: "attendance.view" },
-      { title: "Records", href: "/attendance/records", permission: "attendance.view" },
+      { title: "Current status", href: "/attendance", permission: "attendance.view" },
+      { title: "Statistics", href: "/attendance/statistics", permission: "attendance.view" },
+      { title: "Scan log", href: "/attendance/records", permission: "attendance.view" },
       { title: "Manual record", href: "/attendance/records/new", permission: "attendance.view", manage: ["attendance"] },
     ],
   },
@@ -191,6 +191,11 @@ function pathnameOf(href: string) {
   return new URL(href, "http://local").pathname;
 }
 
+function navPath(pathname: string) {
+  if (pathname === "/occupancy" || pathname.startsWith("/occupancy/")) return "/attendance";
+  return pathname;
+}
+
 function inSection(href: string, pathname: string) {
   const base = pathnameOf(href);
   if (base === "/") return pathname === "/";
@@ -269,7 +274,7 @@ export function AppSidebar({ user, ...props }: ComponentProps<typeof Sidebar> & 
     children: group.children.filter((child) => allowed(user, child)),
   })).filter((group) => group.children.length > 0);
   const activeTitle =
-    groups.find((group) => group.children.some((child) => inSection(child.href, pathname)))?.title ?? null;
+    groups.find((group) => group.children.some((child) => inSection(child.href, navPath(pathname))))?.title ?? null;
   const [openTitle, setOpenTitle] = useState<string | null>(activeTitle);
   const [trackedTitle, setTrackedTitle] = useState(activeTitle);
   if (activeTitle !== trackedTitle) {
@@ -302,7 +307,7 @@ export function AppSidebar({ user, ...props }: ComponentProps<typeof Sidebar> & 
                   group={group}
                   open={openTitle === group.title}
                   onOpenChange={(next) => setOpenTitle(next ? group.title : null)}
-                  pathname={pathname}
+                  pathname={navPath(pathname)}
                   search={search}
                 />
               ))}

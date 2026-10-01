@@ -1,15 +1,6 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
-import { Badge } from "@/components/ui/badge";
+import { DataTable } from "@/components/data-table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
 export function RecordList({
   title,
@@ -54,34 +45,7 @@ export function RecordList({
           ) : rows.length === 0 ? (
             <p className="text-muted-foreground text-sm">{empty}</p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  {headers.map((header) => (
-                    <TableHead key={header}>{header}</TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rows.map((row, index) => (
-                    <TableRow key={index} className={struck?.[index] ? "text-muted-foreground line-through" : undefined}>
-                    {row.map((cell, cellIndex) => (
-                      <TableCell key={headers[cellIndex]} className={cellIndex === 0 ? "font-medium" : undefined}>
-                        {headers[cellIndex] === "Status" || headers[cellIndex] === "Result" ? (
-                          <Badge variant="secondary">{cell}</Badge>
-                        ) : cellIndex === 0 && hrefs?.[index] ? (
-                          <Link href={hrefs[index]} className="underline-offset-4 hover:underline">
-                            {cell}
-                          </Link>
-                        ) : (
-                          cell
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <DataTable headers={headers} rows={rows} hrefs={hrefs} struck={struck} />
           )}
         </CardContent>
       </Card>

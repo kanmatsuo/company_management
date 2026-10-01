@@ -2273,6 +2273,8 @@ export interface components {
             code: string;
             name: string;
             count: number;
+            /** @description Active developers whose latest scan was at this building, present or left. */
+            developers: number;
         };
         PaginatedAccountTransactionList: {
             /** @example 123 */
@@ -2788,6 +2790,8 @@ export interface components {
             readonly presented_card: {
                 [key: string]: unknown;
             } | null;
+            /** @description Till reader code used for this purchase, when one is known. */
+            readonly reader?: string | null;
             readonly developer: components["schemas"]["DeveloperSummary"];
             readonly card_uid: string;
             /** Format: decimal */
@@ -2803,12 +2807,17 @@ export interface components {
         };
         PurchaseCreateRequest: {
             service_position: number;
+            /** @description Till reader code plugged into this PC. */
+            reader?: string | null;
         };
         PurchaseItem: {
             readonly id: number;
             readonly good: number;
             readonly good_name: string;
             readonly quantity: number;
+            readonly kind?: string;
+            readonly start?: string | null;
+            readonly end?: string | null;
             readonly unit_price: string;
             readonly line_total: string;
         };
@@ -3009,6 +3018,8 @@ export interface components {
             /** @description Open days: 0 = Monday ... 6 = Sunday. Default: every day. */
             weekdays?: number[];
             max_slots_per_booking?: number;
+            /** @description One developer's total slots on this rental per day. */
+            max_slots_per_day?: number;
             /** @description How many days in advance a slot can be booked. */
             max_days_ahead?: number;
         };
@@ -3022,6 +3033,8 @@ export interface components {
             /** @description Open days: 0 = Monday ... 6 = Sunday. Default: every day. */
             weekdays?: number[];
             max_slots_per_booking?: number;
+            /** @description One developer's total slots on this rental per day. */
+            max_slots_per_day?: number;
             /** @description How many days in advance a slot can be booked. */
             max_days_ahead?: number;
         };

@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { ArrowDown, ArrowUp } from "lucide-react";
 import type { components } from "@/api/schema";
+import { parsePageSize, TablePager, type PageSize } from "@/components/table-pager";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,21 +14,17 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { DjangoError } from "@/lib/django";
+import { DjangoError, djangoFetch } from "@/lib/django";
 import { can, canManage, getSession } from "@/lib/current-user";
-import { listPath, loadFlexible, one } from "@/lib/load-all";
+import { listPath, loadAll, one } from "@/lib/load-all";
 import { redirect } from "next/navigation";
 
 type Developer = components["schemas"]["Developer"];
+type DeveloperPage = components["schemas"]["PaginatedDeveloperList"];
+
+const SORTS = ["full_name", "employee_number", "department", "start_date", "out_date", "birthday"] as const;
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-const ORDERING = [
-  { value: "full_name", label: "Name" },
-  { value: "birthday", label: "Birthday" },
-  { value: "out_date", label: "Last day" },
-  { value: "start_date", label: "Start date" },
-];
 
 const STATUS_LABEL: Record<string, string> = {
   ACTIVE: "Active",
@@ -35,16 +33,35 @@ const STATUS_LABEL: Record<string, string> = {
   TERMINATED: "Terminated",
 };
 
-async function loadDevelopers(token: string, query: Record<string, string | undefined>) {
-  const path = listPath("/api/v1/developers/", {
-    ordering: query.ordering || "full_name",
-    status: query.status,
-    search: query.search,
-    birthday_month: query.birthday_month,
-    out_after: query.out_after,
-    out_before: query.out_before,
-  });
-  return loadFlexible<Developer>(token, path);
+type DeveloperQuery = {
+  status?: string;
+  search?: string;
+  birthday_month?: string;
+  out_after?: string;
+  out_before?: string;
+  ordering?: string;
+  page?: number;
+  pageSize?: PageSize;
+};
+
+function developersHref(query: DeveloperQuery) {
+  const params = new URLSearchParams();
+  if (query.status) params.set("status", query.status);
+  if (query.search) params.set("search", query.search);
+  if (query.birthday_month) params.set("birthday_month", query.birthday_month);
+  if (query.out_after) params.set("out_after", query.out_after);
+  if (query.out_before) params.set("out_before", query.out_before);
+  if (query.ordering && query.ordering !== "full_name") params.set("ordering", query.ordering);
+  if (query.pageSize && query.pageSize !== 20) params.set("page_size", String(query.pageSize));
+  if (query.page && query.page > 1) params.set("page", String(query.page));
+  const text = params.toString();
+  return text ? `/developers?${text}` : "/developers";
+}
+
+function nextSort(field: (typeof SORTS)[number], current: string) {
+  if (current === field) return `-${field}`;
+  if (current === `-${field}`) return field;
+  return field;
 }
 
 export default async function DevelopersPage({
@@ -57,16 +74,24 @@ export default async function DevelopersPage({
     out_after?: string;
     out_before?: string;
     ordering?: string;
+    page?: string;
+    page_size?: string;
   }>;
 }) {
   const raw = await searchParams;
+  const requested = one(raw.ordering);
+  const ordering = requested && SORTS.some((field) => requested === field || requested === `-${field}`) ? requested : "full_name";
+  const pageSize = parsePageSize(one(raw.page_size));
+  const page = pageSize === "all" ? 1 : Math.max(1, Number(one(raw.page)) || 1);
   const query = {
     status: one(raw.status),
     search: one(raw.search),
     birthday_month: one(raw.birthday_month),
     out_after: one(raw.out_after),
     out_before: one(raw.out_before),
-    ordering: one(raw.ordering),
+    ordering,
+    page,
+    pageSize,
   };
   const session = await getSession();
   if (!session) redirect("/login");
@@ -86,7 +111,18 @@ export default async function DevelopersPage({
   let count = 0;
   let error: string | null = null;
   try {
-    const loaded = await loadDevelopers(session.token, query);
+    const path = listPath("/api/v1/developers/", {
+      ordering,
+      status: query.status,
+      search: query.search,
+      birthday_month: query.birthday_month,
+      out_after: query.out_after,
+      out_before: query.out_before,
+      ...(pageSize === "all" ? {} : { page: String(page), page_size: String(pageSize) }),
+    });
+    const loaded = pageSize === "all"
+      ? await loadAll<Developer>(session.token, path)
+      : await djangoFetch<DeveloperPage>(path, { accessToken: session.token });
     developers = loaded.results;
     count = loaded.count;
   } catch (caught) {
@@ -133,11 +169,8 @@ export default async function DevelopersPage({
               Left before
               <Input name="out_before" type="date" defaultValue={query.out_before ?? ""} />
             </label>
-            <select name="ordering" defaultValue={query.ordering ?? "full_name"} className="h-8 rounded-lg border border-input bg-transparent px-2 text-sm">
-              {ORDERING.map((option) => (
-                <option key={option.value} value={option.value}>{option.label}</option>
-              ))}
-            </select>
+            {ordering !== "full_name" ? <input type="hidden" name="ordering" value={ordering} /> : null}
+            {pageSize !== 20 ? <input type="hidden" name="page_size" value={String(pageSize)} /> : null}
             <Button type="submit" variant="outline">Apply</Button>
           </form>
           {error ? (
@@ -148,15 +181,15 @@ export default async function DevelopersPage({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Number</TableHead>
+                  <SortHead label="Name" field="full_name" query={query} />
+                  <SortHead label="Number" field="employee_number" query={query} />
                   <TableHead>Phone</TableHead>
-                  <TableHead>Department</TableHead>
+                  <SortHead label="Department" field="department" query={query} />
                   <TableHead>Title</TableHead>
                   <TableHead>Manager</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Started</TableHead>
-                  <TableHead>Last day</TableHead>
+                  <SortHead label="Started" field="start_date" query={query} />
+                  <SortHead label="Last day" field="out_date" query={query} />
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -184,8 +217,29 @@ export default async function DevelopersPage({
               </TableBody>
             </Table>
           )}
+          <TablePager
+            page={page}
+            pages={pageSize === "all" ? 1 : Math.max(1, Math.ceil(count / pageSize))}
+            pageSize={pageSize}
+            hrefForPage={(nextPage) => developersHref({ ...query, page: nextPage })}
+            hrefForSize={(size) => developersHref({ ...query, pageSize: size, page: 1 })}
+          />
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function SortHead({ label, field, query }: { label: string; field: (typeof SORTS)[number]; query: DeveloperQuery }) {
+  const current = query.ordering ?? "full_name";
+  const active = current === field || current === `-${field}`;
+  const Icon = current === `-${field}` ? ArrowDown : ArrowUp;
+  return (
+    <TableHead>
+      <Link href={developersHref({ ...query, ordering: nextSort(field, current), page: 1 })} className="inline-flex items-center gap-1">
+        {label}
+        {active ? <Icon className="size-3.5" /> : null}
+      </Link>
+    </TableHead>
   );
 }

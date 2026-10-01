@@ -1,16 +1,18 @@
 import { redirect } from "next/navigation";
-import { addPurchaseItem, cancelPurchase, confirmPurchase, deletePurchaseItem, updatePurchaseItem } from "@/app/(console)/mutations";
+import { addPurchaseItem, cancelPurchase, deletePurchaseItem, updatePurchaseItem } from "@/app/(console)/mutations";
+import { PurchaseReader } from "@/app/(console)/purchases/purchase-reader";
 import type { components } from "@/api/schema";
 import { Facts } from "@/components/facts";
 import { FieldForm } from "@/components/field-form";
 import { LoadError } from "@/components/no-access";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { canManage } from "@/lib/current-user";
+import { getApiUrl } from "@/lib/env";
 import { show, showTime } from "@/lib/load-all";
 import { loadOne } from "@/lib/page-data";
 import { goodChoices } from "@/lib/choices";
-import { RefreshDraft } from "@/app/(console)/purchases/refresh-draft";
+import { Checkout } from "@/app/(console)/purchases/checkout";
 
 type Purchase = components["schemas"]["Purchase"];
 
@@ -23,20 +25,21 @@ export default async function PurchasePage({ params }: { params: Promise<{ id: s
   const draft = purchase.status === "DRAFT";
   const manage = canManage(loaded.session.user, ["purchase", "seller"]);
   const goods = draft && manage ? await goodChoices(loaded.session.token, purchase.service_position) : [];
-  const presented = purchase.presented_card;
-  const tappedName = presented && typeof presented.developer === "object" && presented.developer && "full_name" in presented.developer
-    ? String(presented.developer.full_name)
-    : null;
+  const presented = purchase.presented_card as {
+    developer?: { id?: number; full_name?: string; employee_number?: string; department?: string } | null;
+    presented_at?: string;
+    expires_at?: string;
+  } | null;
+  const socketBase = getApiUrl().replace(/^http/, "ws");
   return (
     <div className="flex flex-col gap-4 md:gap-6">
       <div>
         <h1 className="font-semibold text-2xl tracking-tight">Purchase {purchase.id}</h1>
         <p className="text-muted-foreground text-sm">
           {purchase.status} · {purchase.total} {purchase.currency}
-          {tappedName ? ` · ${tappedName} tapped in` : ""}
+          {!draft && purchase.developer?.full_name ? ` · ${purchase.developer.full_name}` : ""}
         </p>
       </div>
-      {draft ? <RefreshDraft /> : null}
       <Card>
         <CardHeader>
           <CardTitle>Summary</CardTitle>
@@ -46,8 +49,10 @@ export default async function PurchasePage({ params }: { params: Promise<{ id: s
             items={[
               { label: "Seller", value: show(purchase.seller?.name) },
               { label: "Position", value: show(purchase.service_position_name) },
-              { label: "Card", value: show(purchase.card_uid) },
-              { label: "Balance after", value: show(purchase.balance_after) },
+              { label: "Till reader", value: show(purchase.reader) },
+              { label: "Card", value: draft ? "Shown after the card is scanned" : show(purchase.card_uid) },
+              { label: "Developer", value: draft ? "Shown after the card is scanned" : show(purchase.developer?.full_name) },
+              { label: "Balance after", value: draft ? "Shown after payment" : show(purchase.balance_after) },
               { label: "Created", value: showTime(purchase.created_at) },
               { label: "Confirmed", value: showTime(purchase.confirmed_at) },
               { label: "Cancelled", value: showTime(purchase.cancelled_at) },
@@ -74,7 +79,10 @@ export default async function PurchasePage({ params }: { params: Promise<{ id: s
               <TableBody>
                 {purchase.items.map((item) => (
                   <TableRow key={item.id}>
-                    <TableCell>{item.good_name}</TableCell>
+                    <TableCell>
+                      {item.good_name}
+                      {item.start ? ` · ${item.start.slice(11, 16)}–${item.end ? item.end.slice(11, 16) : ""}` : ""}
+                    </TableCell>
                     <TableCell>{item.quantity}</TableCell>
                     <TableCell>{item.unit_price}</TableCell>
                     <TableCell>{item.line_total}</TableCell>
@@ -108,20 +116,18 @@ export default async function PurchasePage({ params }: { params: Promise<{ id: s
         </CardContent>
       </Card>
       {draft && manage ? (
-        <div className="grid gap-4 xl:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Confirm</CardTitle>
-              <CardDescription>The developer taps their card on the till reader. This page does not send a card number. Type the PIN they give you.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <FieldForm
-                action={confirmPurchase.bind(null, purchase.id)}
-                submitLabel="Confirm and charge"
-                fields={[{ name: "pin", label: "PIN", type: "password", required: true }]}
-              />
-            </CardContent>
-          </Card>
+        <div className="grid gap-4">
+          <PurchaseReader purchaseId={purchase.id} current={purchase.reader ?? null} />
+          <Checkout
+            purchaseId={purchase.id}
+            positionId={purchase.service_position}
+            socketBase={socketBase}
+            items={purchase.items}
+            total={purchase.total}
+            currency={purchase.currency}
+            presented={presented}
+            simulator={process.env.TAP_SIMULATOR === "true"}
+          />
           <Card>
             <CardHeader>
               <CardTitle>Cancel draft</CardTitle>

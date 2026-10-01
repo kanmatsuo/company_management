@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { NoAccess } from "@/components/no-access";
 import { can, canManage, getSession } from "@/lib/current-user";
 import { DjangoError, djangoFetch } from "@/lib/django";
-import { positionChoices } from "@/lib/choices";
 import { redirect } from "next/navigation";
 
 type Building = components["schemas"]["Building"];
@@ -23,7 +22,6 @@ export default async function NewReaderPage() {
   } catch (error) {
     if (!(error instanceof DjangoError)) throw error;
   }
-  const positions = await positionChoices(session.token);
   return (
     <div className="flex flex-col gap-4 md:gap-6">
       <div className="flex items-end justify-between gap-4">
@@ -39,7 +37,7 @@ export default async function NewReaderPage() {
           <CardDescription>There is no delete. Clear Active later to turn a device off. Registration still shows an API key once, even for a door that uses a fixed IP.</CardDescription>
         </CardHeader>
         <CardContent>
-          <DeviceForm buildings={buildings.map((building) => ({ id: building.id, label: `${building.code} · ${building.name}` }))} positions={positions} />
+          <DeviceForm buildings={buildings.map((building) => ({ id: building.id, label: `${building.code} · ${building.name}` }))} />
         </CardContent>
       </Card>
     </div>

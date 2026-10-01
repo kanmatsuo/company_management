@@ -48,6 +48,12 @@ export default async function GoodPage({ params }: { params: Promise<{ id: strin
                 { name: "sku", label: "SKU", defaultValue: good.sku ?? "" },
                 { name: "service_position", label: "Service position", type: "select", options: positions, defaultValue: String(good.service_position) },
                 { name: "description", label: "Description", type: "textarea", defaultValue: good.description ?? "" },
+                { name: "slot_minutes", label: "Rental slot minutes", type: "number", defaultValue: good.rental?.slot_minutes ? String(good.rental.slot_minutes) : "" },
+                { name: "opening_time", label: "Rental opens", defaultValue: good.rental?.opening_time ?? "" },
+                { name: "closing_time", label: "Rental closes", defaultValue: good.rental?.closing_time ?? "" },
+                { name: "max_slots_per_booking", label: "Max slots per booking", type: "number", defaultValue: good.rental?.max_slots_per_booking ? String(good.rental.max_slots_per_booking) : "" },
+                { name: "max_slots_per_day", label: "Max slots per person per day", type: "number", defaultValue: good.rental?.max_slots_per_day ? String(good.rental.max_slots_per_day) : "" },
+                { name: "max_days_ahead", label: "Max days ahead", type: "number", defaultValue: good.rental?.max_days_ahead ? String(good.rental.max_days_ahead) : "" },
                 { name: "is_active", label: "Active", type: "checkbox", defaultValue: good.is_active ? "on" : "" },
                 { name: "track_stock", label: "Track stock", type: "checkbox", defaultValue: good.track_stock ? "on" : "" },
               ]}

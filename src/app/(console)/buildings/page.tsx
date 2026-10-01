@@ -3,7 +3,7 @@ import type { components } from "@/api/schema";
 import { NoAccess } from "@/components/no-access";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DataTable } from "@/components/data-table";
 import { can, canManage, getSession } from "@/lib/current-user";
 import { DjangoError, djangoFetch } from "@/lib/django";
 import { redirect } from "next/navigation";
@@ -42,30 +42,11 @@ export default async function BuildingsPage() {
           {error ? <p className="text-destructive text-sm">{error}</p> : buildings.length === 0 ? (
             <p className="text-muted-foreground text-sm">No buildings yet.</p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Code</TableHead>
-                  <TableHead>Name</TableHead>
-                  {manage ? <TableHead /> : null}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {buildings.map((building) => (
-                  <TableRow key={building.id}>
-                    <TableCell className="font-medium">{building.code}</TableCell>
-                    <TableCell>{building.name}</TableCell>
-                    {manage ? (
-                      <TableCell className="text-right">
-                        <Button asChild size="sm" variant="outline">
-                          <Link href={`/buildings/${building.id}`}>Edit</Link>
-                        </Button>
-                      </TableCell>
-                    ) : null}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <DataTable
+              headers={manage ? ["Code", "Name", ""] : ["Code", "Name"]}
+              rows={buildings.map((building) => (manage ? [building.code, building.name, "Edit"] : [building.code, building.name]))}
+              hrefs={buildings.map((building) => `/buildings/${building.id}`)}
+            />
           )}
         </CardContent>
       </Card>

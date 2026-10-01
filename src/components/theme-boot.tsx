@@ -20,9 +20,7 @@ export function ThemeBootScript() {
           root.setAttribute(definition.attribute, value);
         });
         var mode = preferences.theme_mode;
-        var resolved = mode === "system" && window.matchMedia
-          ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
-          : mode === "dark" ? "dark" : "light";
+        var resolved = mode === "dark" ? "dark" : "light";
         root.classList.toggle("dark", resolved === "dark");
         root.style.colorScheme = resolved;
       } catch (e) {}
