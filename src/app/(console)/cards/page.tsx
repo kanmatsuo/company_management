@@ -1,6 +1,9 @@
+import Link from "next/link";
 import type { components } from "@/api/schema";
+import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { RecordList } from "@/components/record-list";
+import { canManage, getSession } from "@/lib/current-user";
 import { listPath, one, show, showTime } from "@/lib/load-all";
 import { loadRecords } from "@/lib/load-records";
 
@@ -18,6 +21,8 @@ export default async function CardsPage({
   searchParams: Promise<{ status?: string; assigned?: string }>;
 }) {
   const query = await searchParams;
+  const session = await getSession();
+  const manage = session ? canManage(session.user, ["rfid"]) : false;
   const data = await loadRecords<CardRow>(
     "rfid.view",
     listPath("/api/v1/rfid/cards/?ordering=-created_at", {
@@ -43,6 +48,8 @@ export default async function CardsPage({
       error={data.error}
       empty="No cards yet."
       headers={["UID", "Label", "Holder", "Status", "Reason", "Updated"]}
+      extra={manage ? <Button asChild><Link href="/cards/new">New card</Link></Button> : null}
+      hrefs={data.results.map((card) => `/cards/${card.id}`)}
       rows={data.results.map((card) => [
         card.uid,
         show(card.label),

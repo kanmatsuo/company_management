@@ -1,4 +1,5 @@
 import { EditUserForm, RoleForm } from "@/app/(console)/users/edit-user-form";
+import { UserRowActions } from "@/app/(console)/users/user-row-actions";
 import type { components } from "@/api/schema";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DjangoError, djangoFetch } from "@/lib/django";
@@ -60,12 +61,13 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
           {user.email} · Joined {showTime(user.date_joined)} · Last sign-in {showTime(user.last_login)}
         </p>
       </div>
+      {canManage ? <UserRowActions id={user.id} active={user.is_active} nextPath="/users" showEdit={false} /> : null}
       <Card>
         <CardHeader>
           <CardTitle>Profile</CardTitle>
           <CardDescription>
             {canManage
-              ? "Clear Active to deactivate this account. There is no permanent delete."
+              ? "Deactivate stops sign-in and keeps the account. Delete asks you to confirm, then removes it if the server allows that."
               : "You can view this account. Changing it needs user.manage."}
           </CardDescription>
         </CardHeader>

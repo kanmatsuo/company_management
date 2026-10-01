@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { components } from "@/api/schema";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -62,7 +63,11 @@ export default async function RolesPage() {
               <TableBody>
                 {roles.map((role) => (
                   <TableRow key={role.code}>
-                    <TableCell className="font-medium">{role.code}</TableCell>
+                    <TableCell className="font-medium">
+                      <Link href={`/users/roles/${role.code}`} className="underline-offset-4 hover:underline">
+                        {role.code}
+                      </Link>
+                    </TableCell>
                     <TableCell>{role.name}</TableCell>
                     <TableCell className="max-w-xl whitespace-normal">{role.permissions.join(", ")}</TableCell>
                   </TableRow>

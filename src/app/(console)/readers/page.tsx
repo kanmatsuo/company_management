@@ -1,6 +1,9 @@
+import Link from "next/link";
 import type { components } from "@/api/schema";
+import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { RecordList } from "@/components/record-list";
+import { can, canManage, getSession } from "@/lib/current-user";
 import { listPath, one, show, showTime } from "@/lib/load-all";
 import { loadRecords } from "@/lib/load-records";
 
@@ -9,12 +12,18 @@ type Device = components["schemas"]["RFIDDevice"];
 export default async function ReadersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ is_active?: string }>;
+  searchParams: Promise<{ is_active?: string; online?: string; purpose?: string }>;
 }) {
   const query = await searchParams;
+  const session = await getSession();
+  const manage = session ? canManage(session.user, ["rfid"]) || can(session.user, "rfid.device.manage") : false;
   const data = await loadRecords<Device>(
     "rfid.view",
-    listPath("/api/v1/rfid/devices/?ordering=code", { is_active: one(query.is_active) }),
+    listPath("/api/v1/rfid/devices/?ordering=code", {
+      is_active: one(query.is_active),
+      online: one(query.online),
+      purpose: one(query.purpose),
+    }),
   );
   if (data.denied) {
     return (
@@ -30,15 +39,19 @@ export default async function ReadersPage({
     <RecordList
       title="Readers"
       summary={`${data.count.toLocaleString()} readers`}
-      description="Door readers and when each one last reported."
+      description="Doors and till readers. Online means the device was heard from in the last two minutes."
       error={data.error}
-      empty="No readers yet."
-      headers={["Code", "Name", "Location", "Direction", "Active", "Last seen"]}
+      empty="No devices yet."
+      headers={["Code", "Kind", "Place", "Serial", "Door IP", "Online", "Active", "Last seen"]}
+      extra={manage ? <Button asChild><Link href="/readers/new">New device</Link></Button> : null}
+      hrefs={data.results.map((device) => `/readers/${device.id}`)}
       rows={data.results.map((device) => [
         device.code,
-        show(device.name),
-        show(device.location),
-        show(device.direction),
+        show(device.purpose),
+        device.purpose === "TILL" ? (device.service_position ? `Counter ${device.service_position}` : "—") : (device.building ? `Building ${device.building}` : "—"),
+        show(device.sn),
+        show(device.allowed_ip),
+        device.online ? "Yes" : "No",
         device.is_active ? "Yes" : "No",
         showTime(device.last_seen_at),
       ])}

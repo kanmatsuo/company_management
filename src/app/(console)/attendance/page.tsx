@@ -39,6 +39,7 @@ export default async function AttendancePage({
       error={data.error}
       empty="No attendance yet."
       headers={["Date", "Person", "Department", "Status", "Hours", "Scans", "First", "Last"]}
+      hrefs={data.results.map((day) => `/attendance/${day.id}`)}
       rows={data.results.map((day) => [
         day.work_date,
         show(day.developer?.full_name),

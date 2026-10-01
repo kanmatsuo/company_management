@@ -1,3 +1,5 @@
+import Link from "next/link";
+import type { ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -17,6 +19,9 @@ export function RecordList({
   empty,
   headers,
   rows,
+  hrefs,
+  extra,
+  struck,
 }: {
   title: string;
   summary: string;
@@ -25,12 +30,18 @@ export function RecordList({
   empty: string;
   headers: string[];
   rows: string[][];
+  hrefs?: Array<string | null>;
+  extra?: ReactNode;
+  struck?: boolean[];
 }) {
   return (
     <div className="flex flex-col gap-4 md:gap-6">
-      <div>
-        <h1 className="font-semibold text-2xl tracking-tight">{title}</h1>
-        <p className="text-muted-foreground text-sm">{error ? "The list could not be loaded." : summary}</p>
+      <div className="flex items-end justify-between gap-4">
+        <div>
+          <h1 className="font-semibold text-2xl tracking-tight">{title}</h1>
+          <p className="text-muted-foreground text-sm">{error ? "The list could not be loaded." : summary}</p>
+        </div>
+        {extra}
       </div>
       <Card>
         <CardHeader>
@@ -53,11 +64,15 @@ export function RecordList({
               </TableHeader>
               <TableBody>
                 {rows.map((row, index) => (
-                  <TableRow key={index}>
+                    <TableRow key={index} className={struck?.[index] ? "text-muted-foreground line-through" : undefined}>
                     {row.map((cell, cellIndex) => (
                       <TableCell key={headers[cellIndex]} className={cellIndex === 0 ? "font-medium" : undefined}>
                         {headers[cellIndex] === "Status" || headers[cellIndex] === "Result" ? (
                           <Badge variant="secondary">{cell}</Badge>
+                        ) : cellIndex === 0 && hrefs?.[index] ? (
+                          <Link href={hrefs[index]} className="underline-offset-4 hover:underline">
+                            {cell}
+                          </Link>
                         ) : (
                           cell
                         )}

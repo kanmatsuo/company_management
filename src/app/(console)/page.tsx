@@ -2,14 +2,18 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartSlot } from "@/components/chart-panel";
 import { djangoFetch } from "@/lib/django";
-import { can, getSession } from "@/lib/current-user";
+import { can, canOpen, getSession } from "@/lib/current-user";
 import {
   CalendarCheck,
   CreditCard,
+  Package,
   Radio,
   ScrollText,
+  ShoppingCart,
+  Store,
   UserRound,
   Users,
+  Wallet,
   type LucideIcon,
 } from "lucide-react";
 
@@ -28,6 +32,10 @@ const STATS: {
   { label: "Users", hint: "Accounts that can sign in", permission: "user.view", path: "/api/v1/users/?page_size=1", icon: Users },
   { label: "Attendance days", hint: "Stored daily rows", permission: "attendance.view", path: "/api/v1/attendance/daily/?page_size=1", icon: CalendarCheck },
   { label: "Audit events", hint: "Recorded changes", permission: "audit.view", path: "/api/v1/audit-logs/?page_size=1", icon: ScrollText },
+  { label: "Wallets", hint: "Developer balances", permission: "finance", path: "/api/v1/finance/accounts/?page_size=1", icon: Wallet },
+  { label: "Goods", hint: "Items for sale", permission: "goods", path: "/api/v1/goods/?page_size=1", icon: Package },
+  { label: "Purchases", hint: "Till orders", permission: "purchase", path: "/api/v1/purchases/?page_size=1", icon: ShoppingCart },
+  { label: "Sellers", hint: "Sellers on file", permission: "seller", path: "/api/v1/sellers/?page_size=1", icon: Store },
 ];
 
 async function loadCount(token: string, path: string) {
@@ -43,7 +51,7 @@ export default async function OverviewPage() {
   const session = await getSession();
   if (!session) return null;
 
-  const visible = STATS.filter((stat) => can(session.user, stat.permission));
+  const visible = STATS.filter((stat) => can(session.user, stat.permission) || canOpen(session.user, stat.permission));
   const values = await Promise.all(visible.map((stat) => loadCount(session.token, stat.path)));
   const name = session.user.full_name || session.user.email;
 

@@ -55,6 +55,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/attendance/occupancy/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description How many developers are inside each building right now, and in total. */
+        get: operations["attendance_occupancy_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/attendance/occupancy/people/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Who is inside right now. `?building=<id>` (or `none`), `?department=`, `?search=`. */
+        get: operations["attendance_occupancy_people_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/attendance/records/": {
         parameters: {
             query?: never;
@@ -165,6 +199,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @description Revoke a refresh token. Works without a valid access token: logout usually happens
+         *     after the access token has expired, and holding the refresh token is proof enough.
+         */
         post: operations["auth_logout_create"];
         delete?: never;
         options?: never;
@@ -244,6 +282,68 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/bookings/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Developers book and pay for rental slots; bookings are final.
+         *
+         *     Developers see their own bookings at `/bookings/me/`; sellers see bookings of their
+         *     rentals; `purchase.view` sees all.
+         */
+        get: operations["bookings_list"];
+        put?: never;
+        /** @description Book and pay for consecutive slots of a rental with your PIN. 201 when booked now; 200 when this Idempotency-Key already booked it. */
+        post: operations["bookings_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/bookings/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Developers book and pay for rental slots; bookings are final.
+         *
+         *     Developers see their own bookings at `/bookings/me/`; sellers see bookings of their
+         *     rentals; `purchase.view` sees all.
+         */
+        get: operations["bookings_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/bookings/me/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Your own bookings. */
+        get: operations["bookings_me_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/developers/": {
         parameters: {
             query?: never;
@@ -298,6 +398,593 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/finance/accounts/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["finance_accounts_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/finance/accounts/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["finance_accounts_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/finance/accounts/{id}/close/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Only with a zero balance. */
+        post: operations["finance_accounts_close_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/finance/accounts/{id}/freeze/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Block spending; deposits still allowed. */
+        post: operations["finance_accounts_freeze_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/finance/accounts/{id}/reopen/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["finance_accounts_reopen_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/finance/accounts/{id}/reset-pin/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Clear a forgotten PIN and any lockout; the developer sets a new one. */
+        post: operations["finance_accounts_reset_pin_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/finance/accounts/{id}/unfreeze/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["finance_accounts_unfreeze_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/finance/accounts/me/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["finance_accounts_me_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/finance/accounts/me/pin/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Set your purchase PIN (4-6 digits), or change it by also sending `current_pin`. */
+        post: operations["finance_accounts_me_pin_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/finance/adjustments/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Signed correction with a mandatory reason. Same idempotency rules as deposits. */
+        post: operations["finance_adjustments_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/finance/deposits/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description 201 when posted; 200 with the original transaction when the Idempotency-Key was already used for this same deposit. */
+        post: operations["finance_deposits_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/finance/transactions/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["finance_transactions_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/finance/transactions/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["finance_transactions_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/finance/transactions/me/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The caller's own transactions. */
+        get: operations["finance_transactions_me_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/goods/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Seller managers manage every good; an active seller manages their own.
+         *
+         *     DELETE is a soft delete. Stock changes only through `POST /goods/{id}/stock/`.
+         */
+        get: operations["goods_list"];
+        put?: never;
+        /**
+         * @description Seller managers manage every good; an active seller manages their own.
+         *
+         *     DELETE is a soft delete. Stock changes only through `POST /goods/{id}/stock/`.
+         */
+        post: operations["goods_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/goods/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Seller managers manage every good; an active seller manages their own.
+         *
+         *     DELETE is a soft delete. Stock changes only through `POST /goods/{id}/stock/`.
+         */
+        get: operations["goods_retrieve"];
+        put?: never;
+        post?: never;
+        /**
+         * @description Seller managers manage every good; an active seller manages their own.
+         *
+         *     DELETE is a soft delete. Stock changes only through `POST /goods/{id}/stock/`.
+         */
+        delete: operations["goods_destroy"];
+        options?: never;
+        head?: never;
+        /**
+         * @description Seller managers manage every good; an active seller manages their own.
+         *
+         *     DELETE is a soft delete. Stock changes only through `POST /goods/{id}/stock/`.
+         */
+        patch: operations["goods_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/goods/{id}/images/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Upload one image (multipart field `image`). Returns the updated good. */
+        post: operations["goods_images_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/goods/{id}/images/{image_id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * @description Seller managers manage every good; an active seller manages their own.
+         *
+         *     DELETE is a soft delete. Stock changes only through `POST /goods/{id}/stock/`.
+         */
+        delete: operations["goods_images_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/goods/{id}/stock/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description RESTOCK (+quantity), DAMAGE (-quantity, reason) or ADJUSTMENT (counted_quantity,
+         *     reason). Returns the recorded movement.
+         */
+        post: operations["goods_stock_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inventory/movements/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Users without `scope_permission` only see their own seller's objects. */
+        get: operations["inventory_movements_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inventory/movements/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Users without `scope_permission` only see their own seller's objects. */
+        get: operations["inventory_movements_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/purchases/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Till flow: create a draft, add items, confirm with the developer's card + PIN.
+         *
+         *     Active sellers work with their own purchases; `purchase.*` permissions cover all.
+         *     Developers see their own confirmed purchases at `/purchases/me/`.
+         */
+        get: operations["purchases_list"];
+        put?: never;
+        /**
+         * @description Till flow: create a draft, add items, confirm with the developer's card + PIN.
+         *
+         *     Active sellers work with their own purchases; `purchase.*` permissions cover all.
+         *     Developers see their own confirmed purchases at `/purchases/me/`.
+         */
+        post: operations["purchases_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/purchases/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Till flow: create a draft, add items, confirm with the developer's card + PIN.
+         *
+         *     Active sellers work with their own purchases; `purchase.*` permissions cover all.
+         *     Developers see their own confirmed purchases at `/purchases/me/`.
+         */
+        get: operations["purchases_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/purchases/{id}/cancel/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Abandon a draft. Confirmed purchases are final. */
+        post: operations["purchases_cancel_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/purchases/{id}/confirm/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Charge the card holder. 201 when confirmed now; 200 when this Idempotency-Key already confirmed it. */
+        post: operations["purchases_confirm_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/purchases/{id}/items/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Add a good (or increase its quantity). Returns the whole purchase. */
+        post: operations["purchases_items_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/purchases/{id}/items/{item_id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description PATCH changes the quantity; DELETE removes the item. Returns the whole purchase. */
+        delete: operations["purchases_items_destroy"];
+        options?: never;
+        head?: never;
+        /** @description PATCH changes the quantity; DELETE removes the item. Returns the whole purchase. */
+        patch: operations["purchases_items_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/purchases/me/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The caller's own purchases (as a developer). */
+        get: operations["purchases_me_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/realtime/ticket/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description Get a single-use ticket (valid 30 s) to open a WebSocket:
+         *     `wss://<host>/ws/counters/<service_position_id>/?ticket=<ticket>`.
+         */
+        post: operations["realtime_ticket_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/rentals/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Bookable rentals (playground, pool, ...), visible to every logged-in user. */
+        get: operations["rentals_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/rentals/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Bookable rentals (playground, pool, ...), visible to every logged-in user. */
+        get: operations["rentals_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/rentals/{id}/availability/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description All slots of one day and whether each can still be booked. */
+        get: operations["rentals_availability_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/rfid/assignments/": {
         parameters: {
             query?: never;
@@ -328,6 +1015,38 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/rfid/buildings/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["rfid_buildings_list"];
+        put?: never;
+        post: operations["rfid_buildings_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/rfid/buildings/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["rfid_buildings_retrieve"];
+        put?: never;
+        post?: never;
+        delete: operations["rfid_buildings_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["rfid_buildings_partial_update"];
         trace?: never;
     };
     "/api/v1/rfid/cards/": {
@@ -468,6 +1187,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/rfid/device/heartbeat/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Devices call this every RFID_HEARTBEAT_SECONDS with `Authorization: Device <key>`. */
+        post: operations["rfid_device_heartbeat_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/rfid/devices/": {
         parameters: {
             query?: never;
@@ -556,6 +1292,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/rfid/events/batch/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description ATTENDANCE devices upload scans buffered while offline (oldest first). Every item needs a client_event_id, so re-sending a batch is safe. */
+        post: operations["rfid_events_batch_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/roles/": {
         parameters: {
             query?: never;
@@ -586,6 +1339,338 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/seller-finance/accounts/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description `available_balance` = balance − `reserved` (open payouts). */
+        get: operations["seller_finance_accounts_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/seller-finance/accounts/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description `available_balance` = balance − `reserved` (open payouts). */
+        get: operations["seller_finance_accounts_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/seller-finance/accounts/me/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The caller's own seller account, whatever the seller's status. */
+        get: operations["seller_finance_accounts_me_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/seller-finance/adjustments/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Signed correction with a mandatory reason. A debit cannot use money reserved by open payouts. */
+        post: operations["seller_finance_adjustments_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/seller-finance/payouts/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Payouts: REQUESTED → APPROVED → (PROCESSING →) PAID, or REJECTED / CANCELLED.
+         *
+         *     Sellers request and cancel their own; finance staff approve, reject and pay.
+         *     The requester can never approve their own payout.
+         */
+        get: operations["seller_finance_payouts_list"];
+        put?: never;
+        /** @description Request a payout (up to the available balance). */
+        post: operations["seller_finance_payouts_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/seller-finance/payouts/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Payouts: REQUESTED → APPROVED → (PROCESSING →) PAID, or REJECTED / CANCELLED.
+         *
+         *     Sellers request and cancel their own; finance staff approve, reject and pay.
+         *     The requester can never approve their own payout.
+         */
+        get: operations["seller_finance_payouts_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/seller-finance/payouts/{id}/approve/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description Payouts: REQUESTED → APPROVED → (PROCESSING →) PAID, or REJECTED / CANCELLED.
+         *
+         *     Sellers request and cancel their own; finance staff approve, reject and pay.
+         *     The requester can never approve their own payout.
+         */
+        post: operations["seller_finance_payouts_approve_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/seller-finance/payouts/{id}/cancel/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Withdraw a request that has not been approved yet. */
+        post: operations["seller_finance_payouts_cancel_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/seller-finance/payouts/{id}/pay/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description The money has been handed over; debits the seller balance. */
+        post: operations["seller_finance_payouts_pay_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/seller-finance/payouts/{id}/processing/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Optional step: the transfer has been started. */
+        post: operations["seller_finance_payouts_processing_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/seller-finance/payouts/{id}/reject/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description Payouts: REQUESTED → APPROVED → (PROCESSING →) PAID, or REJECTED / CANCELLED.
+         *
+         *     Sellers request and cancel their own; finance staff approve, reject and pay.
+         *     The requester can never approve their own payout.
+         */
+        post: operations["seller_finance_payouts_reject_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/seller-finance/transactions/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Users without `scope_permission` only see their own seller's objects. */
+        get: operations["seller_finance_transactions_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/seller-finance/transactions/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Users without `scope_permission` only see their own seller's objects. */
+        get: operations["seller_finance_transactions_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sellers/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Sellers are never deleted; close them with `PATCH {"status": "CLOSED"}`. */
+        get: operations["sellers_list"];
+        put?: never;
+        /** @description Sellers are never deleted; close them with `PATCH {"status": "CLOSED"}`. */
+        post: operations["sellers_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sellers/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Sellers are never deleted; close them with `PATCH {"status": "CLOSED"}`. */
+        get: operations["sellers_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Sellers are never deleted; close them with `PATCH {"status": "CLOSED"}`. */
+        patch: operations["sellers_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/sellers/me/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The caller's own seller profile, whatever its status. */
+        get: operations["sellers_me_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/service-positions/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Sellers manage their own positions; seller managers manage all. DELETE is soft. */
+        get: operations["service_positions_list"];
+        put?: never;
+        /** @description Sellers manage their own positions; seller managers manage all. DELETE is soft. */
+        post: operations["service_positions_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/service-positions/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Sellers manage their own positions; seller managers manage all. DELETE is soft. */
+        get: operations["service_positions_retrieve"];
+        put?: never;
+        post?: never;
+        /** @description Sellers manage their own positions; seller managers manage all. DELETE is soft. */
+        delete: operations["service_positions_destroy"];
+        options?: never;
+        head?: never;
+        /** @description Sellers manage their own positions; seller managers manage all. DELETE is soft. */
+        patch: operations["service_positions_partial_update"];
         trace?: never;
     };
     "/api/v1/users/": {
@@ -663,6 +1748,46 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         /**
+         * @description * `ACTIVE` - Active
+         *     * `FROZEN` - Frozen (can receive money, cannot spend)
+         *     * `CLOSED` - Closed
+         * @enum {string}
+         */
+        AccountStatusEnum: "ACTIVE" | "FROZEN" | "CLOSED";
+        AccountTransaction: {
+            readonly id: number;
+            readonly account: number;
+            readonly developer: components["schemas"]["DeveloperSummary"];
+            readonly kind: components["schemas"]["AccountTransactionKindEnum"];
+            /** Format: decimal */
+            readonly amount: string;
+            /** Format: decimal */
+            readonly balance_after: string;
+            readonly description: string;
+            /** @description e.g. purchase id. */
+            readonly reference: string;
+            readonly actor: number | null;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        /**
+         * @description * `DEPOSIT` - Deposit
+         *     * `PURCHASE` - Purchase
+         *     * `REFUND` - Refund
+         *     * `ADJUSTMENT` - Manual adjustment
+         * @enum {string}
+         */
+        AccountTransactionKindEnum: "DEPOSIT" | "PURCHASE" | "REFUND" | "ADJUSTMENT";
+        AdjustmentRequest: {
+            developer: number;
+            /**
+             * Format: decimal
+             * @description Signed: positive credits, negative debits.
+             */
+            amount: string;
+            reason: string;
+        };
+        /**
          * @description * `IN` - In
          *     * `OUT` - Out
          *     * `SCAN` - Scan (direction not classified)
@@ -680,6 +1805,13 @@ export interface components {
             /** Format: date-time */
             readonly event_time: string;
             readonly event_type: components["schemas"]["AttendanceEventTypeEnum"];
+            /**
+             * @description In/out as reported by the door, or as entered on a manual correction.
+             *
+             *     * `IN` - In
+             *     * `OUT` - Out
+             */
+            readonly direction: components["schemas"]["ScanDirectionEnum"];
             readonly source: components["schemas"]["SourceEnum"];
             readonly device_code: string;
             readonly rfid_event: number | null;
@@ -707,6 +1839,76 @@ export interface components {
             /** Format: date-time */
             created_at?: string;
         };
+        BatchResult: {
+            client_event_id: string;
+            id: number;
+            result: string;
+            /** @description False when this scan was uploaded before. */
+            created: boolean;
+        };
+        BatchScanItemRequest: {
+            uid: string;
+            /** Format: date-time */
+            event_time: string;
+            client_event_id: string;
+            /** @default  */
+            type: components["schemas"]["ScanDirectionEnum"] | components["schemas"]["BlankEnum"];
+        };
+        BatchScanRequest: {
+            events: components["schemas"]["BatchScanItemRequest"][];
+            /** @description Device code; needed only for IP-authenticated doors. */
+            ID?: string;
+        };
+        /** @enum {unknown} */
+        BlankEnum: "";
+        Booking: {
+            readonly id: number;
+            readonly good: number;
+            readonly good_name: string;
+            readonly seller: components["schemas"]["SellerSummary"];
+            readonly location: string;
+            readonly developer: components["schemas"]["DeveloperSummary"];
+            /** Format: date-time */
+            readonly start: string;
+            /** Format: date-time */
+            readonly end: string;
+            readonly slots: number;
+            /** Format: decimal */
+            readonly total: string;
+            readonly currency: string;
+            /** Format: decimal */
+            readonly balance_after: string;
+            readonly purchase: number;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        BookingCreateRequest: {
+            /** @description The rental to book. */
+            good: number;
+            /**
+             * Format: date-time
+             * @description Start of the first slot (from availability).
+             */
+            start: string;
+            /** @default 1 */
+            slots: number;
+            pin: string;
+        };
+        Building: {
+            readonly id: number;
+            /** @description e.g. B1 */
+            code: string;
+            /** @description e.g. Building 1 */
+            name: string;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        BuildingRequest: {
+            /** @description e.g. B1 */
+            code: string;
+            /** @description e.g. Building 1 */
+            name: string;
+        };
         CardAssignRequest: {
             developer: number;
         };
@@ -728,6 +1930,12 @@ export interface components {
          * @enum {string}
          */
         CardStatusEnum: "ACTIVE" | "BLOCKED" | "RETIRED";
+        ConfirmRequest: {
+            /** @description Leave out: the card tapped on the counter's reader is used. Typed UIDs are accepted only if the server allows manual entry. */
+            card_uid?: string;
+            /** @description PIN typed by the developer. */
+            pin: string;
+        };
         CurrentAssignment: {
             readonly id: number;
             readonly developer: components["schemas"]["DeveloperSummary"];
@@ -759,21 +1967,49 @@ export interface components {
          * @enum {string}
          */
         DailyAttendanceStatusEnum: "PRESENT" | "INCOMPLETE";
+        DepositRequest: {
+            developer: number;
+            /** Format: decimal */
+            amount: string;
+            description?: string;
+        };
         Developer: {
             readonly id: number;
             user?: number | null;
             employee_number: string;
             full_name: string;
-            /** Format: email */
-            email: string;
             phone?: string;
+            home_address?: string;
+            /** Format: date */
+            birthday?: string | null;
             department?: string;
             position_title?: string;
             manager?: number | null;
             readonly manager_detail: components["schemas"]["DeveloperSummary"];
             /** Format: date */
             start_date?: string | null;
+            /**
+             * Format: date
+             * @description Last working day (set when the developer leaves).
+             */
+            out_date?: string | null;
             status?: components["schemas"]["DeveloperStatusEnum"];
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        DeveloperAccount: {
+            readonly id: number;
+            readonly developer: components["schemas"]["DeveloperSummary"];
+            /** Format: decimal */
+            readonly balance: string;
+            readonly currency: string;
+            readonly status: components["schemas"]["AccountStatusEnum"];
+            readonly status_reason: string;
+            readonly has_pin: boolean;
+            /** Format: date-time */
+            readonly pin_locked_until: string | null;
             /** Format: date-time */
             readonly created_at: string;
             /** Format: date-time */
@@ -783,14 +2019,20 @@ export interface components {
             user?: number | null;
             employee_number: string;
             full_name: string;
-            /** Format: email */
-            email: string;
             phone?: string;
+            home_address?: string;
+            /** Format: date */
+            birthday?: string | null;
             department?: string;
             position_title?: string;
             manager?: number | null;
             /** Format: date */
             start_date?: string | null;
+            /**
+             * Format: date
+             * @description Last working day (set when the developer leaves).
+             */
+            out_date?: string | null;
             status?: components["schemas"]["DeveloperStatusEnum"];
         };
         /**
@@ -814,13 +2056,38 @@ export interface components {
             full_name: string;
             department?: string;
         };
+        /** @description What a device needs to know about itself and the server (heartbeat response). */
+        DeviceConfig: {
+            /** @description e.g. READER-001 */
+            readonly code: string;
+            readonly name: string;
+            readonly location: string;
+            readonly purpose: components["schemas"]["PurposeEnum"];
+            /**
+             * @description Used by the attendance 'device' rule to label scans IN/OUT.
+             *
+             *     * `IN` - Entrance
+             *     * `OUT` - Exit
+             *     * `BOTH` - Entrance and exit
+             */
+            readonly direction: components["schemas"]["DeviceDirectionEnum"];
+            /** @description TILL devices only: the counter whose purchases receive this reader's taps. */
+            readonly service_position: number | null;
+            readonly service_position_name: string;
+            readonly seller_name: string;
+            /** @description Use to correct the device clock. */
+            readonly server_time: string;
+            readonly heartbeat_seconds: number;
+            readonly debounce_seconds: number;
+            readonly max_future_skew_seconds: number;
+        };
         /**
          * @description * `IN` - Entrance
          *     * `OUT` - Exit
          *     * `BOTH` - Entrance and exit
          * @enum {string}
          */
-        DirectionEnum: "IN" | "OUT" | "BOTH";
+        DeviceDirectionEnum: "IN" | "OUT" | "BOTH";
         /**
          * @description * `RETURNED` - Returned
          *     * `REPLACED` - Replaced
@@ -829,15 +2096,135 @@ export interface components {
          * @enum {string}
          */
         EndReasonEnum: "RETURNED" | "REPLACED" | "DEVELOPER_LEFT" | "DEVELOPER_DELETED";
+        Good: {
+            readonly id: number;
+            service_position: number;
+            readonly position_detail: components["schemas"]["PositionSummary"];
+            readonly seller: components["schemas"]["SellerSummary"];
+            name: string;
+            /** @default PRODUCT */
+            kind: components["schemas"]["GoodKindEnum"];
+            description?: string;
+            /** @description Seller's own product code. */
+            sku?: string;
+            /** Format: decimal */
+            price: string;
+            readonly currency: string;
+            /** @description Available for sale. */
+            is_active?: boolean;
+            /** @description PRODUCT only (default true). Always false otherwise. */
+            track_stock?: boolean;
+            readonly quantity: number;
+            /** @description Required for RENTAL goods, else omit. */
+            rental?: components["schemas"]["RentalSettings"] | null;
+            readonly images: components["schemas"]["GoodImage"][];
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        GoodImage: {
+            readonly id: number;
+            /** Format: uri */
+            image: string;
+            alt_text?: string;
+            /** @description Lowest is shown first. */
+            position?: number;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        GoodImageRequest: {
+            /** Format: binary */
+            image: string;
+            alt_text?: string;
+            /** @description Lowest is shown first. */
+            position?: number;
+        };
+        /**
+         * @description * `PRODUCT` - Product (tangible, optional stock)
+         *     * `SERVICE` - Service (intangible, sold at the till)
+         *     * `RENTAL` - Rental (booked by time slot)
+         * @enum {string}
+         */
+        GoodKindEnum: "PRODUCT" | "SERVICE" | "RENTAL";
+        GoodRequest: {
+            service_position: number;
+            name: string;
+            /** @default PRODUCT */
+            kind: components["schemas"]["GoodKindEnum"];
+            description?: string;
+            /** @description Seller's own product code. */
+            sku?: string;
+            /** Format: decimal */
+            price: string;
+            /** @description Available for sale. */
+            is_active?: boolean;
+            /** @description PRODUCT only (default true). Always false otherwise. */
+            track_stock?: boolean;
+            /** @description Starting stock (create only; later changes go through /stock/). */
+            initial_quantity?: number;
+            /** @description Required for RENTAL goods, else omit. */
+            rental?: components["schemas"]["RentalSettingsRequest"] | null;
+        };
+        HeartbeatRequest: {
+            app_version?: string;
+            /** @description Device code; needed for key-less doors and till readers. */
+            ID?: string;
+            /** @description Till readers without a key: their serial number. */
+            SN?: string;
+        };
+        InventoryMovement: {
+            readonly id: number;
+            readonly good: number;
+            readonly good_name: string;
+            readonly kind: components["schemas"]["InventoryMovementKindEnum"];
+            readonly quantity_delta: number;
+            readonly quantity_after: number;
+            readonly reason: string;
+            /** @description e.g. purchase item id for SALE/RETURN. */
+            readonly reference: string;
+            readonly actor: number | null;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        /**
+         * @description * `INITIAL_STOCK` - Initial stock
+         *     * `RESTOCK` - Restock
+         *     * `SALE` - Sale
+         *     * `RETURN` - Return
+         *     * `DAMAGE` - Damage / loss
+         *     * `ADJUSTMENT` - Stock count adjustment
+         * @enum {string}
+         */
+        InventoryMovementKindEnum: "INITIAL_STOCK" | "RESTOCK" | "SALE" | "RETURN" | "DAMAGE" | "ADJUSTMENT";
+        ItemAddRequest: {
+            good: number;
+            /** @default 1 */
+            quantity: number;
+        };
         LogoutRequest: {
             refresh: string;
         };
+        /**
+         * @description * `IN` - IN
+         *     * `OUT` - OUT
+         * @enum {string}
+         */
+        ManualRecordDirectionEnum: "IN" | "OUT";
         ManualRecordRequest: {
             developer: number;
             /** Format: date-time */
             event_time: string;
             /** @description Why the record is being added. */
             note: string;
+            /**
+             * @description IN or OUT, e.g. OUT to mark someone as gone who never scanned out.
+             *
+             *     * `IN` - IN
+             *     * `OUT` - OUT
+             * @default
+             */
+            direction: components["schemas"]["ManualRecordDirectionEnum"] | components["schemas"]["BlankEnum"];
         };
         Me: {
             readonly id: number;
@@ -856,15 +2243,51 @@ export interface components {
             readonly id: number;
             readonly employee_number: string;
             readonly full_name: string;
-            /** Format: email */
-            readonly email: string;
             readonly phone: string;
+            readonly home_address: string;
+            /** Format: date */
+            readonly birthday: string | null;
             readonly department: string;
             readonly position_title: string;
             readonly manager: components["schemas"]["DeveloperSummary"];
             /** Format: date */
             readonly start_date: string | null;
+            /**
+             * Format: date
+             * @description Last working day (set when the developer leaves).
+             */
+            readonly out_date: string | null;
             readonly status: components["schemas"]["DeveloperStatusEnum"];
+        };
+        Occupancy: {
+            /** Format: date-time */
+            as_of: string;
+            /** @description Developers inside any building right now. */
+            total: number;
+            buildings: components["schemas"]["OccupancyBuilding"][];
+            /** @description Inside, but last IN had no building (e.g. a manual correction). */
+            unknown_building: number;
+        };
+        OccupancyBuilding: {
+            id: number;
+            code: string;
+            name: string;
+            count: number;
+        };
+        PaginatedAccountTransactionList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["AccountTransaction"][];
         };
         PaginatedAttendanceRecordList: {
             /** @example 123 */
@@ -896,6 +2319,36 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["AuditLog"][];
         };
+        PaginatedBatchResultList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["BatchResult"][];
+        };
+        PaginatedBookingList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["Booking"][];
+        };
         PaginatedDailyAttendanceList: {
             /** @example 123 */
             count: number;
@@ -911,6 +2364,21 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["DailyAttendance"][];
         };
+        PaginatedDeveloperAccountList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["DeveloperAccount"][];
+        };
         PaginatedDeveloperList: {
             /** @example 123 */
             count: number;
@@ -925,6 +2393,66 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["Developer"][];
+        };
+        PaginatedGoodList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["Good"][];
+        };
+        PaginatedInventoryMovementList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["InventoryMovement"][];
+        };
+        PaginatedPersonInsideList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["PersonInside"][];
+        };
+        PaginatedPurchaseList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["Purchase"][];
         };
         PaginatedRFIDCardAssignmentList: {
             /** @example 123 */
@@ -986,6 +2514,111 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["RFIDEvent"][];
         };
+        PaginatedRentalList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["Rental"][];
+        };
+        PaginatedSellerAccountList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["SellerAccount"][];
+        };
+        PaginatedSellerList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["Seller"][];
+        };
+        PaginatedSellerPaymentList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["SellerPayment"][];
+        };
+        PaginatedSellerTransactionList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["SellerTransaction"][];
+        };
+        PaginatedServicePositionList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["ServicePosition"][];
+        };
+        PaginatedSlotList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["Slot"][];
+        };
         PaginatedUserList: {
             /** @example 123 */
             count: number;
@@ -1005,19 +2638,53 @@ export interface components {
             old_password: string;
             new_password: string;
         };
+        PatchedBuildingRequest: {
+            /** @description e.g. B1 */
+            code?: string;
+            /** @description e.g. Building 1 */
+            name?: string;
+        };
         PatchedDeveloperRequest: {
             user?: number | null;
             employee_number?: string;
             full_name?: string;
-            /** Format: email */
-            email?: string;
             phone?: string;
+            home_address?: string;
+            /** Format: date */
+            birthday?: string | null;
             department?: string;
             position_title?: string;
             manager?: number | null;
             /** Format: date */
             start_date?: string | null;
+            /**
+             * Format: date
+             * @description Last working day (set when the developer leaves).
+             */
+            out_date?: string | null;
             status?: components["schemas"]["DeveloperStatusEnum"];
+        };
+        PatchedGoodRequest: {
+            service_position?: number;
+            name?: string;
+            /** @default PRODUCT */
+            kind: components["schemas"]["GoodKindEnum"];
+            description?: string;
+            /** @description Seller's own product code. */
+            sku?: string;
+            /** Format: decimal */
+            price?: string;
+            /** @description Available for sale. */
+            is_active?: boolean;
+            /** @description PRODUCT only (default true). Always false otherwise. */
+            track_stock?: boolean;
+            /** @description Starting stock (create only; later changes go through /stock/). */
+            initial_quantity?: number;
+            /** @description Required for RENTAL goods, else omit. */
+            rental?: components["schemas"]["RentalSettingsRequest"] | null;
+        };
+        PatchedItemUpdateRequest: {
+            quantity?: number;
         };
         PatchedRFIDCardUpdateRequest: {
             /** @description Number printed on the card. */
@@ -1030,6 +2697,10 @@ export interface components {
             name?: string;
             location?: string;
             purpose?: components["schemas"]["PurposeEnum"];
+            /** @description ATTENDANCE devices: the building whose door this is (for occupancy). */
+            building?: number | null;
+            /** @description TILL devices only: the counter whose purchases receive this reader's taps. */
+            service_position?: number | null;
             /**
              * @description Used by the attendance 'device' rule to label scans IN/OUT.
              *
@@ -1037,18 +2708,123 @@ export interface components {
              *     * `OUT` - Exit
              *     * `BOTH` - Entrance and exit
              */
-            direction?: components["schemas"]["DirectionEnum"];
+            direction?: components["schemas"]["DeviceDirectionEnum"];
+            /** @description ATTENDANCE doors that cannot send an API key: requests from this fixed IP that carry this device's code as `ID` are accepted without a key. */
+            allowed_ip?: string | null;
+            /** @description TILL readers: the serial number they send as `SN` (stored upper-case). */
+            sn?: string;
+            is_active?: boolean;
+        };
+        PatchedSellerRequest: {
+            user?: number | null;
+            name?: string;
+            contact_name?: string;
+            email?: string;
+            phone?: string;
+            status?: components["schemas"]["SellerStatusEnum"];
+            notes?: string;
+        };
+        PatchedServicePositionRequest: {
+            seller?: number;
+            name?: string;
+            location?: string;
             is_active?: boolean;
         };
         PatchedUserUpdateRequest: {
             full_name?: string;
             is_active?: boolean;
         };
+        PayReferenceRequest: {
+            /** @description Bank transfer or cash receipt number. */
+            payment_reference: string;
+        };
+        PayoutRequestRequest: {
+            /** @description Required for finance staff; sellers always request for themselves. */
+            seller?: number;
+            /** Format: decimal */
+            amount: string;
+            /** @default  */
+            note: string;
+        };
         /**
-         * @description * `ATTENDANCE` - Attendance
+         * @description * `REQUESTED` - Requested
+         *     * `APPROVED` - Approved
+         *     * `PROCESSING` - Processing
+         *     * `PAID` - Paid
+         *     * `REJECTED` - Rejected
+         *     * `CANCELLED` - Cancelled
          * @enum {string}
          */
-        PurposeEnum: "ATTENDANCE";
+        PayoutStatusEnum: "REQUESTED" | "APPROVED" | "PROCESSING" | "PAID" | "REJECTED" | "CANCELLED";
+        PersonInside: {
+            readonly developer: components["schemas"]["DeveloperSummary"];
+            readonly building: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Format: date-time
+             * @description Time of the latest record.
+             */
+            readonly since: string | null;
+            readonly device_code: string;
+        };
+        PositionSummary: {
+            readonly id: number;
+            name: string;
+        };
+        PositionSummaryRequest: {
+            name: string;
+        };
+        Purchase: {
+            readonly id: number;
+            readonly status: components["schemas"]["PurchaseStatusEnum"];
+            readonly seller: components["schemas"]["SellerSummary"];
+            readonly service_position: number;
+            readonly service_position_name: string;
+            readonly items: components["schemas"]["PurchaseItem"][];
+            readonly total: string;
+            readonly currency: string;
+            /** @description The card tapped on this counter's reader, while still valid (drafts only). */
+            readonly presented_card: {
+                [key: string]: unknown;
+            } | null;
+            readonly developer: components["schemas"]["DeveloperSummary"];
+            readonly card_uid: string;
+            /** Format: decimal */
+            readonly balance_after: string;
+            readonly created_by: number | null;
+            /** Format: date-time */
+            readonly created_at: string;
+            readonly confirmed_by: number | null;
+            /** Format: date-time */
+            readonly confirmed_at: string | null;
+            /** Format: date-time */
+            readonly cancelled_at: string | null;
+        };
+        PurchaseCreateRequest: {
+            service_position: number;
+        };
+        PurchaseItem: {
+            readonly id: number;
+            readonly good: number;
+            readonly good_name: string;
+            readonly quantity: number;
+            readonly unit_price: string;
+            readonly line_total: string;
+        };
+        /**
+         * @description * `DRAFT` - Draft (bucket being built)
+         *     * `CONFIRMED` - Confirmed (paid)
+         *     * `CANCELLED` - Cancelled
+         * @enum {string}
+         */
+        PurchaseStatusEnum: "DRAFT" | "CONFIRMED" | "CANCELLED";
+        /**
+         * @description * `ATTENDANCE` - Attendance reader
+         *     * `TILL` - Till card reader (program on a seller's computer)
+         * @enum {string}
+         */
+        PurposeEnum: "ATTENDANCE" | "TILL";
         RFIDCard: {
             readonly id: number;
             uid: string;
@@ -1094,6 +2870,10 @@ export interface components {
             name?: string;
             location?: string;
             purpose?: components["schemas"]["PurposeEnum"];
+            /** @description ATTENDANCE devices: the building whose door this is (for occupancy). */
+            building?: number | null;
+            /** @description TILL devices only: the counter whose purchases receive this reader's taps. */
+            service_position?: number | null;
             /**
              * @description Used by the attendance 'device' rule to label scans IN/OUT.
              *
@@ -1101,11 +2881,19 @@ export interface components {
              *     * `OUT` - Exit
              *     * `BOTH` - Entrance and exit
              */
-            direction?: components["schemas"]["DirectionEnum"];
+            direction?: components["schemas"]["DeviceDirectionEnum"];
+            /** @description ATTENDANCE doors that cannot send an API key: requests from this fixed IP that carry this device's code as `ID` are accepted without a key. */
+            allowed_ip?: string | null;
+            /** @description TILL readers: the serial number they send as `SN` (stored upper-case). */
+            sn?: string;
             is_active?: boolean;
-            readonly api_key_prefix: string;
+            readonly online: boolean;
             /** Format: date-time */
             readonly last_seen_at: string | null;
+            readonly last_ip: string | null;
+            /** @description Firmware or program version, from heartbeats. */
+            readonly app_version: string;
+            readonly api_key_prefix: string;
             /** Format: date-time */
             readonly created_at: string;
         };
@@ -1115,6 +2903,10 @@ export interface components {
             name?: string;
             location?: string;
             purpose?: components["schemas"]["PurposeEnum"];
+            /** @description ATTENDANCE devices: the building whose door this is (for occupancy). */
+            building?: number | null;
+            /** @description TILL devices only: the counter whose purchases receive this reader's taps. */
+            service_position?: number | null;
             /**
              * @description Used by the attendance 'device' rule to label scans IN/OUT.
              *
@@ -1122,7 +2914,11 @@ export interface components {
              *     * `OUT` - Exit
              *     * `BOTH` - Entrance and exit
              */
-            direction?: components["schemas"]["DirectionEnum"];
+            direction?: components["schemas"]["DeviceDirectionEnum"];
+            /** @description ATTENDANCE doors that cannot send an API key: requests from this fixed IP that carry this device's code as `ID` are accepted without a key. */
+            allowed_ip?: string | null;
+            /** @description TILL readers: the serial number they send as `SN` (stored upper-case). */
+            sn?: string;
             is_active?: boolean;
         };
         RFIDDeviceWithKey: {
@@ -1132,6 +2928,10 @@ export interface components {
             name?: string;
             location?: string;
             purpose?: components["schemas"]["PurposeEnum"];
+            /** @description ATTENDANCE devices: the building whose door this is (for occupancy). */
+            building?: number | null;
+            /** @description TILL devices only: the counter whose purchases receive this reader's taps. */
+            service_position?: number | null;
             /**
              * @description Used by the attendance 'device' rule to label scans IN/OUT.
              *
@@ -1139,11 +2939,19 @@ export interface components {
              *     * `OUT` - Exit
              *     * `BOTH` - Entrance and exit
              */
-            direction?: components["schemas"]["DirectionEnum"];
+            direction?: components["schemas"]["DeviceDirectionEnum"];
+            /** @description ATTENDANCE doors that cannot send an API key: requests from this fixed IP that carry this device's code as `ID` are accepted without a key. */
+            allowed_ip?: string | null;
+            /** @description TILL readers: the serial number they send as `SN` (stored upper-case). */
+            sn?: string;
             is_active?: boolean;
-            readonly api_key_prefix: string;
+            readonly online: boolean;
             /** Format: date-time */
             readonly last_seen_at: string | null;
+            readonly last_ip: string | null;
+            /** @description Firmware or program version, from heartbeats. */
+            readonly app_version: string;
+            readonly api_key_prefix: string;
             /** Format: date-time */
             readonly created_at: string;
             /** @description Shown only once. Configure the reader with it now. */
@@ -1162,7 +2970,60 @@ export interface components {
             readonly event_time: string;
             /** Format: date-time */
             readonly received_at: string;
+            /**
+             * @description In/out as reported by the device with this scan (blank if not reported).
+             *
+             *     * `IN` - In
+             *     * `OUT` - Out
+             */
+            readonly direction: components["schemas"]["ScanDirectionEnum"];
             readonly result: components["schemas"]["ResultEnum"];
+        };
+        RealtimeTicket: {
+            ticket: string;
+            expires_in: number;
+        };
+        RejectRequest: {
+            reason: string;
+        };
+        /** @description A bookable rental as developers see it. */
+        Rental: {
+            readonly id: number;
+            readonly name: string;
+            readonly description: string;
+            /** Format: decimal */
+            readonly price: string;
+            readonly currency: string;
+            readonly seller: components["schemas"]["SellerSummary"];
+            readonly location: string;
+            readonly rental: components["schemas"]["RentalSettings"];
+            readonly images: components["schemas"]["GoodImage"][];
+        };
+        RentalSettings: {
+            /** @description Length of one bookable slot; `price` is charged per slot. */
+            slot_minutes: number;
+            /** Format: time */
+            opening_time: string;
+            /** Format: time */
+            closing_time: string;
+            /** @description Open days: 0 = Monday ... 6 = Sunday. Default: every day. */
+            weekdays?: number[];
+            max_slots_per_booking?: number;
+            /** @description How many days in advance a slot can be booked. */
+            max_days_ahead?: number;
+        };
+        RentalSettingsRequest: {
+            /** @description Length of one bookable slot; `price` is charged per slot. */
+            slot_minutes: number;
+            /** Format: time */
+            opening_time: string;
+            /** Format: time */
+            closing_time: string;
+            /** @description Open days: 0 = Monday ... 6 = Sunday. Default: every day. */
+            weekdays?: number[];
+            max_slots_per_booking?: number;
+            /** @description How many days in advance a slot can be booked. */
+            max_days_ahead?: number;
         };
         /**
          * @description * `ACCEPTED` - Accepted
@@ -1186,11 +3047,29 @@ export interface components {
         RoleAssignRequest: {
             role: string;
         };
-        /** @description Payload a reader sends. */
+        /**
+         * @description * `IN` - In
+         *     * `OUT` - Out
+         * @enum {string}
+         */
+        ScanDirectionEnum: "IN" | "OUT";
+        /**
+         * @description Payload a reader sends. Accepts both our field names and the door devices' format
+         *     `{"ID": "Door1", "Type": "in", "UID": "04A2B3C4"}`.
+         */
         ScanRequest: {
             uid: string;
-            /** @description Optional; must match the authenticated reader's code. */
+            /** @description Device code (the doors' `ID`); must match the device's key. */
             device_id?: string;
+            /**
+             * @description `in` / `out` from building doors, `pay` from till readers (`Type`/`TYPE`).
+             *
+             *     * `IN` - IN
+             *     * `OUT` - OUT
+             *     * `PAY` - PAY
+             * @default
+             */
+            type: components["schemas"]["ScanTypeEnum"] | components["schemas"]["BlankEnum"];
             /** Format: date-time */
             event_time?: string;
             /** @default  */
@@ -1200,11 +3079,167 @@ export interface components {
             readonly id: number;
             readonly result: components["schemas"]["ResultEnum"];
             readonly accepted: boolean;
+            /**
+             * @description In/out as reported by the device with this scan (blank if not reported).
+             *
+             *     * `IN` - In
+             *     * `OUT` - Out
+             */
+            readonly direction: components["schemas"]["ScanDirectionEnum"];
+            /** @description Short text for the reader's screen. */
+            readonly display_message: string;
             readonly developer: components["schemas"]["DeveloperSummary"];
+            /** @description TILL devices: the draft purchase this tap was attached to, or null. */
+            readonly purchase: number | null;
             /** Format: date-time */
             readonly event_time: string;
             /** @description Reader-generated id; a retried request with the same id is not stored twice. */
             readonly client_event_id: string;
+        };
+        /**
+         * @description * `IN` - IN
+         *     * `OUT` - OUT
+         *     * `PAY` - PAY
+         * @enum {string}
+         */
+        ScanTypeEnum: "IN" | "OUT" | "PAY";
+        Seller: {
+            readonly id: number;
+            user?: number | null;
+            name: string;
+            contact_name?: string;
+            email?: string;
+            phone?: string;
+            status?: components["schemas"]["SellerStatusEnum"];
+            notes?: string;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        SellerAccount: {
+            readonly id: number;
+            readonly seller: components["schemas"]["SellerSummary"];
+            /** Format: decimal */
+            readonly balance: string;
+            /** Format: decimal */
+            readonly reserved: string;
+            readonly available_balance: string;
+            readonly currency: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        SellerAdjustmentRequest: {
+            seller: number;
+            /** Format: decimal */
+            amount: string;
+            reason: string;
+        };
+        SellerPayment: {
+            readonly id: number;
+            readonly seller: components["schemas"]["SellerSummary"];
+            /** Format: decimal */
+            readonly amount: string;
+            readonly currency: string;
+            readonly status: components["schemas"]["PayoutStatusEnum"];
+            readonly note: string;
+            readonly requested_by: number | null;
+            /** Format: date-time */
+            readonly created_at: string;
+            readonly approved_by: number | null;
+            /** Format: date-time */
+            readonly approved_at: string | null;
+            /** Format: date-time */
+            readonly processed_at: string | null;
+            readonly paid_by: number | null;
+            /** Format: date-time */
+            readonly paid_at: string | null;
+            /** @description Bank transfer or cash receipt number. */
+            readonly payment_reference: string;
+            readonly rejected_by: number | null;
+            /** Format: date-time */
+            readonly rejected_at: string | null;
+            readonly rejection_reason: string;
+            /** Format: date-time */
+            readonly cancelled_at: string | null;
+        };
+        SellerRequest: {
+            user?: number | null;
+            name: string;
+            contact_name?: string;
+            email?: string;
+            phone?: string;
+            status?: components["schemas"]["SellerStatusEnum"];
+            notes?: string;
+        };
+        /**
+         * @description * `ACTIVE` - Active
+         *     * `SUSPENDED` - Suspended
+         *     * `CLOSED` - Closed
+         * @enum {string}
+         */
+        SellerStatusEnum: "ACTIVE" | "SUSPENDED" | "CLOSED";
+        SellerSummary: {
+            readonly id: number;
+            name: string;
+            status?: components["schemas"]["SellerStatusEnum"];
+        };
+        SellerSummaryRequest: {
+            name: string;
+            status?: components["schemas"]["SellerStatusEnum"];
+        };
+        SellerTransaction: {
+            readonly id: number;
+            readonly account: number;
+            readonly seller: components["schemas"]["SellerSummary"];
+            readonly kind: components["schemas"]["SellerTransactionKindEnum"];
+            /** Format: decimal */
+            readonly amount: string;
+            /** Format: decimal */
+            readonly balance_after: string;
+            readonly description: string;
+            /** @description purchase:ID or payout:ID */
+            readonly reference: string;
+            readonly actor: number | null;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        /**
+         * @description * `SALE` - Sale
+         *     * `PAYOUT` - Payout
+         *     * `ADJUSTMENT` - Manual adjustment
+         * @enum {string}
+         */
+        SellerTransactionKindEnum: "SALE" | "PAYOUT" | "ADJUSTMENT";
+        ServicePosition: {
+            readonly id: number;
+            seller?: number;
+            readonly seller_detail: components["schemas"]["SellerSummary"];
+            name: string;
+            location?: string;
+            is_active?: boolean;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        ServicePositionRequest: {
+            seller?: number;
+            name: string;
+            location?: string;
+            is_active?: boolean;
+        };
+        SetPinRequest: {
+            pin: string;
+            /** @description Required to change an existing PIN. */
+            current_pin?: string;
+        };
+        Slot: {
+            /** Format: date-time */
+            start: string;
+            /** Format: date-time */
+            end: string;
+            available: boolean;
         };
         /**
          * @description * `RFID` - RFID scan
@@ -1212,6 +3247,26 @@ export interface components {
          * @enum {string}
          */
         SourceEnum: "RFID" | "MANUAL";
+        StatusChangeRequest: {
+            /** @default  */
+            reason: string;
+        };
+        /**
+         * @description * `RESTOCK` - RESTOCK
+         *     * `DAMAGE` - DAMAGE
+         *     * `ADJUSTMENT` - ADJUSTMENT
+         * @enum {string}
+         */
+        StockChangeKindEnum: "RESTOCK" | "DAMAGE" | "ADJUSTMENT";
+        StockChangeRequest: {
+            kind: components["schemas"]["StockChangeKindEnum"];
+            /** @description RESTOCK / DAMAGE: how many units. */
+            quantity?: number;
+            /** @description ADJUSTMENT: the physically counted stock. */
+            counted_quantity?: number;
+            /** @default  */
+            reason: string;
+        };
         TokenObtainPair: {
             readonly access: string;
             readonly refresh: string;
@@ -1332,6 +3387,49 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DailyAttendance"];
+                };
+            };
+        };
+    };
+    attendance_occupancy_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Occupancy"];
+                };
+            };
+        };
+    };
+    attendance_occupancy_people_list: {
+        parameters: {
+            query?: {
+                /** @description A page number within the paginated result set. */
+                page?: number;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedPersonInsideList"];
                 };
             };
         };
@@ -1648,14 +3746,129 @@ export interface operations {
             };
         };
     };
+    bookings_list: {
+        parameters: {
+            query?: {
+                date?: string;
+                developer?: number;
+                good?: number;
+                /** @description Which field to use when ordering the results. */
+                ordering?: string;
+                /** @description A page number within the paginated result set. */
+                page?: number;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+                /** @description A search term. */
+                search?: string;
+                seller?: number;
+                start_after?: string;
+                start_before?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedBookingList"];
+                };
+            };
+        };
+    };
+    bookings_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unique per booking attempt; a retry with the same key is safe. */
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BookingCreateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["BookingCreateRequest"];
+                "multipart/form-data": components["schemas"]["BookingCreateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Booking"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Booking"];
+                };
+            };
+        };
+    };
+    bookings_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this booking. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Booking"];
+                };
+            };
+        };
+    };
+    bookings_me_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Booking"];
+                };
+            };
+        };
+    };
     developers_list: {
         parameters: {
             query?: {
+                /** @description 1-12, e.g. for a birthday list. */
+                birthday_month?: number;
                 department?: string;
                 has_user?: boolean;
                 manager?: number;
                 /** @description Which field to use when ordering the results. */
                 ordering?: string;
+                out_after?: string;
+                out_before?: string;
                 /** @description A page number within the paginated result set. */
                 page?: number;
                 /** @description Number of results to return per page. */
@@ -1803,6 +4016,1019 @@ export interface operations {
             };
         };
     };
+    finance_accounts_list: {
+        parameters: {
+            query?: {
+                balance_max?: number;
+                balance_min?: number;
+                department?: string;
+                developer?: number;
+                /** @description Which field to use when ordering the results. */
+                ordering?: string;
+                /** @description A page number within the paginated result set. */
+                page?: number;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+                /** @description A search term. */
+                search?: string;
+                /**
+                 * @description * `ACTIVE` - Active
+                 *     * `FROZEN` - Frozen (can receive money, cannot spend)
+                 *     * `CLOSED` - Closed
+                 */
+                status?: "ACTIVE" | "CLOSED" | "FROZEN";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedDeveloperAccountList"];
+                };
+            };
+        };
+    };
+    finance_accounts_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this developer account. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeveloperAccount"];
+                };
+            };
+        };
+    };
+    finance_accounts_close_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this developer account. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["StatusChangeRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["StatusChangeRequest"];
+                "multipart/form-data": components["schemas"]["StatusChangeRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeveloperAccount"];
+                };
+            };
+        };
+    };
+    finance_accounts_freeze_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this developer account. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["StatusChangeRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["StatusChangeRequest"];
+                "multipart/form-data": components["schemas"]["StatusChangeRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeveloperAccount"];
+                };
+            };
+        };
+    };
+    finance_accounts_reopen_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this developer account. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["StatusChangeRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["StatusChangeRequest"];
+                "multipart/form-data": components["schemas"]["StatusChangeRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeveloperAccount"];
+                };
+            };
+        };
+    };
+    finance_accounts_reset_pin_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this developer account. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeveloperAccount"];
+                };
+            };
+        };
+    };
+    finance_accounts_unfreeze_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this developer account. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["StatusChangeRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["StatusChangeRequest"];
+                "multipart/form-data": components["schemas"]["StatusChangeRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeveloperAccount"];
+                };
+            };
+        };
+    };
+    finance_accounts_me_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeveloperAccount"];
+                };
+            };
+        };
+    };
+    finance_accounts_me_pin_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetPinRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["SetPinRequest"];
+                "multipart/form-data": components["schemas"]["SetPinRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    finance_adjustments_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unique per user action (use a UUID). Retries with the same key are safe. */
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdjustmentRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["AdjustmentRequest"];
+                "multipart/form-data": components["schemas"]["AdjustmentRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountTransaction"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountTransaction"];
+                };
+            };
+        };
+    };
+    finance_deposits_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unique per user action (use a UUID). Retries with the same key are safe. */
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DepositRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["DepositRequest"];
+                "multipart/form-data": components["schemas"]["DepositRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountTransaction"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountTransaction"];
+                };
+            };
+        };
+    };
+    finance_transactions_list: {
+        parameters: {
+            query?: {
+                account?: number;
+                created_after?: string;
+                created_before?: string;
+                developer?: number;
+                /**
+                 * @description * `DEPOSIT` - Deposit
+                 *     * `PURCHASE` - Purchase
+                 *     * `REFUND` - Refund
+                 *     * `ADJUSTMENT` - Manual adjustment
+                 */
+                kind?: "ADJUSTMENT" | "DEPOSIT" | "PURCHASE" | "REFUND";
+                /** @description Which field to use when ordering the results. */
+                ordering?: string;
+                /** @description A page number within the paginated result set. */
+                page?: number;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+                reference?: string;
+                /** @description A search term. */
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedAccountTransactionList"];
+                };
+            };
+        };
+    };
+    finance_transactions_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this account transaction. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountTransaction"];
+                };
+            };
+        };
+    };
+    finance_transactions_me_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountTransaction"];
+                };
+            };
+        };
+    };
+    goods_list: {
+        parameters: {
+            query?: {
+                in_stock?: boolean;
+                is_active?: boolean;
+                /**
+                 * @description * `PRODUCT` - Product (tangible, optional stock)
+                 *     * `SERVICE` - Service (intangible, sold at the till)
+                 *     * `RENTAL` - Rental (booked by time slot)
+                 */
+                kind?: "PRODUCT" | "RENTAL" | "SERVICE";
+                /** @description Which field to use when ordering the results. */
+                ordering?: string;
+                /** @description A page number within the paginated result set. */
+                page?: number;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+                price_max?: number;
+                price_min?: number;
+                /** @description A search term. */
+                search?: string;
+                seller?: number;
+                service_position?: number;
+                track_stock?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedGoodList"];
+                };
+            };
+        };
+    };
+    goods_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GoodRequest"];
+                "multipart/form-data": components["schemas"]["GoodRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["GoodRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Good"];
+                };
+            };
+        };
+    };
+    goods_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this good. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Good"];
+                };
+            };
+        };
+    };
+    goods_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this good. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    goods_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this good. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedGoodRequest"];
+                "multipart/form-data": components["schemas"]["PatchedGoodRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedGoodRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Good"];
+                };
+            };
+        };
+    };
+    goods_images_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this good. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["GoodImageRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Good"];
+                };
+            };
+        };
+    };
+    goods_images_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this good. */
+                id: number;
+                image_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    goods_stock_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this good. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StockChangeRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InventoryMovement"];
+                };
+            };
+        };
+    };
+    inventory_movements_list: {
+        parameters: {
+            query?: {
+                created_after?: string;
+                created_before?: string;
+                good?: number;
+                /**
+                 * @description * `INITIAL_STOCK` - Initial stock
+                 *     * `RESTOCK` - Restock
+                 *     * `SALE` - Sale
+                 *     * `RETURN` - Return
+                 *     * `DAMAGE` - Damage / loss
+                 *     * `ADJUSTMENT` - Stock count adjustment
+                 */
+                kind?: "ADJUSTMENT" | "DAMAGE" | "INITIAL_STOCK" | "RESTOCK" | "RETURN" | "SALE";
+                /** @description Which field to use when ordering the results. */
+                ordering?: string;
+                /** @description A page number within the paginated result set. */
+                page?: number;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+                /** @description A search term. */
+                search?: string;
+                seller?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedInventoryMovementList"];
+                };
+            };
+        };
+    };
+    inventory_movements_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this inventory movement. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InventoryMovement"];
+                };
+            };
+        };
+    };
+    purchases_list: {
+        parameters: {
+            query?: {
+                confirmed_after?: string;
+                confirmed_before?: string;
+                developer?: number;
+                /** @description Which field to use when ordering the results. */
+                ordering?: string;
+                /** @description A page number within the paginated result set. */
+                page?: number;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+                /** @description A search term. */
+                search?: string;
+                seller?: number;
+                service_position?: number;
+                /**
+                 * @description * `DRAFT` - Draft (bucket being built)
+                 *     * `CONFIRMED` - Confirmed (paid)
+                 *     * `CANCELLED` - Cancelled
+                 */
+                status?: "CANCELLED" | "CONFIRMED" | "DRAFT";
+                total_max?: number;
+                total_min?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedPurchaseList"];
+                };
+            };
+        };
+    };
+    purchases_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PurchaseCreateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PurchaseCreateRequest"];
+                "multipart/form-data": components["schemas"]["PurchaseCreateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Purchase"];
+                };
+            };
+        };
+    };
+    purchases_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this purchase. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Purchase"];
+                };
+            };
+        };
+    };
+    purchases_cancel_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this purchase. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Purchase"];
+                };
+            };
+        };
+    };
+    purchases_confirm_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unique per checkout attempt; a retry with the same key is safe. */
+                "Idempotency-Key": string;
+            };
+            path: {
+                /** @description A unique integer value identifying this purchase. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ConfirmRequest"];
+                "multipart/form-data": components["schemas"]["ConfirmRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Purchase"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Purchase"];
+                };
+            };
+        };
+    };
+    purchases_items_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this purchase. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItemAddRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ItemAddRequest"];
+                "multipart/form-data": components["schemas"]["ItemAddRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Purchase"];
+                };
+            };
+        };
+    };
+    purchases_items_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this purchase. */
+                id: number;
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    purchases_items_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this purchase. */
+                id: number;
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedItemUpdateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedItemUpdateRequest"];
+                "multipart/form-data": components["schemas"]["PatchedItemUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Purchase"];
+                };
+            };
+        };
+    };
+    purchases_me_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Purchase"];
+                };
+            };
+        };
+    };
+    realtime_ticket_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RealtimeTicket"];
+                };
+            };
+        };
+    };
+    rentals_list: {
+        parameters: {
+            query?: {
+                /** @description Which field to use when ordering the results. */
+                ordering?: string;
+                /** @description A page number within the paginated result set. */
+                page?: number;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+                /** @description A search term. */
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedRentalList"];
+                };
+            };
+        };
+    };
+    rentals_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this good. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Rental"];
+                };
+            };
+        };
+    };
+    rentals_availability_list: {
+        parameters: {
+            query: {
+                /** @description Company-local date, YYYY-MM-DD. */
+                date: string;
+                /** @description Which field to use when ordering the results. */
+                ordering?: string;
+                /** @description A page number within the paginated result set. */
+                page?: number;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+                /** @description A search term. */
+                search?: string;
+            };
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this good. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedSlotList"];
+                };
+            };
+        };
+    };
     rfid_assignments_list: {
         parameters: {
             query?: {
@@ -1859,6 +5085,121 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RFIDCardAssignment"];
+                };
+            };
+        };
+    };
+    rfid_buildings_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Building"][];
+                };
+            };
+        };
+    };
+    rfid_buildings_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BuildingRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["BuildingRequest"];
+                "multipart/form-data": components["schemas"]["BuildingRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Building"];
+                };
+            };
+        };
+    };
+    rfid_buildings_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this building. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Building"];
+                };
+            };
+        };
+    };
+    rfid_buildings_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this building. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    rfid_buildings_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this building. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedBuildingRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedBuildingRequest"];
+                "multipart/form-data": components["schemas"]["PatchedBuildingRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Building"];
                 };
             };
         };
@@ -2136,20 +5477,51 @@ export interface operations {
             };
         };
     };
+    rfid_device_heartbeat_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["HeartbeatRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["HeartbeatRequest"];
+                "multipart/form-data": components["schemas"]["HeartbeatRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeviceConfig"];
+                };
+            };
+        };
+    };
     rfid_devices_list: {
         parameters: {
             query?: {
+                building?: number;
                 is_active?: boolean;
+                online?: boolean;
                 /** @description Which field to use when ordering the results. */
                 ordering?: string;
                 /** @description A page number within the paginated result set. */
                 page?: number;
                 /** @description Number of results to return per page. */
                 page_size?: number;
-                /** @description * `ATTENDANCE` - Attendance */
-                purpose?: "ATTENDANCE";
+                /**
+                 * @description * `ATTENDANCE` - Attendance reader
+                 *     * `TILL` - Till card reader (program on a seller's computer)
+                 */
+                purpose?: "ATTENDANCE" | "TILL";
                 /** @description A search term. */
                 search?: string;
+                service_position?: number;
             };
             header?: never;
             path?: never;
@@ -2363,6 +5735,56 @@ export interface operations {
             };
         };
     };
+    rfid_events_batch_create: {
+        parameters: {
+            query?: {
+                card?: number;
+                developer?: number;
+                device?: number;
+                event_after?: string;
+                event_before?: string;
+                /** @description Which field to use when ordering the results. */
+                ordering?: string;
+                /** @description A page number within the paginated result set. */
+                page?: number;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+                /**
+                 * @description * `ACCEPTED` - Accepted
+                 *     * `DUPLICATE` - Duplicate (debounced)
+                 *     * `UNKNOWN_CARD` - Unknown card
+                 *     * `UNASSIGNED_CARD` - Card not assigned
+                 *     * `BLOCKED_CARD` - Card blocked
+                 *     * `RETIRED_CARD` - Card retired
+                 *     * `INACTIVE_DEVELOPER` - Developer not active
+                 */
+                result?: "ACCEPTED" | "BLOCKED_CARD" | "DUPLICATE" | "INACTIVE_DEVELOPER" | "RETIRED_CARD" | "UNASSIGNED_CARD" | "UNKNOWN_CARD";
+                /** @description A search term. */
+                search?: string;
+                uid?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BatchScanRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["BatchScanRequest"];
+                "multipart/form-data": components["schemas"]["BatchScanRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedBatchResultList"];
+                };
+            };
+        };
+    };
     roles_list: {
         parameters: {
             query?: never;
@@ -2399,6 +5821,647 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Role"];
+                };
+            };
+        };
+    };
+    seller_finance_accounts_list: {
+        parameters: {
+            query?: {
+                /** @description Which field to use when ordering the results. */
+                ordering?: string;
+                /** @description A page number within the paginated result set. */
+                page?: number;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+                /** @description A search term. */
+                search?: string;
+                seller?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedSellerAccountList"];
+                };
+            };
+        };
+    };
+    seller_finance_accounts_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this seller account. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SellerAccount"];
+                };
+            };
+        };
+    };
+    seller_finance_accounts_me_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SellerAccount"];
+                };
+            };
+        };
+    };
+    seller_finance_adjustments_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unique per user action (use a UUID). Retries with the same key are safe. */
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SellerAdjustmentRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["SellerAdjustmentRequest"];
+                "multipart/form-data": components["schemas"]["SellerAdjustmentRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SellerTransaction"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SellerTransaction"];
+                };
+            };
+        };
+    };
+    seller_finance_payouts_list: {
+        parameters: {
+            query?: {
+                created_after?: string;
+                created_before?: string;
+                /** @description Which field to use when ordering the results. */
+                ordering?: string;
+                /** @description A page number within the paginated result set. */
+                page?: number;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+                /** @description A search term. */
+                search?: string;
+                seller?: number;
+                /**
+                 * @description * `REQUESTED` - Requested
+                 *     * `APPROVED` - Approved
+                 *     * `PROCESSING` - Processing
+                 *     * `PAID` - Paid
+                 *     * `REJECTED` - Rejected
+                 *     * `CANCELLED` - Cancelled
+                 */
+                status?: "APPROVED" | "CANCELLED" | "PAID" | "PROCESSING" | "REJECTED" | "REQUESTED";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedSellerPaymentList"];
+                };
+            };
+        };
+    };
+    seller_finance_payouts_create: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unique per user action (use a UUID). Retries with the same key are safe. */
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PayoutRequestRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PayoutRequestRequest"];
+                "multipart/form-data": components["schemas"]["PayoutRequestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SellerPayment"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SellerPayment"];
+                };
+            };
+        };
+    };
+    seller_finance_payouts_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this seller payment. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SellerPayment"];
+                };
+            };
+        };
+    };
+    seller_finance_payouts_approve_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this seller payment. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SellerPayment"];
+                };
+            };
+        };
+    };
+    seller_finance_payouts_cancel_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this seller payment. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SellerPayment"];
+                };
+            };
+        };
+    };
+    seller_finance_payouts_pay_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this seller payment. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PayReferenceRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PayReferenceRequest"];
+                "multipart/form-data": components["schemas"]["PayReferenceRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SellerPayment"];
+                };
+            };
+        };
+    };
+    seller_finance_payouts_processing_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this seller payment. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SellerPayment"];
+                };
+            };
+        };
+    };
+    seller_finance_payouts_reject_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this seller payment. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RejectRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["RejectRequest"];
+                "multipart/form-data": components["schemas"]["RejectRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SellerPayment"];
+                };
+            };
+        };
+    };
+    seller_finance_transactions_list: {
+        parameters: {
+            query?: {
+                created_after?: string;
+                created_before?: string;
+                /**
+                 * @description * `SALE` - Sale
+                 *     * `PAYOUT` - Payout
+                 *     * `ADJUSTMENT` - Manual adjustment
+                 */
+                kind?: "ADJUSTMENT" | "PAYOUT" | "SALE";
+                /** @description Which field to use when ordering the results. */
+                ordering?: string;
+                /** @description A page number within the paginated result set. */
+                page?: number;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+                reference?: string;
+                /** @description A search term. */
+                search?: string;
+                seller?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedSellerTransactionList"];
+                };
+            };
+        };
+    };
+    seller_finance_transactions_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this seller transaction. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SellerTransaction"];
+                };
+            };
+        };
+    };
+    sellers_list: {
+        parameters: {
+            query?: {
+                has_user?: boolean;
+                /** @description Which field to use when ordering the results. */
+                ordering?: string;
+                /** @description A page number within the paginated result set. */
+                page?: number;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+                /** @description A search term. */
+                search?: string;
+                /**
+                 * @description * `ACTIVE` - Active
+                 *     * `SUSPENDED` - Suspended
+                 *     * `CLOSED` - Closed
+                 */
+                status?: "ACTIVE" | "CLOSED" | "SUSPENDED";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedSellerList"];
+                };
+            };
+        };
+    };
+    sellers_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SellerRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["SellerRequest"];
+                "multipart/form-data": components["schemas"]["SellerRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Seller"];
+                };
+            };
+        };
+    };
+    sellers_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this seller. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Seller"];
+                };
+            };
+        };
+    };
+    sellers_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this seller. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedSellerRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedSellerRequest"];
+                "multipart/form-data": components["schemas"]["PatchedSellerRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Seller"];
+                };
+            };
+        };
+    };
+    sellers_me_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Seller"];
+                };
+            };
+        };
+    };
+    service_positions_list: {
+        parameters: {
+            query?: {
+                is_active?: boolean;
+                /** @description Which field to use when ordering the results. */
+                ordering?: string;
+                /** @description A page number within the paginated result set. */
+                page?: number;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+                /** @description A search term. */
+                search?: string;
+                seller?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedServicePositionList"];
+                };
+            };
+        };
+    };
+    service_positions_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServicePositionRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ServicePositionRequest"];
+                "multipart/form-data": components["schemas"]["ServicePositionRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServicePosition"];
+                };
+            };
+        };
+    };
+    service_positions_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this service position. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServicePosition"];
+                };
+            };
+        };
+    };
+    service_positions_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this service position. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    service_positions_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this service position. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedServicePositionRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedServicePositionRequest"];
+                "multipart/form-data": components["schemas"]["PatchedServicePositionRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServicePosition"];
                 };
             };
         };

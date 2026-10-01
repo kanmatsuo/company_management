@@ -1,0 +1,89 @@
+import { redirect } from "next/navigation";
+import { createBooking } from "@/app/(console)/mutations";
+import type { components } from "@/api/schema";
+import { Facts } from "@/components/facts";
+import { FieldForm } from "@/components/field-form";
+import { LoadError } from "@/components/no-access";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { show, showTime } from "@/lib/load-all";
+import { loadList, loadOne } from "@/lib/page-data";
+
+type Rental = components["schemas"]["Rental"];
+type Slot = components["schemas"]["Slot"];
+
+export default async function RentalPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ date?: string }>;
+}) {
+  const id = Number((await params).id);
+  if (!Number.isInteger(id)) redirect("/rentals");
+  const query = await searchParams;
+  const today = new Date().toISOString().slice(0, 10);
+  const date = query.date && /^\d{4}-\d{2}-\d{2}$/.test(query.date) ? query.date : today;
+  const loaded = await loadOne<Rental>(`/api/v1/rentals/${id}/`);
+  if (!loaded.value) return <LoadError title="Rental" message={loaded.error ?? "Not found."} />;
+  const rental = loaded.value;
+  const slots = await loadList<Slot>(`/api/v1/rentals/${id}/availability/?date=${date}`);
+  const open = slots.results.filter((slot) => slot.available);
+
+  return (
+    <div className="flex flex-col gap-4 md:gap-6">
+      <div>
+        <h1 className="font-semibold text-2xl tracking-tight">{rental.name}</h1>
+        <p className="text-muted-foreground text-sm">{rental.price} {rental.currency} per {rental.rental.slot_minutes} minutes · {show(rental.location)}</p>
+      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Rules</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Facts
+            items={[
+              { label: "Opens", value: rental.rental.opening_time },
+              { label: "Closes", value: rental.rental.closing_time },
+              { label: "Max slots", value: String(rental.rental.max_slots_per_booking ?? "—") },
+              { label: "Book ahead", value: rental.rental.max_days_ahead ? `${rental.rental.max_days_ahead} days` : "—" },
+              { label: "Seller", value: show(rental.seller?.name) },
+            ]}
+          />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Day</CardTitle>
+          <CardDescription>Only free slots can be booked. Combined slots must be consecutive.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4">
+          <form className="flex items-end gap-2" method="get">
+            <label className="grid gap-1 text-xs text-muted-foreground">
+              Date
+              <Input name="date" type="date" defaultValue={date} />
+            </label>
+            <Button type="submit" variant="outline">Show slots</Button>
+          </form>
+          {slots.error ? <p className="text-destructive text-sm">{slots.error}</p> : null}
+          {open.length === 0 ? <p className="text-muted-foreground text-sm">No free slots on this day.</p> : (
+            <FieldForm
+              action={createBooking}
+              submitLabel="Book and pay"
+              fields={[
+                { name: "good", label: "Rental", type: "hidden", defaultValue: String(rental.id) },
+                { name: "start", label: "First slot", type: "select", required: true, options: open.map((slot) => ({
+                  value: slot.start,
+                  label: `${showTime(slot.start)} – ${showTime(slot.end)}`,
+                })) },
+                { name: "slots", label: "How many slots", type: "number", defaultValue: "1", required: true },
+                { name: "pin", label: "PIN", type: "password", required: true },
+              ]}
+            />
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

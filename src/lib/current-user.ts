@@ -1,7 +1,10 @@
 import { cache } from "react";
 import type { components } from "@/api/schema";
 import { djangoFetch } from "@/lib/django";
+import { can, canManage, canOpen } from "@/lib/permissions";
 import { getAccessToken } from "@/lib/session";
+
+export { can, canManage, canOpen };
 
 export type CurrentUser = components["schemas"]["Me"];
 
@@ -17,6 +20,3 @@ export const getSession = cache(async (): Promise<Session | null> => {
   return { token, user };
 });
 
-export function can(user: CurrentUser, permission: string) {
-  return user.permissions.includes(permission);
-}

@@ -233,6 +233,21 @@ html {
   overscroll-behavior: none;
 }
 
+/* Native menus ignore the page background and keep a light popup, so dark-theme text disappears. */
+select option {
+  background-color: #ffffff;
+  color: #18181b;
+}
+
+.dark select {
+  color-scheme: dark;
+}
+
+.dark select option {
+  background-color: #27272a;
+  color: #fafafa;
+}
+
 html:has([data-landing-page]) {
   view-transition-name: none;
 }

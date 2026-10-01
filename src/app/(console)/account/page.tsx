@@ -1,6 +1,10 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import { changePassword } from "@/app/(console)/mutations";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { FieldForm } from "@/components/field-form";
 import { getSession } from "@/lib/current-user";
 
 export default async function AccountPage() {
@@ -43,6 +47,38 @@ export default async function AccountPage() {
               )}
             </div>
           </div>
+        </CardContent>
+      </Card>
+      <Card className="max-w-2xl">
+        <CardHeader>
+          <CardTitle>Password</CardTitle>
+          <CardDescription>Change the password for this account.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <FieldForm
+            action={changePassword}
+            submitLabel="Update password"
+            fields={[
+              { name: "old_password", label: "Current password", type: "password", required: true },
+              { name: "new_password", label: "New password", type: "password", required: true },
+            ]}
+          />
+        </CardContent>
+      </Card>
+      <Card className="max-w-2xl">
+        <CardHeader>
+          <CardTitle>Your records</CardTitle>
+          <CardDescription>These use the signed-in account. The server returns an error if you have no matching profile.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-wrap gap-2">
+          <Button asChild variant="outline" size="sm"><Link href="/developers/me">My developer profile</Link></Button>
+          <Button asChild variant="outline" size="sm"><Link href="/attendance/me">My attendance</Link></Button>
+          <Button asChild variant="outline" size="sm"><Link href="/attendance/records/me">My attendance records</Link></Button>
+          <Button asChild variant="outline" size="sm"><Link href="/finance/accounts/me">My wallet</Link></Button>
+          <Button asChild variant="outline" size="sm"><Link href="/finance/transactions/me">My transactions</Link></Button>
+          <Button asChild variant="outline" size="sm"><Link href="/purchases/me">My purchases</Link></Button>
+          <Button asChild variant="outline" size="sm"><Link href="/sellers/me">My seller profile</Link></Button>
+          <Button asChild variant="outline" size="sm"><Link href="/seller-finance/accounts/me">My seller balance</Link></Button>
         </CardContent>
       </Card>
     </div>

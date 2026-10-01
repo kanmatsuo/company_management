@@ -44,6 +44,7 @@ export default async function ScansPage({
       error={data.error}
       empty="No scans yet."
       headers={["Time", "UID", "Reader", "Person", "Result"]}
+      hrefs={data.results.map((event) => `/scans/${event.id}`)}
       rows={data.results.map((event) => [
         showTime(event.event_time),
         event.uid,

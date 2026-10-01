@@ -58,18 +58,25 @@ function messageFor(status: number, code: string | null, message: string | undef
 
 export async function djangoFetch<T>(
   path: string,
-  init: RequestInit & { accessToken?: string } = {},
+  init: RequestInit & { accessToken?: string; skipAuthRefresh?: boolean; authorization?: string } = {},
 ): Promise<T> {
   const headers = new Headers(init.headers);
   headers.set("Accept", "application/json");
-  if (init.body && !headers.has("Content-Type")) {
+  if (init.body && !(init.body instanceof FormData) && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
-  if (init.accessToken) {
+  if (init.authorization) {
+    headers.set("Authorization", init.authorization);
+  } else if (init.accessToken) {
     headers.set("Authorization", `Bearer ${init.accessToken}`);
   }
 
-  const { accessToken: _accessToken, ...request } = init;
+  const {
+    accessToken: _accessToken,
+    skipAuthRefresh: _skipAuthRefresh,
+    authorization: _authorization,
+    ...request
+  } = init;
   let response: Response;
   try {
     response = await fetch(`${getApiUrl()}${path}`, {
@@ -98,6 +105,17 @@ export async function djangoFetch<T>(
 
   if (!response.ok) {
     const code = body?.error?.code ?? null;
+    const canRefresh =
+      response.status === 401 &&
+      Boolean(init.accessToken) &&
+      !init.skipAuthRefresh &&
+      code !== "NO_ACTIVE_ACCOUNT";
+    if (canRefresh && (await cookiesMutable())) {
+      const refreshed = await tryRefreshAccess();
+      if (refreshed) {
+        return djangoFetch<T>(path, { ...init, accessToken: refreshed, skipAuthRefresh: true });
+      }
+    }
     const details = asFieldDetails(body?.error?.details);
     let message = messageFor(response.status, code, body?.error?.message);
     if (response.status >= 500 && requestId) {
@@ -107,4 +125,24 @@ export async function djangoFetch<T>(
   }
 
   return (body ?? undefined) as T;
+}
+
+async function cookiesMutable() {
+  try {
+    const { cookies } = await import("next/headers");
+    const jar = await cookies();
+    jar.set("session_probe", "", { httpOnly: true, path: "/", maxAge: 0 });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function tryRefreshAccess() {
+  try {
+    const { refreshStoredSession } = await import("@/lib/refresh-session");
+    return await refreshStoredSession();
+  } catch {
+    return null;
+  }
 }

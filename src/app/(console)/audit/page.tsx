@@ -40,6 +40,7 @@ export default async function AuditPage() {
       error={data.error}
       empty="No audit events yet."
       headers={["When", "Who", "Action", "Record", "Changes"]}
+      hrefs={data.results.map((entry) => `/audit/${entry.id}`)}
       rows={data.results.map((entry) => [
         showTime(entry.created_at),
         show(entry.actor_email),

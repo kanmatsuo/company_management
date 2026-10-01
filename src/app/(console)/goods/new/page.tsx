@@ -1,0 +1,53 @@
+import { createGood } from "@/app/(console)/mutations";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { FieldForm } from "@/components/field-form";
+import { NoAccess } from "@/components/no-access";
+import { canManage } from "@/lib/current-user";
+import { requireSession } from "@/lib/page-data";
+import { positionChoices } from "@/lib/choices";
+
+export default async function NewGoodPage() {
+  const session = await requireSession();
+  if (!canManage(session.user, ["goods", "good", "seller"])) return <NoAccess description="Your account cannot create goods." />;
+  const positions = await positionChoices(session.token);
+  return (
+    <div className="flex flex-col gap-4 md:gap-6">
+      <div>
+        <h1 className="font-semibold text-2xl tracking-tight">New good</h1>
+        <p className="text-muted-foreground text-sm">Stock changes after creation go through the stock action.</p>
+      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Good</CardTitle>
+          <CardDescription>Price is a decimal. The service position decides who sells it.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <FieldForm
+            action={createGood}
+            submitLabel="Create good"
+            fields={[
+              { name: "service_position", label: "Service position", type: "select", required: true, options: positions },
+              { name: "name", label: "Name", required: true },
+              { name: "price", label: "Price", required: true },
+              { name: "kind", label: "Kind", type: "select", options: [
+                { value: "PRODUCT", label: "Product" },
+                { value: "SERVICE", label: "Service" },
+                { value: "RENTAL", label: "Rental" },
+              ], defaultValue: "PRODUCT" },
+              { name: "sku", label: "SKU" },
+              { name: "description", label: "Description", type: "textarea" },
+              { name: "initial_quantity", label: "Initial quantity", type: "number" },
+              { name: "slot_minutes", label: "Rental slot minutes", type: "number" },
+              { name: "opening_time", label: "Rental opens", placeholder: "08:00" },
+              { name: "closing_time", label: "Rental closes", placeholder: "20:00" },
+              { name: "max_slots_per_booking", label: "Max slots per booking", type: "number" },
+              { name: "max_days_ahead", label: "Max days ahead", type: "number" },
+              { name: "is_active", label: "Active", type: "checkbox", defaultValue: "on" },
+              { name: "track_stock", label: "Track stock", type: "checkbox", defaultValue: "on" },
+            ]}
+          />
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
