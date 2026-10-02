@@ -30,3 +30,32 @@ npm run start
 ```
 
 Production copies `.next/standalone`, `.next/static`, and `public/` onto the offline server with a matching Node.js runtime. nginx sends `/api/` to Django and everything else to Next.js. Set `API_URL` in that service environment.
+
+## Offline server
+
+The offline server has no internet, so it receives the full source with everything needed to develop and build: `.git`, a complete `node_modules`, and the Node.js runtime. Fonts live in `src/app/fonts` (no Google Fonts download).
+
+On a machine with internet and the same OS and CPU as the offline server (native binaries in `node_modules` are platform-specific):
+
+```bash
+./scripts/package-offline.sh   # creates dist/management-app-offline.tar.gz
+```
+
+On the offline server:
+
+```bash
+tar -xzf management-app-offline.tar.gz
+sudo tar -xJf node-v*-linux-x64.tar.xz -C /opt
+export PATH=/opt/node-v22.23.3-linux-x64/bin:$PATH   # add to ~/.bashrc
+cd management-app
+```
+
+Create `.env.local` with the local Django origin, for example `API_URL=http://127.0.0.1:8000`. Add the server's address to `allowedDevOrigins` in `next.config.ts` if you open `npm run dev` from another machine.
+
+Then `npm run dev`, `npm run build`, `npm run start`, and `npm run lint` work as usual.
+
+These need internet and do not work offline:
+
+- `npm install <package>`, or upgrading dependencies. Run them on the online machine and package again.
+- `npx shadcn add <component>`, which downloads from the shadcn registry.
+- `npm run generate:api` works only if `API_URL` points at a Django server reachable from the offline server.

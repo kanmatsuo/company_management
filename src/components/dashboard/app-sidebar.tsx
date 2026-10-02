@@ -294,10 +294,10 @@ export function AppSidebar({ user, locale, isSeller = false, isOwner = false, ..
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild size="lg">
+            <SidebarMenuButton asChild size="lg" tooltip={t(locale, "Management")} className="group-data-[collapsible=icon]:justify-center">
               <Link href="/">
                 <LayoutDashboard />
-                <span className="font-semibold text-base">{t(locale, "Management")}</span>
+                <span className="font-semibold text-base group-data-[collapsible=icon]:hidden">{t(locale, "Management")}</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
