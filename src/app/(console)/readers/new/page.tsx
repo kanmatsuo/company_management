@@ -1,4 +1,5 @@
-import Link from "next/link";
+import { Title, Hint } from "@/components/auto-text";
+import Link from "@/components/app-link";
 import { DeviceForm } from "@/app/(console)/readers/device-form";
 import type { components } from "@/api/schema";
 import { Button } from "@/components/ui/button";
@@ -26,8 +27,8 @@ export default async function NewReaderPage() {
     <div className="flex flex-col gap-4 md:gap-6">
       <div className="flex items-end justify-between gap-4">
         <div>
-          <h1 className="font-semibold text-2xl tracking-tight">New device</h1>
-          <p className="text-muted-foreground text-sm">The code must match the ID the hardware sends, such as Door1 or Reader2.</p>
+          <Title>New device</Title>
+          <Hint>The code must match the ID the hardware sends, such as Door1 or Reader2.</Hint>
         </div>
         <Button asChild variant="outline"><Link href="/buildings">Buildings</Link></Button>
       </div>

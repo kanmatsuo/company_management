@@ -9,17 +9,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { show } from "@/lib/load-all";
 import { loadList, loadOne } from "@/lib/page-data";
+import { getLocale } from "@/lib/locale";
 
 type Rental = components["schemas"]["Rental"];
-type Slot = components["schemas"]["Slot"];
-type CourtGood = { service_position: number };
+type Slot = components["schemas"]["Slot"] & { start_time?: string; end_time?: string; state?: string };
 
 export default async function RentalPage({
   params,
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ date?: string }>;
+  searchParams: Promise<{ date?: string; start?: string }>;
 }) {
   const id = Number((await params).id);
   if (!Number.isInteger(id)) redirect("/rentals");
@@ -29,9 +29,9 @@ export default async function RentalPage({
   const loaded = await loadOne<Rental>(`/api/v1/rentals/${id}/`);
   if (!loaded.value) return <LoadError title="Rental" message={loaded.error ?? "Not found."} />;
   const rental = loaded.value;
-  const [slots, court, detected] = await Promise.all([
+  const locale = await getLocale();
+  const [slots, detected] = await Promise.all([
     loadList<Slot>(`/api/v1/rentals/${id}/availability/?date=${date}`),
-    loadOne<CourtGood>(`/api/v1/goods/${id}/`),
     detectedReaders(),
   ]);
 
@@ -61,7 +61,7 @@ export default async function RentalPage({
       <Card>
         <CardHeader>
           <CardTitle>Day</CardTitle>
-          <CardDescription>The developer taps their card on the desk reader, then enters their PIN. Times already taken cannot be selected.</CardDescription>
+          <CardDescription>Pick a free stretch on the slot grid. The developer taps their card on the desk reader, then enters their PIN.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
           <form className="flex items-end gap-2" method="get">
@@ -77,10 +77,12 @@ export default async function RentalPage({
             court={rental.name}
             price={rental.price}
             currency={rental.currency}
-            servicePosition={court.value?.service_position ?? null}
+            date={date}
             maxPerBooking={rental.rental.max_slots_per_booking ?? 1}
             slots={slots.results}
             reader={detected.reader}
+            initialStart={query.start ?? ""}
+            locale={locale}
           />
         </CardContent>
       </Card>

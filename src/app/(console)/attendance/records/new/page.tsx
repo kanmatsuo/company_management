@@ -1,3 +1,4 @@
+import { Title, Hint } from "@/components/auto-text";
 import { createAttendanceRecord } from "@/app/(console)/mutations";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FieldForm } from "@/components/field-form";
@@ -15,8 +16,8 @@ export default async function NewAttendanceRecordPage() {
   return (
     <div className="flex flex-col gap-4 md:gap-6">
       <div>
-        <h1 className="font-semibold text-2xl tracking-tight">Manual attendance</h1>
-        <p className="text-muted-foreground text-sm">Add a missing moment. Choose Out when someone is still counted inside because they never scanned out.</p>
+        <Title>Manual attendance</Title>
+        <Hint>Add a missing moment. Choose Out when someone is still counted inside because they never scanned out.</Hint>
       </div>
       <Card>
         <CardHeader>

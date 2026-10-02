@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/app-link";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import type { components } from "@/api/schema";
 import { parsePageSize, TablePager, type PageSize } from "@/components/table-pager";
@@ -17,6 +17,8 @@ import { Input } from "@/components/ui/input";
 import { DjangoError, djangoFetch } from "@/lib/django";
 import { can, canManage, getSession } from "@/lib/current-user";
 import { listPath, loadAll, one } from "@/lib/load-all";
+import { getLocale } from "@/lib/locale";
+import { t } from "@/lib/i18n";
 import { redirect } from "next/navigation";
 
 type Developer = components["schemas"]["Developer"];
@@ -94,14 +96,15 @@ export default async function DevelopersPage({
     pageSize,
   };
   const session = await getSession();
+  const locale = await getLocale();
   if (!session) redirect("/login");
   const manage = canManage(session.user, ["developer"]);
   if (!can(session.user, "developer.view") && !manage) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>No access</CardTitle>
-          <CardDescription>Your account cannot open developers.</CardDescription>
+          <CardTitle>{t(locale, "No access")}</CardTitle>
+          <CardDescription>{t(locale, "Your account cannot open developers.")}</CardDescription>
         </CardHeader>
       </Card>
     );
@@ -126,70 +129,70 @@ export default async function DevelopersPage({
     developers = loaded.results;
     count = loaded.count;
   } catch (caught) {
-    error = caught instanceof DjangoError ? caught.message : "Could not load developers.";
+    error = caught instanceof DjangoError ? caught.message : t(locale, "Could not load developers.");
   }
 
   return (
     <div className="flex flex-col gap-4 md:gap-6">
       <div className="flex items-end justify-between gap-4">
         <div>
-          <h1 className="font-semibold text-2xl tracking-tight">Developers</h1>
+          <h1 className="font-semibold text-2xl tracking-tight">{t(locale, "Developers")}</h1>
           <p className="text-muted-foreground text-sm">
-            {error ? "The list could not be loaded." : `${count.toLocaleString()} people`}
+            {error ? t(locale, "The list could not be loaded.") : `${count.toLocaleString()} ${t(locale, "people")}`}
           </p>
         </div>
         {manage ? (
           <Button asChild>
-            <Link href="/developers/new">New developer</Link>
+            <Link href="/developers/new">{t(locale, "New developer")}</Link>
           </Button>
         ) : null}
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>All developers</CardTitle>
+          <CardTitle>{t(locale, "All developers")}</CardTitle>
           <CardDescription>
-            Search matches name, employee number, and phone. Address and birthday stay on each person's page. A last working day does not change status or release a card.
+            {t(locale, "Search matches name, employee number, and phone. Address and birthday stay on each person's page. A last working day does not change status or release a card.")}
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
           <form className="flex flex-wrap items-end gap-2" method="get">
             {query.status ? <input type="hidden" name="status" value={query.status} /> : null}
-            <Input name="search" defaultValue={query.search ?? ""} placeholder="Name, number, or phone" className="max-w-xs" />
+            <Input name="search" defaultValue={query.search ?? ""} placeholder={t(locale, "Name, number, or phone")} className="max-w-xs" />
             <select name="birthday_month" defaultValue={query.birthday_month ?? ""} className="h-8 rounded-lg border border-input bg-transparent px-2 text-sm">
-              <option value="">Any birthday month</option>
+              <option value="">{t(locale, "Any birthday month")}</option>
               {MONTHS.map((month, index) => (
-                <option key={month} value={String(index + 1)}>{month}</option>
+                <option key={month} value={String(index + 1)}>{t(locale, month)}</option>
               ))}
             </select>
             <label className="grid gap-1 text-xs text-muted-foreground">
-              Left after
+              {t(locale, "Left after")}
               <Input name="out_after" type="date" defaultValue={query.out_after ?? ""} />
             </label>
             <label className="grid gap-1 text-xs text-muted-foreground">
-              Left before
+              {t(locale, "Left before")}
               <Input name="out_before" type="date" defaultValue={query.out_before ?? ""} />
             </label>
             {ordering !== "full_name" ? <input type="hidden" name="ordering" value={ordering} /> : null}
             {pageSize !== 20 ? <input type="hidden" name="page_size" value={String(pageSize)} /> : null}
-            <Button type="submit" variant="outline">Apply</Button>
+            <Button type="submit" variant="outline">{t(locale, "Apply")}</Button>
           </form>
           {error ? (
             <p className="text-destructive text-sm">{error}</p>
           ) : developers.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No developers yet.</p>
+            <p className="text-muted-foreground text-sm">{t(locale, "No developers yet.")}</p>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <SortHead label="Name" field="full_name" query={query} />
-                  <SortHead label="Number" field="employee_number" query={query} />
-                  <TableHead>Phone</TableHead>
-                  <SortHead label="Department" field="department" query={query} />
-                  <TableHead>Title</TableHead>
-                  <TableHead>Manager</TableHead>
-                  <TableHead>Status</TableHead>
-                  <SortHead label="Started" field="start_date" query={query} />
-                  <SortHead label="Last day" field="out_date" query={query} />
+                  <SortHead label={t(locale, "Name")} field="full_name" query={query} />
+                  <SortHead label={t(locale, "Number")} field="employee_number" query={query} />
+                  <TableHead>{t(locale, "Phone")}</TableHead>
+                  <SortHead label={t(locale, "Department")} field="department" query={query} />
+                  <TableHead>{t(locale, "Title")}</TableHead>
+                  <TableHead>{t(locale, "Manager")}</TableHead>
+                  <TableHead>{t(locale, "Status")}</TableHead>
+                  <SortHead label={t(locale, "Started")} field="start_date" query={query} />
+                  <SortHead label={t(locale, "Last day")} field="out_date" query={query} />
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -207,7 +210,7 @@ export default async function DevelopersPage({
                     <TableCell>{developer.manager_detail?.full_name || "—"}</TableCell>
                     <TableCell>
                       <Badge variant={developer.status === "ACTIVE" ? "secondary" : "outline"}>
-                        {STATUS_LABEL[developer.status ?? ""] ?? developer.status ?? "—"}
+                        {t(locale, STATUS_LABEL[developer.status ?? ""] ?? developer.status ?? "—")}
                       </Badge>
                     </TableCell>
                     <TableCell>{developer.start_date || "—"}</TableCell>
@@ -223,6 +226,7 @@ export default async function DevelopersPage({
             pageSize={pageSize}
             hrefForPage={(nextPage) => developersHref({ ...query, page: nextPage })}
             hrefForSize={(size) => developersHref({ ...query, pageSize: size, page: 1 })}
+            locale={locale}
           />
         </CardContent>
       </Card>

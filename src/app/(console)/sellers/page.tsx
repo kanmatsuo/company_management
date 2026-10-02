@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/app-link";
 import type { components } from "@/api/schema";
 import { Button } from "@/components/ui/button";
 import { RecordList } from "@/components/record-list";
@@ -6,7 +6,7 @@ import { canManage, getSession } from "@/lib/current-user";
 import { show } from "@/lib/load-all";
 import { loadList } from "@/lib/page-data";
 
-type Seller = components["schemas"]["Seller"];
+type Seller = components["schemas"]["Seller"] & { user_email?: string | null };
 
 export default async function SellersPage() {
   const session = await getSession();
@@ -20,9 +20,9 @@ export default async function SellersPage() {
       error={data.error}
       empty="No sellers yet."
       extra={manage ? <Button asChild><Link href="/sellers/new">New seller</Link></Button> : null}
-      headers={["Name", "Contact", "Email", "Phone", "Status"]}
+      headers={["Name", "Store login", "Contact", "Email", "Phone", "Status"]}
       hrefs={data.results.map((seller) => `/sellers/${seller.id}`)}
-      rows={data.results.map((seller) => [seller.name, show(seller.contact_name), show(seller.email), show(seller.phone), show(seller.status)])}
+      rows={data.results.map((seller) => [seller.name, show(seller.user_email), show(seller.contact_name), show(seller.email), show(seller.phone), show(seller.status)])}
     />
   );
 }

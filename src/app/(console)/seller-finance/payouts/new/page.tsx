@@ -1,3 +1,4 @@
+import { Title, Hint } from "@/components/auto-text";
 import { requestPayout } from "@/app/(console)/mutations";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FieldForm } from "@/components/field-form";
@@ -10,8 +11,8 @@ export default async function NewPayoutPage() {
   return (
     <div className="flex flex-col gap-4 md:gap-6">
       <div>
-        <h1 className="font-semibold text-2xl tracking-tight">Request payout</h1>
-        <p className="text-muted-foreground text-sm">The amount cannot exceed the available balance. Leave the seller empty to use your own seller.</p>
+        <Title>Request payout</Title>
+        <Hint>The amount cannot exceed the available balance. Leave the seller empty to use your own seller.</Hint>
       </div>
       <Card>
         <CardHeader>

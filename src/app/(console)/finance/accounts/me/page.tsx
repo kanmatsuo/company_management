@@ -1,3 +1,4 @@
+import { Title } from "@/components/auto-text";
 import { setMyPin } from "@/app/(console)/mutations";
 import type { components } from "@/api/schema";
 import { Facts } from "@/components/facts";
@@ -16,7 +17,7 @@ export default async function MyWalletPage() {
   return (
     <div className="flex flex-col gap-4 md:gap-6">
       <div>
-        <h1 className="font-semibold text-2xl tracking-tight">My wallet</h1>
+        <Title>My wallet</Title>
         <p className="text-muted-foreground text-sm">{account.balance} {account.currency} · {account.status}</p>
       </div>
       <Card>

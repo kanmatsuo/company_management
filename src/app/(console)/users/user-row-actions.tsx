@@ -1,21 +1,25 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/app-link";
 import { useActionState, useState } from "react";
 import { Pencil, Trash2, UserX } from "lucide-react";
 import { deactivateUser, deleteUser, type FormState } from "@/app/(console)/users/actions";
 import { Button } from "@/components/ui/button";
+import type { Locale } from "@/lib/i18n";
+import { t } from "@/lib/i18n";
 
 export function UserRowActions({
   id,
   active,
   nextPath,
   showEdit = true,
+  locale = "en",
 }: {
   id: number;
   active: boolean;
   nextPath: string;
   showEdit?: boolean;
+  locale?: Locale;
 }) {
   const deactivate = deactivateUser.bind(null, id, nextPath);
   const remove = deleteUser.bind(null, id);
@@ -28,7 +32,7 @@ export function UserRowActions({
     <div className="flex flex-wrap items-center justify-end gap-1">
       {showEdit ? (
         <Button asChild size="icon-sm" variant="outline">
-          <Link href={`/users/${id}`} aria-label="Edit">
+          <Link href={`/users/${id}`} aria-label={t(locale, "Edit")}>
             <Pencil />
           </Link>
         </Button>
@@ -39,20 +43,20 @@ export function UserRowActions({
           size="icon-sm"
           variant="outline"
           disabled={deactivating || !active}
-          aria-label={active ? "Deactivate" : "Already inactive"}
-          title={active ? "Deactivate" : "Already inactive"}
+          aria-label={active ? t(locale, "Deactivate") : t(locale, "Already inactive")}
+          title={active ? t(locale, "Deactivate") : t(locale, "Already inactive")}
         >
           <UserX />
         </Button>
       </form>
       {confirming ? (
         <form action={deleteAction} className="flex items-center gap-1">
-          <span className="text-muted-foreground text-xs">Delete permanently?</span>
+          <span className="text-muted-foreground text-xs">{t(locale, "Delete permanently?")}</span>
           <Button type="button" size="sm" variant="outline" onClick={() => setConfirming(false)}>
-            Cancel
+            {t(locale, "Cancel")}
           </Button>
           <Button type="submit" size="sm" variant="destructive" disabled={deleting}>
-            Delete
+            {t(locale, "Delete")}
           </Button>
         </form>
       ) : (
@@ -60,8 +64,8 @@ export function UserRowActions({
           type="button"
           size="icon-sm"
           variant="outline"
-          aria-label="Delete"
-          title="Delete permanently"
+          aria-label={t(locale, "Delete")}
+          title={t(locale, "Delete permanently")}
           onClick={() => setConfirming(true)}
         >
           <Trash2 />

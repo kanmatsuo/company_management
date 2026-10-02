@@ -1,3 +1,4 @@
+import { AutoText } from "@/components/auto-text";
 import { redirect } from "next/navigation";
 import { addPurchaseItem, cancelPurchase, deletePurchaseItem, updatePurchaseItem } from "@/app/(console)/mutations";
 import { PurchaseReader } from "@/app/(console)/purchases/purchase-reader";
@@ -7,14 +8,15 @@ import { FieldForm } from "@/components/field-form";
 import { LoadError } from "@/components/no-access";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { canManage } from "@/lib/current-user";
+import { canManage, runsStore } from "@/lib/current-user";
 import { getApiUrl } from "@/lib/env";
 import { show, showTime } from "@/lib/load-all";
 import { loadOne } from "@/lib/page-data";
 import { goodChoices } from "@/lib/choices";
 import { Checkout } from "@/app/(console)/purchases/checkout";
+import { getLocale } from "@/lib/locale";
 
-type Purchase = components["schemas"]["Purchase"];
+type Purchase = components["schemas"]["Purchase"] & { kind?: string };
 
 export default async function PurchasePage({ params }: { params: Promise<{ id: string }> }) {
   const id = Number((await params).id);
@@ -23,7 +25,8 @@ export default async function PurchasePage({ params }: { params: Promise<{ id: s
   if (!loaded.value) return <LoadError title="Purchase" message={loaded.error ?? "Not found."} />;
   const purchase = loaded.value;
   const draft = purchase.status === "DRAFT";
-  const manage = canManage(loaded.session.user, ["purchase", "seller"]);
+  const booking = purchase.kind === "BOOKING";
+  const manage = canManage(loaded.session.user, ["purchase", "seller"]) || await runsStore();
   const goods = draft && manage ? await goodChoices(loaded.session.token, purchase.service_position) : [];
   const presented = purchase.presented_card as {
     developer?: { id?: number; full_name?: string; employee_number?: string; department?: string } | null;
@@ -31,10 +34,11 @@ export default async function PurchasePage({ params }: { params: Promise<{ id: s
     expires_at?: string;
   } | null;
   const socketBase = getApiUrl().replace(/^http/, "ws");
+  const locale = await getLocale();
   return (
     <div className="flex flex-col gap-4 md:gap-6">
       <div>
-        <h1 className="font-semibold text-2xl tracking-tight">Purchase {purchase.id}</h1>
+        <h1 className="font-semibold text-2xl tracking-tight"><AutoText>{booking ? "Booking" : "Purchase"}</AutoText> {purchase.id}</h1>
         <p className="text-muted-foreground text-sm">
           {purchase.status} · {purchase.total} {purchase.currency}
           {!draft && purchase.developer?.full_name ? ` · ${purchase.developer.full_name}` : ""}
@@ -65,7 +69,7 @@ export default async function PurchasePage({ params }: { params: Promise<{ id: s
           <CardTitle>Items</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4">
-          {purchase.items.length === 0 ? <p className="text-muted-foreground text-sm">No items yet.</p> : (
+          {purchase.items.length === 0 ? <p className="text-muted-foreground text-sm"><AutoText>No items yet.</AutoText></p> : (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -86,7 +90,7 @@ export default async function PurchasePage({ params }: { params: Promise<{ id: s
                     <TableCell>{item.quantity}</TableCell>
                     <TableCell>{item.unit_price}</TableCell>
                     <TableCell>{item.line_total}</TableCell>
-                    {draft && manage ? (
+                    {draft && manage && !booking ? (
                       <TableCell className="w-56">
                         <FieldForm
                           action={updatePurchaseItem.bind(null, purchase.id, item.id)}
@@ -103,7 +107,7 @@ export default async function PurchasePage({ params }: { params: Promise<{ id: s
               </TableBody>
             </Table>
           )}
-          {draft && manage ? (
+          {draft && manage && !booking ? (
             <FieldForm
               action={addPurchaseItem.bind(null, purchase.id)}
               submitLabel="Add item"
@@ -127,6 +131,8 @@ export default async function PurchasePage({ params }: { params: Promise<{ id: s
             currency={purchase.currency}
             presented={presented}
             simulator={process.env.TAP_SIMULATOR === "true"}
+            verb={booking ? "book" : "buy"}
+            locale={locale}
           />
           <Card>
             <CardHeader>

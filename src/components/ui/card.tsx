@@ -1,5 +1,6 @@
 import * as React from "react"
 import { cn } from "cn"
+import { AutoText } from "@/components/auto-text"
 
 function Card({
   className,
@@ -32,7 +33,7 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
+function CardTitle({ className, children, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-title"
@@ -41,17 +42,21 @@ function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
         className
       )}
       {...props}
-    />
+    >
+      <AutoText>{children}</AutoText>
+    </div>
   )
 }
 
-function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
+function CardDescription({ className, children, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-description"
       className={cn("text-sm text-muted-foreground", className)}
       {...props}
-    />
+    >
+      <AutoText>{children}</AutoText>
+    </div>
   )
 }
 

@@ -1,3 +1,4 @@
+import { Title } from "@/components/auto-text";
 import type { components } from "@/api/schema";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable } from "@/components/data-table";
@@ -32,7 +33,7 @@ export default async function RolesPage() {
   return (
     <div className="flex flex-col gap-4 md:gap-6">
       <div>
-        <h1 className="font-semibold text-2xl tracking-tight">Roles</h1>
+        <Title>Roles</Title>
         <p className="text-muted-foreground text-sm">{roles.length} roles</p>
       </div>
       <Card>

@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import type { Locale } from "@/lib/i18n";
+import { t } from "@/lib/i18n";
 
 type FieldErrors = Record<string, string[]>;
 
-export function LoginForm({ notice }: { notice?: string }) {
+export function LoginForm({ notice, locale }: { notice?: string; locale: Locale }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -32,14 +34,14 @@ export function LoginForm({ notice }: { notice?: string }) {
         details?: FieldErrors;
       } | null;
       if (!response.ok) {
-        setMessage(body?.message || "Could not sign in.");
+        setMessage(body?.message || t(locale, "Could not sign in."));
         setFields(body?.details ?? {});
         return;
       }
       router.push("/");
       router.refresh();
     } catch {
-      setMessage("Could not reach the app.");
+      setMessage(t(locale, "Could not reach the app."));
     } finally {
       setPending(false);
     }
@@ -49,7 +51,7 @@ export function LoginForm({ notice }: { notice?: string }) {
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
       {message ? <p className="text-destructive text-sm">{message}</p> : null}
       <div className="grid gap-1.5">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email">{t(locale, "Email")}</Label>
         <Input
           id="email"
           name="email"
@@ -67,7 +69,7 @@ export function LoginForm({ notice }: { notice?: string }) {
         ))}
       </div>
       <div className="grid gap-1.5">
-        <Label htmlFor="password">Password</Label>
+        <Label htmlFor="password">{t(locale, "Password")}</Label>
         <Input
           id="password"
           name="password"
@@ -84,7 +86,7 @@ export function LoginForm({ notice }: { notice?: string }) {
         ))}
       </div>
       <Button className="w-full" type="submit" disabled={pending}>
-        {pending ? "Signing in…" : "Login"}
+        {pending ? t(locale, "Signing in…") : t(locale, "Login")}
       </Button>
     </form>
   );

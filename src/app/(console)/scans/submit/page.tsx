@@ -1,3 +1,4 @@
+import { Title, Hint } from "@/components/auto-text";
 import { submitScan } from "@/app/(console)/mutations";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FieldForm } from "@/components/field-form";
@@ -11,8 +12,8 @@ export default async function SubmitScanPage() {
   return (
     <div className="flex flex-col gap-4 md:gap-6">
       <div>
-        <h1 className="font-semibold text-2xl tracking-tight">Submit scan</h1>
-        <p className="text-muted-foreground text-sm">Readers send scans with their own key, not a user session.</p>
+        <Title>Submit scan</Title>
+        <Hint>Readers send scans with their own key, not a user session.</Hint>
       </div>
       <Card>
         <CardHeader>

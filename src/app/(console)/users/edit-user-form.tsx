@@ -1,5 +1,7 @@
 "use client";
 
+import { AutoText } from "@/components/auto-text";
+
 import { useActionState } from "react";
 import { assignRole, removeRole, updateUser, type FormState } from "@/app/(console)/users/actions";
 import { Button } from "@/components/ui/button";
@@ -56,7 +58,7 @@ export function RoleForm({
   return (
     <div className="grid gap-4">
       <div className="flex flex-wrap gap-2">
-        {current.length === 0 ? <p className="text-muted-foreground text-sm">No roles.</p> : null}
+        {current.length === 0 ? <p className="text-muted-foreground text-sm"><AutoText>No roles.</AutoText></p> : null}
         {current.map((code) => (
           <form key={code} action={removeRole.bind(null, id, code)}>
             <Button type="submit" size="sm" variant="outline">

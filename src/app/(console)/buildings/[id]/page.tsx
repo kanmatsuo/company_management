@@ -5,9 +5,10 @@ import { FieldForm } from "@/components/field-form";
 import { LoadError, NoAccess } from "@/components/no-access";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { can, canManage } from "@/lib/current-user";
+import { roleUserChoices } from "@/lib/choices";
 import { loadOne } from "@/lib/page-data";
 
-type Building = components["schemas"]["Building"];
+type Building = components["schemas"]["Building"] & { managers?: number[]; owners?: number[] };
 
 export default async function BuildingPage({ params }: { params: Promise<{ id: string }> }) {
   const id = Number((await params).id);
@@ -16,6 +17,13 @@ export default async function BuildingPage({ params }: { params: Promise<{ id: s
   if (!loaded.value) return <LoadError title="Building" message={loaded.error ?? "Not found."} />;
   const building = loaded.value;
   const manage = can(loaded.session.user, "rfid.device.manage") || canManage(loaded.session.user, ["rfid"]);
+  const assignPeople = can(loaded.session.user, "user.manage") || can(loaded.session.user, "role.assign");
+  const [owners, managers] = assignPeople
+    ? await Promise.all([
+        roleUserChoices(loaded.session.token, "BUILDING_OWNER"),
+        roleUserChoices(loaded.session.token, "BUILDING_MANAGER"),
+      ])
+    : [[], []];
   if (!manage && !can(loaded.session.user, "rfid.view")) {
     return <NoAccess description="Your account cannot open buildings." />;
   }
@@ -38,6 +46,12 @@ export default async function BuildingPage({ params }: { params: Promise<{ id: s
                 fields={[
                   { name: "code", label: "Code", required: true, defaultValue: building.code },
                   { name: "name", label: "Name", required: true, defaultValue: building.name },
+                  ...(assignPeople
+                    ? [
+                        { name: "owners", label: "Owners", type: "users" as const, options: owners, defaultValue: (building.owners ?? []).join(",") },
+                        { name: "managers", label: "Managers", type: "users" as const, options: managers, defaultValue: (building.managers ?? []).join(",") },
+                      ]
+                    : []),
                 ]}
               />
             </CardContent>

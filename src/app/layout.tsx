@@ -4,6 +4,7 @@ import { fontVariables } from "@/app/fonts";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeBootScript } from "@/components/theme-boot";
 import { parsePreference } from "@/lib/preferences/preferences-config";
+import { getLocale } from "@/lib/locale";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -13,6 +14,7 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const jar = await cookies();
+  const locale = await getLocale();
   const preferences = {
     theme_mode: parsePreference("theme_mode", jar.get("theme_mode")?.value),
     content_layout: parsePreference("content_layout", jar.get("content_layout")?.value),
@@ -22,7 +24,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   };
   return (
     <html
-      lang="en"
+      lang={locale}
       className={`${fontVariables} h-full antialiased${preferences.theme_mode === "dark" ? " dark" : ""}`}
       data-theme-mode={preferences.theme_mode}
       data-content-layout={preferences.content_layout}

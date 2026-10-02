@@ -1,3 +1,4 @@
+import { AutoText } from "@/components/auto-text";
 import type { components } from "@/api/schema";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable } from "@/components/data-table";
@@ -64,7 +65,7 @@ export default async function BuildingPeoplePage({ params }: { params: Promise<{
         </CardHeader>
         <CardContent>
           {inside.length === 0 ? (
-            <p className="text-muted-foreground text-sm">Nobody is in.</p>
+            <p className="text-muted-foreground text-sm"><AutoText>Nobody is in.</AutoText></p>
           ) : (
             <DataTable
               headers={id === "all" ? ["Person", "Department", "Building"] : ["Person", "Department"]}
@@ -85,7 +86,7 @@ export default async function BuildingPeoplePage({ params }: { params: Promise<{
         </CardHeader>
         <CardContent>
           {outside.length === 0 ? (
-            <p className="text-muted-foreground text-sm">Nobody is out.</p>
+            <p className="text-muted-foreground text-sm"><AutoText>Nobody is out.</AutoText></p>
           ) : (
             <DataTable
               headers={["Person", "Department"]}

@@ -8,9 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { canManage } from "@/lib/current-user";
 import { show, showTime } from "@/lib/load-all";
 import { loadOne } from "@/lib/page-data";
-import { developerChoices, userChoices } from "@/lib/choices";
+import { buildingChoices, developerChoices, userChoices } from "@/lib/choices";
 
-type Developer = components["schemas"]["Developer"];
+type Developer = components["schemas"]["Developer"] & { building?: number | null; building_name?: string | null };
 
 const STATUS = [
   { value: "ACTIVE", label: "Active" },
@@ -26,9 +26,13 @@ export default async function DeveloperDetailPage({ params }: { params: Promise<
   if (!loaded.value) return <LoadError title="Developer" message={loaded.error ?? "Not found."} />;
   const developer = loaded.value;
   const manage = canManage(loaded.session.user, ["developer"]);
-  const [managers, users] = manage
-    ? await Promise.all([developerChoices(loaded.session.token), userChoices(loaded.session.token)])
-    : [[], []];
+  const [managers, users, buildings] = manage
+    ? await Promise.all([
+        developerChoices(loaded.session.token),
+        userChoices(loaded.session.token),
+        buildingChoices(loaded.session.token),
+      ])
+    : [[], [], []];
 
   return (
     <div className="flex flex-col gap-4 md:gap-6">
@@ -56,6 +60,7 @@ export default async function DeveloperDetailPage({ params }: { params: Promise<
                 { name: "birthday", label: "Birthday", type: "date", defaultValue: developer.birthday ?? "" },
                 { name: "department", label: "Department", defaultValue: developer.department ?? "" },
                 { name: "position_title", label: "Title", defaultValue: developer.position_title ?? "" },
+                { name: "building", label: "Home building", type: "select", options: buildings, defaultValue: developer.building ? String(developer.building) : "" },
                 { name: "manager", label: "Manager", type: "select", options: managers, defaultValue: developer.manager ? String(developer.manager) : "" },
                 { name: "user", label: "Linked user", type: "select", options: users, defaultValue: developer.user ? String(developer.user) : "" },
                 { name: "start_date", label: "Start date", type: "date", defaultValue: developer.start_date ?? "" },
@@ -71,6 +76,7 @@ export default async function DeveloperDetailPage({ params }: { params: Promise<
                 { label: "Birthday", value: show(developer.birthday) },
                 { label: "Department", value: show(developer.department) },
                 { label: "Title", value: show(developer.position_title) },
+                { label: "Home building", value: show(developer.building_name) },
                 { label: "Manager", value: show(developer.manager_detail?.full_name) },
                 { label: "Status", value: show(developer.status) },
                 { label: "Started", value: show(developer.start_date) },

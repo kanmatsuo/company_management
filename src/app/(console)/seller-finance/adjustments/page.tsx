@@ -1,3 +1,4 @@
+import { Title, Hint } from "@/components/auto-text";
 import { adjustSeller } from "@/app/(console)/mutations";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FieldForm } from "@/components/field-form";
@@ -13,8 +14,8 @@ export default async function SellerAdjustmentPage() {
   return (
     <div className="flex flex-col gap-4 md:gap-6">
       <div>
-        <h1 className="font-semibold text-2xl tracking-tight">Seller adjustment</h1>
-        <p className="text-muted-foreground text-sm">A debit cannot use money already reserved by open payouts.</p>
+        <Title>Seller adjustment</Title>
+        <Hint>A debit cannot use money already reserved by open payouts.</Hint>
       </div>
       <Card>
         <CardHeader>

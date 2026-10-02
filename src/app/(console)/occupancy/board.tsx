@@ -4,6 +4,8 @@ import { useEffect, useState, useTransition } from "react";
 import type { components } from "@/api/schema";
 import { refreshOccupancy } from "@/app/(console)/occupancy/actions";
 import { BuildingBars } from "@/components/building-bars";
+import { useLocale } from "@/components/locale-context";
+import { t } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -45,6 +47,7 @@ export function OccupancyBoard({
   const [live, setLive] = useState("Connecting");
   const [refreshError, setRefreshError] = useState("");
   const [refreshing, startRefresh] = useTransition();
+  const locale = useLocale();
 
   function applyOccupancy(next: Occupancy | null, error: string | null) {
     if (next) {
@@ -128,21 +131,23 @@ export function OccupancyBoard({
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-muted-foreground text-sm">
-          {live === "Live" ? "Live · counts update as doors scan" : `${live} · counts reload every 10 seconds`}
+          {live === "Live"
+            ? t(locale, "Live · counts update as doors scan")
+            : `${t(locale, live)} · ${t(locale, "counts reload every 10 seconds")}`}
           {occupancy.as_of ? <LocalTime value={occupancy.as_of} /> : null}
           {refreshError ? ` · ${refreshError}` : ""}
         </p>
         <Button type="button" variant="outline" size="sm" disabled={refreshing} onClick={reload}>
-          {refreshing ? "Refreshing" : "Refresh"}
+          {refreshing ? t(locale, "Refreshing") : t(locale, "Refresh")}
         </Button>
       </div>
       <BuildingBars occupancy={occupancy} staff={staff} />
       <Card>
         <CardHeader>
-          <CardTitle>Door scans</CardTitle>
+          <CardTitle>{t(locale, "Door scans")}</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-2">
-          {scans.length === 0 ? <p className="text-muted-foreground text-sm">Waiting for the next door scan.</p> : null}
+          {scans.length === 0 ? <p className="text-muted-foreground text-sm">{t(locale, "Waiting for the next door scan.")}</p> : null}
           {scans.map((scan) => (
             <p key={scan.id} className={scan.accepted ? "text-sm" : "text-destructive text-sm"}>
               {scan.device_code}

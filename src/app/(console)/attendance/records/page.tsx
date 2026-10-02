@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/app-link";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import type { components } from "@/api/schema";
 import { parsePageSize, TablePager } from "@/components/table-pager";
@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/table";
 import { ClockTime } from "@/app/(console)/attendance/records/clock-time";
 import { can, canManage, canOpen, getSession } from "@/lib/current-user";
+import { getLocale } from "@/lib/locale";
+import { t } from "@/lib/i18n";
 import { DjangoError, djangoFetch } from "@/lib/django";
 import { listPath, loadAll, one, show } from "@/lib/load-all";
 import { redirect } from "next/navigation";
@@ -86,14 +88,15 @@ export default async function AttendanceRecordsPage({
     pageSize,
   };
   const session = await getSession();
+  const locale = await getLocale();
   if (!session) redirect("/login");
   const manage = canManage(session.user, ["attendance"]);
   if (!can(session.user, "attendance.view") && !canOpen(session.user, "attendance.view") && !manage) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>No access</CardTitle>
-          <CardDescription>Your account cannot open the scan log.</CardDescription>
+          <CardTitle>{t(locale, "No access")}</CardTitle>
+          <CardDescription>{t(locale, "Your account cannot open the scan log.")}</CardDescription>
         </CardHeader>
       </Card>
     );
@@ -118,7 +121,7 @@ export default async function AttendanceRecordsPage({
     records = loaded.results;
     count = loaded.count;
   } catch (caught) {
-    error = caught instanceof DjangoError ? caught.message : "Could not load the scan log.";
+    error = caught instanceof DjangoError ? caught.message : t(locale, "Could not load the scan log.");
   }
 
   const pages = pageSize === "all" ? 1 : Math.max(1, Math.ceil(count / pageSize));
@@ -127,62 +130,62 @@ export default async function AttendanceRecordsPage({
     <div className="flex flex-col gap-4 md:gap-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-semibold text-2xl tracking-tight">Scan log</h1>
-          <p className="text-muted-foreground text-sm">{error ? "The list could not be loaded." : `${count.toLocaleString()} scans`}</p>
+          <h1 className="font-semibold text-2xl tracking-tight">{t(locale, "Scan log")}</h1>
+          <p className="text-muted-foreground text-sm">{error ? t(locale, "The list could not be loaded.") : `${count.toLocaleString()} ${t(locale, "scans")}`}</p>
         </div>
         {manage ? (
           <Button asChild>
-            <Link href="/attendance/records/new">Manual record</Link>
+            <Link href="/attendance/records/new">{t(locale, "Manual record")}</Link>
           </Button>
         ) : null}
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>Scans</CardTitle>
-          <CardDescription>Search matches a person's name or employee number. Voided rows stay in the list.</CardDescription>
+          <CardTitle>{t(locale, "Scans")}</CardTitle>
+          <CardDescription>{t(locale, "Search matches a person's name or employee number. Voided rows stay in the list.")}</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
           <form className="flex flex-wrap items-end gap-2" method="get">
-            <Input name="search" defaultValue={query.search ?? ""} placeholder="Name or employee number" className="max-w-xs" />
+            <Input name="search" defaultValue={query.search ?? ""} placeholder={t(locale, "Name or employee number")} className="max-w-xs" />
             <select name="event_type" defaultValue={query.event_type ?? ""} className="h-8 rounded-lg border border-input bg-transparent px-2 text-sm">
-              <option value="">Any type</option>
-              <option value="IN">In</option>
-              <option value="OUT">Out</option>
-              <option value="SCAN">Scan</option>
+              <option value="">{t(locale, "Any type")}</option>
+              <option value="IN">{t(locale, "In")}</option>
+              <option value="OUT">{t(locale, "Out")}</option>
+              <option value="SCAN">{t(locale, "Scan")}</option>
             </select>
             <select name="source" defaultValue={query.source ?? ""} className="h-8 rounded-lg border border-input bg-transparent px-2 text-sm">
-              <option value="">Any source</option>
-              <option value="RFID">Door scan</option>
-              <option value="MANUAL">Manual</option>
+              <option value="">{t(locale, "Any source")}</option>
+              <option value="RFID">{t(locale, "Door scan")}</option>
+              <option value="MANUAL">{t(locale, "Manual")}</option>
             </select>
             <label className="grid gap-1 text-xs text-muted-foreground">
-              From
+              {t(locale, "From")}
               <Input name="date_from" type="date" defaultValue={query.date_from ?? ""} />
             </label>
             <label className="grid gap-1 text-xs text-muted-foreground">
-              To
+              {t(locale, "To")}
               <Input name="date_to" type="date" defaultValue={query.date_to ?? ""} />
             </label>
             {ordering !== "-event_time" ? <input type="hidden" name="ordering" value={ordering} /> : null}
             {pageSize !== 20 ? <input type="hidden" name="page_size" value={String(pageSize)} /> : null}
-            <Button type="submit" variant="outline">Apply</Button>
+            <Button type="submit" variant="outline">{t(locale, "Apply")}</Button>
           </form>
           {error ? (
             <p className="text-destructive text-sm">{error}</p>
           ) : records.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No scans match this list.</p>
+            <p className="text-muted-foreground text-sm">{t(locale, "No scans match this list.")}</p>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <SortHead label="Time" field="event_time" query={query} />
-                  <SortHead label="Date" field="work_date" query={query} />
-                  <TableHead>Person</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Source</TableHead>
-                  <TableHead>Device</TableHead>
-                  <TableHead>Void</TableHead>
-                  <TableHead>Note</TableHead>
+                  <SortHead label={t(locale, "Time")} field="event_time" query={query} />
+                  <SortHead label={t(locale, "Date")} field="work_date" query={query} />
+                  <TableHead>{t(locale, "Person")}</TableHead>
+                  <TableHead>{t(locale, "Type")}</TableHead>
+                  <TableHead>{t(locale, "Source")}</TableHead>
+                  <TableHead>{t(locale, "Device")}</TableHead>
+                  <TableHead>{t(locale, "Void")}</TableHead>
+                  <TableHead>{t(locale, "Note")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -196,11 +199,11 @@ export default async function AttendanceRecordsPage({
                     <TableCell>{record.work_date}</TableCell>
                     <TableCell>{show(record.developer?.full_name)}</TableCell>
                     <TableCell>
-                      <Badge variant="secondary">{record.event_type}</Badge>
+                      <Badge variant="secondary">{t(locale, record.event_type === "IN" ? "In" : record.event_type === "OUT" ? "Out" : record.event_type === "SCAN" ? "Scan" : record.event_type)}</Badge>
                     </TableCell>
-                    <TableCell>{record.source}</TableCell>
+                    <TableCell>{record.source === "RFID" ? t(locale, "Door scan") : record.source === "MANUAL" ? t(locale, "Manual") : record.source}</TableCell>
                     <TableCell>{show(record.device_code)}</TableCell>
-                    <TableCell>{record.is_void ? `Yes${record.void_reason ? `: ${record.void_reason}` : ""}` : "No"}</TableCell>
+                    <TableCell>{record.is_void ? `${t(locale, "Yes")}${record.void_reason ? `: ${record.void_reason}` : ""}` : t(locale, "No")}</TableCell>
                     <TableCell>{show(record.note)}</TableCell>
                   </TableRow>
                 ))}
@@ -213,6 +216,7 @@ export default async function AttendanceRecordsPage({
             pageSize={pageSize}
             hrefForPage={(nextPage) => scansHref({ ...query, page: nextPage })}
             hrefForSize={(size) => scansHref({ ...query, pageSize: size, page: 1 })}
+            locale={locale}
           />
         </CardContent>
       </Card>

@@ -2,8 +2,9 @@ import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { DjangoError } from "@/lib/django";
-import { getSession } from "@/lib/current-user";
+import { getSession, ownsStore, runsStore } from "@/lib/current-user";
 import { REFRESH_COOKIE, SESSION_RETRY_COOKIE } from "@/lib/session-cookies";
+import { getLocale } from "@/lib/locale";
 
 export const dynamic = "force-dynamic";
 
@@ -30,8 +31,11 @@ export default async function ConsoleLayout({ children }: { children: React.Reac
   if (!user) return null;
   const cookieStore = await cookies();
   const defaultOpen = cookieStore.get("sidebar_state")?.value !== "false";
+  const locale = await getLocale();
+  const isSeller = await runsStore();
+  const isOwner = await ownsStore(user.id);
   return (
-    <DashboardShell user={user} defaultOpen={defaultOpen}>
+    <DashboardShell user={user} defaultOpen={defaultOpen} locale={locale} isSeller={isSeller} isOwner={isOwner}>
       {children}
     </DashboardShell>
   );

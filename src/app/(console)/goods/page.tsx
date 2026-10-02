@@ -1,8 +1,8 @@
-import Link from "next/link";
+import Link from "@/components/app-link";
 import type { components } from "@/api/schema";
 import { Button } from "@/components/ui/button";
 import { RecordList } from "@/components/record-list";
-import { canManage, getSession } from "@/lib/current-user";
+import { canManage, getSession, runsStore } from "@/lib/current-user";
 import { show } from "@/lib/load-all";
 import { loadList } from "@/lib/page-data";
 
@@ -10,7 +10,7 @@ type Good = components["schemas"]["Good"];
 
 export default async function GoodsPage() {
   const session = await getSession();
-  const manage = session ? canManage(session.user, ["goods", "good", "seller"]) : false;
+  const manage = session ? canManage(session.user, ["goods", "good", "seller"]) || await runsStore() : false;
   const data = await loadList<Good>("/api/v1/goods/?ordering=name");
   return (
     <RecordList

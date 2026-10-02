@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import type { CurrentUser } from "@/lib/current-user";
+import type { Locale } from "@/lib/i18n";
+import { t } from "@/lib/i18n";
 
 function initials(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -21,7 +23,7 @@ function initials(name: string) {
   return parts.slice(0, 2).map((part) => part[0]?.toUpperCase() ?? "").join("");
 }
 
-export function NavUser({ user }: { user: CurrentUser }) {
+export function NavUser({ user, locale = "en" }: { user: CurrentUser; locale?: Locale }) {
   const router = useRouter();
   const { isMobile } = useSidebar();
   const [pending, setPending] = useState(false);
@@ -66,13 +68,13 @@ export function NavUser({ user }: { user: CurrentUser }) {
             <DropdownMenuLabel className="font-normal">
               <div className="grid text-left text-sm leading-tight">
                 <span className="truncate font-medium">{name}</span>
-                <span className="truncate text-muted-foreground text-xs">{user.roles[0] ?? "Member"}</span>
+                <span className="truncate text-muted-foreground text-xs">{t(locale, user.roles[0] ?? "Member")}</span>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem disabled={pending} onClick={onLogout}>
               <LogOut />
-              {pending ? "Signing out…" : "Sign out"}
+              {pending ? t(locale, "Signing out…") : t(locale, "Sign out")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

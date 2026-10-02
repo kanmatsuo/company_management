@@ -1,3 +1,4 @@
+import { Title, Hint } from "@/components/auto-text";
 import { adjustBalance } from "@/app/(console)/mutations";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FieldForm } from "@/components/field-form";
@@ -13,8 +14,8 @@ export default async function AdjustmentPage() {
   return (
     <div className="flex flex-col gap-4 md:gap-6">
       <div>
-        <h1 className="font-semibold text-2xl tracking-tight">Adjustment</h1>
-        <p className="text-muted-foreground text-sm">Positive amounts credit the wallet. Negative amounts debit it.</p>
+        <Title>Adjustment</Title>
+        <Hint>Positive amounts credit the wallet. Negative amounts debit it.</Hint>
       </div>
       <Card>
         <CardHeader>

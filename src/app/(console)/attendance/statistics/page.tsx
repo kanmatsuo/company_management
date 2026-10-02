@@ -6,7 +6,9 @@ import { Input } from "@/components/ui/input";
 import { listPath, one } from "@/lib/load-all";
 import { loadRecords } from "@/lib/load-records";
 import { loadList, loadOne } from "@/lib/page-data";
-import Link from "next/link";
+import { getLocale } from "@/lib/locale";
+import { t } from "@/lib/i18n";
+import Link from "@/components/app-link";
 
 type Day = components["schemas"]["DailyAttendance"];
 type Record = components["schemas"]["AttendanceRecord"];
@@ -48,6 +50,7 @@ export default async function StatisticsPage({
   searchParams: Promise<{ from?: string; to?: string; building?: string }>;
 }) {
   const query = await searchParams;
+  const locale = await getLocale();
   const today = iso(new Date());
   const from = /^\d{4}-\d{2}-\d{2}$/.test(query.from ?? "") ? query.from! : today;
   const to = /^\d{4}-\d{2}-\d{2}$/.test(query.to ?? "") ? query.to! : today;
@@ -70,8 +73,8 @@ export default async function StatisticsPage({
     return (
       <Card>
         <CardHeader>
-          <CardTitle>No access</CardTitle>
-          <CardDescription>Your account cannot open attendance statistics.</CardDescription>
+          <CardTitle>{t(locale, "No access")}</CardTitle>
+          <CardDescription>{t(locale, "Your account cannot open attendance statistics.")}</CardDescription>
         </CardHeader>
       </Card>
     );
@@ -142,9 +145,9 @@ export default async function StatisticsPage({
   return (
     <div className="flex flex-col gap-4 md:gap-6">
       <div>
-        <h1 className="font-semibold text-2xl tracking-tight">Statistics</h1>
+        <h1 className="font-semibold text-2xl tracking-tight">{t(locale, "Statistics")}</h1>
         <p className="text-muted-foreground text-sm">
-          {start} to {end}.
+          {start} {t(locale, "to")} {end}.
           {buildingId ? ` · ${selectedBuilding}` : ""}
           {truncated ? " This range is larger than the page can load in full." : ""}
           {days.error || scans.error ? ` ${days.error || scans.error}` : ""}
@@ -153,31 +156,31 @@ export default async function StatisticsPage({
       <div className="flex flex-wrap items-end gap-2">
         {presets.map((preset) => (
           <Button key={preset.label} asChild variant={preset.from === start && preset.to === end && !buildingId ? "default" : "outline"} size="sm">
-            <Link href={`/attendance/statistics?from=${preset.from}&to=${preset.to}`}>{preset.label}</Link>
+            <Link href={`/attendance/statistics?from=${preset.from}&to=${preset.to}`}>{t(locale, preset.label)}</Link>
           </Button>
         ))}
         <form className="flex flex-wrap items-end gap-2" method="get">
           <label className="grid gap-1 text-sm">
-            From
+            {t(locale, "From")}
             <Input type="date" name="from" defaultValue={start} required />
           </label>
           <label className="grid gap-1 text-sm">
-            To
+            {t(locale, "To")}
             <Input type="date" name="to" defaultValue={end} required />
           </label>
           {buildingId ? <input type="hidden" name="building" value={buildingId} /> : null}
-          <Button type="submit" size="sm">Show range</Button>
+          <Button type="submit" size="sm">{t(locale, "Show range")}</Button>
         </form>
       </div>
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {[
-          ["People", people.size, "Different people recorded in this date range"],
-          ["In scans", ins, "Door scans marked in"],
-          ["Out scans", outs, "Door scans marked out"],
+          ["People", people.size, t(locale, "Different people recorded in this date range")],
+          ["In scans", ins, t(locale, "Door scans marked in")],
+          ["Out scans", outs, t(locale, "Door scans marked out")],
         ].map(([label, value, hint]) => (
-          <Card key={label}>
+          <Card key={String(label)}>
             <CardHeader>
-              <CardDescription>{label}</CardDescription>
+              <CardDescription>{t(locale, String(label))}</CardDescription>
               <CardTitle className="text-3xl tabular-nums">{Number(value).toLocaleString("en-US")}</CardTitle>
               <p className="text-muted-foreground text-sm">{hint}</p>
             </CardHeader>
@@ -186,9 +189,9 @@ export default async function StatisticsPage({
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>By building</CardTitle>
+          <CardTitle>{t(locale, "By building")}</CardTitle>
           <CardDescription>
-            Each bar is people who scanned at that building. A person who used two buildings is counted in both.
+            {t(locale, "Each bar is people who scanned at that building. A person who used two buildings is counted in both.")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -201,9 +204,9 @@ export default async function StatisticsPage({
               href: `/attendance/statistics?from=${start}&to=${end}&building=${id}`,
             }))}
             series={[
-              { key: "people", label: "People", color: "var(--chart-1)" },
-              { key: "ins", label: "In", color: "var(--chart-3)" },
-              { key: "outs", label: "Out", color: "var(--chart-4)" },
+              { key: "people", label: t(locale, "People"), color: "var(--chart-1)" },
+              { key: "ins", label: t(locale, "In"), color: "var(--chart-3)" },
+              { key: "outs", label: t(locale, "Out"), color: "var(--chart-4)" },
             ]}
             height={Math.max(240, buildingRows.length * 56)}
           />
@@ -211,9 +214,11 @@ export default async function StatisticsPage({
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>{weekly ? "By week" : "By day"}</CardTitle>
+          <CardTitle>{weekly ? t(locale, "By week") : t(locale, "By day")}</CardTitle>
           <CardDescription>
-            Each bar is only that {weekly ? "week" : "day"}. A person who came on more than one {weekly ? "week" : "day"} is counted once above and once on each bar.
+            {weekly
+              ? t(locale, "Each bar is only that week. A person who came on more than one week is counted once above and once on each bar.")
+              : t(locale, "Each bar is only that day. A person who came on more than one day is counted once above and once on each bar.")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -222,20 +227,20 @@ export default async function StatisticsPage({
               name: period.slice(5),
               people: row.size,
             }))}
-            series={[{ key: "people", label: "People", color: "var(--chart-1)" }]}
+            series={[{ key: "people", label: t(locale, "People"), color: "var(--chart-1)" }]}
             height={300}
           />
         </CardContent>
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>By department</CardTitle>
-          <CardDescription>Each bar is the people in that department. A person has one department, so these bars add up to People above.</CardDescription>
+          <CardTitle>{t(locale, "By department")}</CardTitle>
+          <CardDescription>{t(locale, "Each bar is the people in that department. A person has one department, so these bars add up to People above.")}</CardDescription>
         </CardHeader>
         <CardContent>
           <SeriesChart
             data={departments.map(([name, row]) => ({ name, people: row.size }))}
-            series={[{ key: "people", label: "People", color: "var(--chart-3)" }]}
+            series={[{ key: "people", label: t(locale, "People"), color: "var(--chart-3)" }]}
             layout="vertical"
             height={Math.max(220, departments.length * 48)}
           />

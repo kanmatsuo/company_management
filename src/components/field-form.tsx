@@ -5,11 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { FormState } from "@/lib/form";
+import { t } from "@/lib/i18n";
+import { useLocale } from "@/components/locale-context";
+import { SearchSelect } from "@/components/search-select";
+import { UserMultiSelect } from "@/components/user-multi-select";
 
 export type Field = {
   name: string;
   label: string;
-  type?: "text" | "email" | "password" | "number" | "date" | "datetime-local" | "textarea" | "select" | "checkbox" | "file" | "hidden";
+  type?: "text" | "email" | "password" | "number" | "date" | "datetime-local" | "textarea" | "select" | "users" | "checkbox" | "file" | "hidden";
   required?: boolean;
   defaultValue?: string;
   placeholder?: string;
@@ -33,13 +37,14 @@ export function FieldForm({
   variant?: "default" | "outline" | "destructive";
 }) {
   const [state, formAction, pending] = useActionState(action, null as FormState);
+  const locale = useLocale();
 
   return (
     <form action={formAction} encType={fields.some((field) => field.type === "file") ? "multipart/form-data" : undefined} className="grid max-w-md gap-4">
       {state?.message ? <p className="text-destructive text-sm">{state.message}</p> : null}
       {state?.notice ? (
         <div className="grid gap-2 rounded-lg border bg-muted p-3">
-          <p className="text-sm">This key is shown only once. Copy it before you leave the page.</p>
+          <p className="text-sm">{t(locale, "This key is shown only once. Copy it before you leave the page.")}</p>
           <p className="break-all font-mono text-sm">{state.notice}</p>
           <Button
             type="button"
@@ -50,7 +55,7 @@ export function FieldForm({
               void navigator.clipboard.writeText(key);
             }}
           >
-            Copy key
+            {t(locale, "Copy key")}
           </Button>
         </div>
       ) : null}
@@ -63,24 +68,31 @@ export function FieldForm({
           return (
             <label key={field.name} className="flex items-center gap-2 text-sm">
               <input name={field.name} type="checkbox" defaultChecked={field.defaultValue === "on"} className="size-4" />
-              {field.label}
+              {t(locale, field.label)}
             </label>
           );
         }
         return (
           <div key={field.name} className="grid gap-1.5">
-            <Label htmlFor={field.name}>{field.label}</Label>
+            <Label htmlFor={field.name}>{t(locale, field.label)}</Label>
             {field.type === "textarea" ? (
               <textarea id={field.name} name={field.name} required={field.required} defaultValue={field.defaultValue} className={`${control} min-h-20 py-2`} />
+            ) : field.type === "users" ? (
+              <UserMultiSelect
+                name={field.name}
+                locale={locale}
+                defaultValue={field.defaultValue}
+                options={(field.options ?? []).map((option) => ({ value: option.value, label: t(locale, option.label) }))}
+              />
             ) : field.type === "select" ? (
-              <select id={field.name} name={field.name} required={field.required} defaultValue={field.defaultValue} className={`${control} h-8`}>
-                <option value="">Choose</option>
-                {field.options?.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+              <SearchSelect
+                id={field.name}
+                name={field.name}
+                required={field.required}
+                defaultValue={field.defaultValue}
+                locale={locale}
+                options={(field.options ?? []).map((option) => ({ value: option.value, label: t(locale, option.label) }))}
+              />
             ) : (
               <Input
                 id={field.name}
@@ -88,7 +100,7 @@ export function FieldForm({
                 type={field.type ?? "text"}
                 required={field.required}
                 defaultValue={field.defaultValue}
-                placeholder={field.placeholder}
+                placeholder={field.placeholder ? t(locale, field.placeholder) : undefined}
               />
             )}
             {errors?.map((error) => (
@@ -98,7 +110,7 @@ export function FieldForm({
         );
       })}
       <Button type="submit" variant={variant} disabled={pending}>
-        {pending ? pendingLabel : submitLabel}
+        {pending ? t(locale, pendingLabel) : t(locale, submitLabel)}
       </Button>
     </form>
   );

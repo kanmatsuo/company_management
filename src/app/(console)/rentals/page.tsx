@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/app-link";
 import type { components } from "@/api/schema";
 import { RecordList } from "@/components/record-list";
 import { show } from "@/lib/load-all";

@@ -3,17 +3,21 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
+import type { Locale } from "@/lib/i18n";
+import { t } from "@/lib/i18n";
 
 export function UserSearch({
   value,
   isActive,
   ordering,
   pageSize,
+  locale = "en",
 }: {
   value: string;
   isActive?: string;
   ordering?: string;
   pageSize?: number | "all";
+  locale?: Locale;
 }) {
   const router = useRouter();
   const [text, setText] = useState(value);
@@ -37,9 +41,9 @@ export function UserSearch({
     <Input
       value={text}
       onChange={(event) => setText(event.target.value)}
-      placeholder="Search name or email"
+      placeholder={t(locale, "Search name or email")}
       className="max-w-xs"
-      aria-label="Search users"
+      aria-label={t(locale, "Search users")}
     />
   );
 }

@@ -1,10 +1,11 @@
+import { Title, Hint } from "@/components/auto-text";
 import { createDeveloper } from "@/app/(console)/mutations";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FieldForm } from "@/components/field-form";
 import { NoAccess } from "@/components/no-access";
 import { canManage } from "@/lib/current-user";
 import { requireSession } from "@/lib/page-data";
-import { developerChoices, userChoices } from "@/lib/choices";
+import { buildingChoices, developerChoices, userChoices } from "@/lib/choices";
 
 const STATUS = [
   { value: "ACTIVE", label: "Active" },
@@ -18,12 +19,16 @@ export default async function NewDeveloperPage() {
   if (!canManage(session.user, ["developer"])) {
     return <NoAccess description="Your account cannot create developers." />;
   }
-  const [managers, users] = await Promise.all([developerChoices(session.token), userChoices(session.token)]);
+  const [managers, users, buildings] = await Promise.all([
+    developerChoices(session.token),
+    userChoices(session.token),
+    buildingChoices(session.token),
+  ]);
   return (
     <div className="flex flex-col gap-4 md:gap-6">
       <div>
-        <h1 className="font-semibold text-2xl tracking-tight">New developer</h1>
-        <p className="text-muted-foreground text-sm">Leaving the company is a status change, not a hard delete.</p>
+        <Title>New developer</Title>
+        <Hint>Leaving the company is a status change, not a hard delete.</Hint>
       </div>
       <Card>
         <CardHeader>
@@ -42,6 +47,7 @@ export default async function NewDeveloperPage() {
               { name: "birthday", label: "Birthday", type: "date" },
               { name: "department", label: "Department" },
               { name: "position_title", label: "Title" },
+              { name: "building", label: "Home building", type: "select", options: buildings },
               { name: "manager", label: "Manager", type: "select", options: managers },
               { name: "user", label: "Linked user", type: "select", options: users },
               { name: "start_date", label: "Start date", type: "date" },

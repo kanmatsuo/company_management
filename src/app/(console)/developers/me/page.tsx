@@ -1,3 +1,4 @@
+import { Hint } from "@/components/auto-text";
 import type { components } from "@/api/schema";
 import { Facts } from "@/components/facts";
 import { LoadError } from "@/components/no-access";
@@ -15,7 +16,7 @@ export default async function MyDeveloperPage() {
     <div className="flex flex-col gap-4 md:gap-6">
       <div>
         <h1 className="font-semibold text-2xl tracking-tight">{profile.full_name}</h1>
-        <p className="text-muted-foreground text-sm">Your own developer profile.</p>
+        <Hint>Your own developer profile.</Hint>
       </div>
       <Card>
         <CardHeader>

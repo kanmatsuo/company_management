@@ -1,5 +1,6 @@
 "use client";
 
+import { AutoText } from "@/components/auto-text";
 import { useState } from "react";
 import { createReader, updateReader } from "@/app/(console)/mutations";
 import { FieldForm, type Field } from "@/components/field-form";
@@ -51,21 +52,23 @@ export function DeviceForm({
   return (
     <div className="grid gap-3">
       <label className="grid max-w-md gap-1.5 text-sm">
-        Kind
+        <AutoText>Kind</AutoText>
         <select
           className="h-8 rounded-lg border border-input bg-transparent px-2"
           value={purpose}
           onChange={(event) => setPurpose(event.target.value)}
         >
           {PURPOSE.map((option) => (
-            <option key={option.value} value={option.value}>{option.label}</option>
+            <option key={option.value} value={option.value}><AutoText>{option.label}</AutoText></option>
           ))}
         </select>
       </label>
       <p className="max-w-md text-muted-foreground text-sm">
-        {door
-          ? "A door needs a building. It can sign in from a fixed IP, or with the API key shown once after you save."
-          : "A till reader is not tied to a counter. It needs the serial number on the device and signs in with that serial number and its code."}
+        <AutoText>
+          {door
+            ? "A door needs a building. It can sign in from a fixed IP, or with the API key shown once after you save."
+            : "A till reader is not tied to a counter. It needs the serial number on the device and signs in with that serial number and its code."}
+        </AutoText>
       </p>
       <FieldForm key={purpose} action={id ? updateReader.bind(null, id) : createReader} submitLabel={id ? "Save" : "Create device"} fields={fields} />
     </div>

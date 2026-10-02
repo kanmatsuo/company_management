@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { useLocale } from "@/components/locale-context";
+import { t } from "@/lib/i18n";
 import { usePreferencesStore } from "@/stores/preferences/preferences-provider";
 
 export function LayoutControls() {
@@ -17,22 +19,24 @@ export function LayoutControls() {
     })),
   );
 
+  const locale = useLocale();
+
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button size="icon" variant="ghost" aria-label="Layout settings">
+        <Button size="icon" variant="ghost" aria-label={t(locale, "Layout settings")}>
           <Settings />
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80">
         <div className="flex flex-col gap-5">
           <div className="space-y-1.5">
-            <h4 className="font-medium text-sm leading-none">Preferences</h4>
-            <p className="text-muted-foreground text-xs">Theme and sidebar behavior.</p>
+            <h4 className="font-medium text-sm leading-none">{t(locale, "Preferences")}</h4>
+            <p className="text-muted-foreground text-xs">{t(locale, "Theme and sidebar behavior.")}</p>
           </div>
           <div className="space-y-3 **:data-[slot=toggle-group]:w-full **:data-[slot=toggle-group-item]:flex-1 **:data-[slot=toggle-group-item]:text-xs">
             <div className="space-y-1">
-              <Label className="font-medium text-xs">Theme</Label>
+              <Label className="font-medium text-xs">{t(locale, "Theme")}</Label>
               <ToggleGroup
                 size="sm"
                 spacing={0}
@@ -45,12 +49,12 @@ export function LayoutControls() {
                   }
                 }}
               >
-                <ToggleGroupItem value="light">Light</ToggleGroupItem>
-                <ToggleGroupItem value="dark">Dark</ToggleGroupItem>
+                <ToggleGroupItem value="light">{t(locale, "Light")}</ToggleGroupItem>
+                <ToggleGroupItem value="dark">{t(locale, "Dark")}</ToggleGroupItem>
               </ToggleGroup>
             </div>
             <div className="space-y-1">
-              <Label className="font-medium text-xs">Sidebar style</Label>
+              <Label className="font-medium text-xs">{t(locale, "Sidebar style")}</Label>
               <ToggleGroup
                 size="sm"
                 spacing={0}
@@ -63,13 +67,13 @@ export function LayoutControls() {
                   }
                 }}
               >
-                <ToggleGroupItem value="sidebar">Sidebar</ToggleGroupItem>
-                <ToggleGroupItem value="inset">Inset</ToggleGroupItem>
-                <ToggleGroupItem value="floating">Floating</ToggleGroupItem>
+                <ToggleGroupItem value="sidebar">{t(locale, "Sidebar")}</ToggleGroupItem>
+                <ToggleGroupItem value="inset">{t(locale, "Inset")}</ToggleGroupItem>
+                <ToggleGroupItem value="floating">{t(locale, "Floating")}</ToggleGroupItem>
               </ToggleGroup>
             </div>
             <div className="space-y-1">
-              <Label className="font-medium text-xs">Sidebar collapse</Label>
+              <Label className="font-medium text-xs">{t(locale, "Sidebar collapse")}</Label>
               <ToggleGroup
                 size="sm"
                 spacing={0}
@@ -82,12 +86,12 @@ export function LayoutControls() {
                   }
                 }}
               >
-                <ToggleGroupItem value="icon">Icon</ToggleGroupItem>
-                <ToggleGroupItem value="offcanvas">Hide</ToggleGroupItem>
+                <ToggleGroupItem value="icon">{t(locale, "Icon")}</ToggleGroupItem>
+                <ToggleGroupItem value="offcanvas">{t(locale, "Hide")}</ToggleGroupItem>
               </ToggleGroup>
             </div>
             <Button type="button" size="sm" variant="outline" className="w-full text-xs" onClick={resetPreferences}>
-              Restore defaults
+              {t(locale, "Restore defaults")}
             </Button>
           </div>
         </div>

@@ -1,3 +1,4 @@
+import { Hint, AutoText } from "@/components/auto-text";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartSlot } from "@/components/chart-panel";
 
@@ -11,8 +12,8 @@ export function SectionTemplate({
   return (
     <div className="flex flex-col gap-4 md:gap-6">
       <div>
-        <h1 className="font-semibold text-2xl tracking-tight">{title}</h1>
-        <p className="text-muted-foreground text-sm">{description}</p>
+        <h1 className="font-semibold text-2xl tracking-tight"><AutoText>{title}</AutoText></h1>
+        <Hint>{description}</Hint>
       </div>
       <div className="grid gap-4 xl:grid-cols-5">
         <div className="xl:col-span-3">

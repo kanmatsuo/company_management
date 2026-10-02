@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { cn } from "cn"
+import { AutoText } from "@/components/auto-text"
 
 function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
@@ -64,7 +65,7 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
   )
 }
 
-function TableHead({ className, ...props }: React.ComponentProps<"th">) {
+function TableHead({ className, children, ...props }: React.ComponentProps<"th">) {
   return (
     <th
       data-slot="table-head"
@@ -73,7 +74,9 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
         className
       )}
       {...props}
-    />
+    >
+      <AutoText>{children}</AutoText>
+    </th>
   )
 }
 

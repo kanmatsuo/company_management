@@ -1,15 +1,30 @@
-import Link from "next/link";
+import Link from "@/components/app-link";
 import type { components } from "@/api/schema";
 import { SeriesChart } from "@/components/ui/chart";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { RecordList } from "@/components/record-list";
-import { canManage, getSession } from "@/lib/current-user";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { canManage, getSession, runsStore } from "@/lib/current-user";
+import { DjangoError, djangoFetch } from "@/lib/django";
 import { show, showTime } from "@/lib/load-all";
 import { loadList } from "@/lib/page-data";
+import { getLocale } from "@/lib/locale";
+import { t } from "@/lib/i18n";
 
 type Purchase = components["schemas"]["Purchase"];
+type PerformanceRow = {
+  service_position: number;
+  service_position_name: string;
+  seller_name: string;
+  building_name: string | null;
+  sales_count: number;
+  sales_total: string;
+  bookings_count: number;
+  bookings_total: string;
+  total: string;
+};
 
 function iso(date: Date) {
   return date.toISOString().slice(0, 10);
@@ -74,7 +89,20 @@ export default async function PurchasesPage({
     { label: "This month", from: `${today.slice(0, 7)}-01`, to: endOfMonth(today) },
   ];
   const session = await getSession();
-  const manage = session ? canManage(session.user, ["purchase", "seller"]) : false;
+  const locale = await getLocale();
+  let performance: PerformanceRow[] = [];
+  let performanceError: string | null = null;
+  if (session) {
+    try {
+      performance = await djangoFetch<PerformanceRow[]>(
+        `/api/v1/purchases/performance/?confirmed_after=${start}T00:00:00Z&confirmed_before=${shift(end, 1)}T00:00:00Z`,
+        { accessToken: session.token },
+      );
+    } catch (caught) {
+      performanceError = caught instanceof DjangoError ? caught.message : "Could not load sales by counter.";
+    }
+  }
+  const manage = session ? canManage(session.user, ["purchase", "seller"]) || await runsStore() : false;
   const data = await loadList<Purchase>("/api/v1/purchases/?ordering=-created_at");
   const inRange = data.results.filter((row) => {
     const day = dayKey(row.status === "CONFIRMED" ? row.confirmed_at || row.created_at : row.created_at);
@@ -120,39 +148,39 @@ export default async function PurchasesPage({
     <div className="flex flex-col gap-4 md:gap-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-semibold text-2xl tracking-tight">Purchases</h1>
-          <p className="text-muted-foreground text-sm">{start} to {end}. Paid sales are confirmed purchases. Money is the sum of those totals.</p>
+          <h1 className="font-semibold text-2xl tracking-tight">{t(locale, "Purchases")}</h1>
+          <p className="text-muted-foreground text-sm">{start} {t(locale, "to")} {end}. {t(locale, "Paid sales are confirmed purchases. Money is the sum of those totals.")}</p>
         </div>
-        {manage ? <Button asChild><Link href="/purchases/new">New purchase</Link></Button> : null}
+        {manage ? <Button asChild><Link href="/purchases/new">{t(locale, "New purchase")}</Link></Button> : null}
       </div>
       <div className="flex flex-wrap items-end gap-2">
         {presets.map((preset) => (
           <Button key={preset.label} asChild size="sm" variant={preset.from === start && preset.to === end ? "default" : "outline"}>
-            <Link href={`/purchases?from=${preset.from}&to=${preset.to}`}>{preset.label}</Link>
+            <Link href={`/purchases?from=${preset.from}&to=${preset.to}`}>{t(locale, preset.label)}</Link>
           </Button>
         ))}
         <form className="flex flex-wrap items-end gap-2" method="get">
           <label className="grid gap-1 text-sm">
-            From
+            {t(locale, "From")}
             <Input type="date" name="from" defaultValue={start} required />
           </label>
           <label className="grid gap-1 text-sm">
-            To
+            {t(locale, "To")}
             <Input type="date" name="to" defaultValue={end} required />
           </label>
-          <Button type="submit" size="sm">Show range</Button>
+          <Button type="submit" size="sm">{t(locale, "Show range")}</Button>
         </form>
       </div>
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {[
-          ["Paid sales", paid.length, "Confirmed purchases"],
-          ["Money taken", `${money(taken)} ${currency}`.trim(), "Sum of paid totals"],
-          ["Buyers", buyers.size, "Different people who paid"],
-          ["Drafts", drafts.length, `${cancelled.length} cancelled`],
+          ["Paid sales", paid.length, t(locale, "Confirmed purchases")],
+          ["Money taken", `${money(taken)} ${currency}`.trim(), t(locale, "Sum of paid totals")],
+          ["Buyers", buyers.size, t(locale, "Different people who paid")],
+          ["Drafts", drafts.length, `${cancelled.length} ${t(locale, "cancelled")}`],
         ].map(([label, value, hint]) => (
           <Card key={label}>
             <CardHeader>
-              <CardDescription>{label}</CardDescription>
+              <CardDescription>{t(locale, String(label))}</CardDescription>
               <CardTitle className="text-3xl tabular-nums">{typeof value === "number" ? value.toLocaleString("en-US") : value}</CardTitle>
               <p className="text-muted-foreground text-sm">{hint}</p>
             </CardHeader>
@@ -162,15 +190,15 @@ export default async function PurchasesPage({
       {data.error ? <p className="text-destructive text-sm">{data.error}</p> : null}
       <Card>
         <CardHeader>
-          <CardTitle>By seller</CardTitle>
-          <CardDescription>Paid sales and money taken for each seller.</CardDescription>
+          <CardTitle>{t(locale, "By seller")}</CardTitle>
+          <CardDescription>{t(locale, "Paid sales and money taken for each seller.")}</CardDescription>
         </CardHeader>
         <CardContent>
           <SeriesChart
             data={sellerRows.map(([name, row]) => ({ name, sales: row.count, money: row.money / 100 }))}
             series={[
-              { key: "sales", label: "Paid sales", color: "var(--chart-1)" },
-              { key: "money", label: `Money (${currency || "total"})`, color: "var(--chart-3)" },
+              { key: "sales", label: t(locale, "Paid sales"), color: "var(--chart-1)" },
+              { key: "money", label: `${t(locale, "Money")} (${currency || t(locale, "total")})`, color: "var(--chart-3)" },
             ]}
             layout="vertical"
             height={Math.max(220, sellerRows.length * 56)}
@@ -179,15 +207,15 @@ export default async function PurchasesPage({
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>By counter</CardTitle>
-          <CardDescription>Paid sales at each service position.</CardDescription>
+          <CardTitle>{t(locale, "By counter")}</CardTitle>
+          <CardDescription>{t(locale, "Paid sales at each service position.")}</CardDescription>
         </CardHeader>
         <CardContent>
           <SeriesChart
             data={counterRows.map(([name, row]) => ({ name, sales: row.count, money: row.money / 100 }))}
             series={[
-              { key: "sales", label: "Paid sales", color: "var(--chart-1)" },
-              { key: "money", label: `Money (${currency || "total"})`, color: "var(--chart-4)" },
+              { key: "sales", label: t(locale, "Paid sales"), color: "var(--chart-1)" },
+              { key: "money", label: `${t(locale, "Money")} (${currency || t(locale, "total")})`, color: "var(--chart-4)" },
             ]}
             height={Math.max(240, counterRows.length * 48)}
           />
@@ -195,13 +223,13 @@ export default async function PurchasesPage({
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>By till reader</CardTitle>
-          <CardDescription>Which reader was used for each paid sale.</CardDescription>
+          <CardTitle>{t(locale, "By till reader")}</CardTitle>
+          <CardDescription>{t(locale, "Which reader was used for each paid sale.")}</CardDescription>
         </CardHeader>
         <CardContent>
           <SeriesChart
             data={readerRows.map(([name, row]) => ({ name, sales: row.count }))}
-            series={[{ key: "sales", label: "Paid sales", color: "var(--chart-5)" }]}
+            series={[{ key: "sales", label: t(locale, "Paid sales"), color: "var(--chart-5)" }]}
             layout="vertical"
             height={Math.max(200, readerRows.length * 48)}
           />
@@ -209,23 +237,59 @@ export default async function PurchasesPage({
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>{weekly ? "By week" : "By day"}</CardTitle>
-          <CardDescription>Paid sales in each {weekly ? "week" : "day"} of this range.</CardDescription>
+          <CardTitle>{weekly ? t(locale, "By week") : t(locale, "By day")}</CardTitle>
+          <CardDescription>{weekly ? t(locale, "Paid sales in each week of this range.") : t(locale, "Paid sales in each day of this range.")}</CardDescription>
         </CardHeader>
         <CardContent>
           <SeriesChart
             data={periodRows.map(([period, row]) => ({ name: period.slice(5), sales: row.count, money: row.money / 100 }))}
             series={[
-              { key: "sales", label: "Paid sales", color: "var(--chart-1)" },
-              { key: "money", label: `Money (${currency || "total"})`, color: "var(--chart-3)" },
+              { key: "sales", label: t(locale, "Paid sales"), color: "var(--chart-1)" },
+              { key: "money", label: `${t(locale, "Money")} (${currency || t(locale, "total")})`, color: "var(--chart-3)" },
             ]}
             height={280}
           />
         </CardContent>
       </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>{t(locale, "Sales by counter")}</CardTitle>
+          <CardDescription>{t(locale, "Confirmed till sales and court bookings for each sell position.")}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {performanceError ? <p className="text-destructive text-sm">{performanceError}</p> : performance.length === 0 ? (
+            <p className="text-muted-foreground text-sm">{t(locale, "No confirmed sales in this range.")}</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t(locale, "Position")}</TableHead>
+                  <TableHead>{t(locale, "Seller")}</TableHead>
+                  <TableHead>{t(locale, "Place")}</TableHead>
+                  <TableHead>{t(locale, "Till sales")}</TableHead>
+                  <TableHead>{t(locale, "Court bookings")}</TableHead>
+                  <TableHead>{t(locale, "Total")}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {performance.map((row) => (
+                  <TableRow key={row.service_position}>
+                    <TableCell>{row.service_position_name}</TableCell>
+                    <TableCell>{row.seller_name}</TableCell>
+                    <TableCell>{row.building_name || "—"}</TableCell>
+                    <TableCell>{row.sales_count} · {row.sales_total}</TableCell>
+                    <TableCell>{row.bookings_count} · {row.bookings_total}</TableCell>
+                    <TableCell>{row.total}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
       <RecordList
         title="Sales in this range"
-        summary={`${inRange.length.toLocaleString()} purchases`}
+        summary={`${inRange.length.toLocaleString()} ${t(locale, "purchases")}`}
         description="Includes drafts and cancelled purchases from the same dates."
         error={data.error}
         empty="No purchases in this range."

@@ -1,4 +1,5 @@
-import Link from "next/link";
+import { Title, Hint, AutoText } from "@/components/auto-text";
+import Link from "@/components/app-link";
 import { redirect } from "next/navigation";
 import { changePassword } from "@/app/(console)/mutations";
 import { Badge } from "@/components/ui/badge";
@@ -11,13 +12,13 @@ export default async function AccountPage() {
   const session = await getSession();
   if (!session) redirect("/login");
   const user = session.user;
-  const lastLogin = user.last_login ? new Date(user.last_login).toLocaleString() : "No previous sign-in";
+  const lastLogin = user.last_login ? new Date(user.last_login).toLocaleString() : null;
 
   return (
     <div className="flex flex-col gap-4 md:gap-6">
       <div>
-        <h1 className="font-semibold text-2xl tracking-tight">Account</h1>
-        <p className="text-muted-foreground text-sm">The person signed in on this browser.</p>
+        <Title>Account</Title>
+        <Hint>The person signed in on this browser.</Hint>
       </div>
       <Card className="max-w-2xl">
         <CardHeader>
@@ -26,15 +27,15 @@ export default async function AccountPage() {
         </CardHeader>
         <CardContent className="grid gap-4 text-sm">
           <div>
-            <p className="text-muted-foreground">Roles</p>
-            <p className="mt-1">{user.roles.length > 0 ? user.roles.join(", ") : "None"}</p>
+            <p className="text-muted-foreground"><AutoText>Roles</AutoText></p>
+            <p className="mt-1">{user.roles.length > 0 ? user.roles.join(", ") : <AutoText>None</AutoText>}</p>
           </div>
           <div>
-            <p className="text-muted-foreground">Last sign-in</p>
-            <p className="mt-1">{lastLogin}</p>
+            <p className="text-muted-foreground"><AutoText>Last sign-in</AutoText></p>
+            <p className="mt-1">{lastLogin ?? <AutoText>No previous sign-in</AutoText>}</p>
           </div>
           <div>
-            <p className="text-muted-foreground">Permissions</p>
+            <p className="text-muted-foreground"><AutoText>Permissions</AutoText></p>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {user.permissions.length > 0 ? (
                 user.permissions.map((code) => (
@@ -43,7 +44,7 @@ export default async function AccountPage() {
                   </Badge>
                 ))
               ) : (
-                <span>None</span>
+                <span><AutoText>None</AutoText></span>
               )}
             </div>
           </div>

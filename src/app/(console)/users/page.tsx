@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/app-link";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import type { components } from "@/api/schema";
 import { UserRowActions } from "@/app/(console)/users/user-row-actions";
@@ -18,6 +18,8 @@ import { parsePageSize, TablePager, type PageSize } from "@/components/table-pag
 import { can, getSession } from "@/lib/current-user";
 import { DjangoError, djangoFetch } from "@/lib/django";
 import { listPath, loadAll, one, show, showTime } from "@/lib/load-all";
+import { getLocale } from "@/lib/locale";
+import { t } from "@/lib/i18n";
 import { redirect } from "next/navigation";
 
 type User = components["schemas"]["User"];
@@ -55,14 +57,15 @@ export default async function UsersPage({
   const pageSize = parsePageSize(one(raw.page_size));
   const page = pageSize === "all" ? 1 : Math.max(1, Number(one(raw.page)) || 1);
   const session = await getSession();
+  const locale = await getLocale();
   if (!session) redirect("/login");
   const canManage = can(session.user, "user.manage");
   if (!can(session.user, "user.view")) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>No access</CardTitle>
-          <CardDescription>Your account cannot open users.</CardDescription>
+          <CardTitle>{t(locale, "No access")}</CardTitle>
+          <CardDescription>{t(locale, "Your account cannot open users.")}</CardDescription>
         </CardHeader>
       </Card>
     );
@@ -84,7 +87,7 @@ export default async function UsersPage({
     users = loaded.results;
     count = loaded.count;
   } catch (caught) {
-    error = caught instanceof DjangoError ? caught.message : "Could not load users.";
+    error = caught instanceof DjangoError ? caught.message : t(locale, "Could not load users.");
   }
 
   const pages = pageSize === "all" ? 1 : Math.max(1, Math.ceil(count / pageSize));
@@ -94,40 +97,40 @@ export default async function UsersPage({
     <div className="flex flex-col gap-4 md:gap-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-semibold text-2xl tracking-tight">Users</h1>
-          <p className="text-muted-foreground text-sm">{count.toLocaleString()} users</p>
+          <h1 className="font-semibold text-2xl tracking-tight">{t(locale, "Users")}</h1>
+          <p className="text-muted-foreground text-sm">{count.toLocaleString()} {t(locale, "users")}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <UserSearch key={search} value={search} isActive={isActive} ordering={ordering === "full_name" ? undefined : ordering} pageSize={pageSize === 20 ? undefined : pageSize} />
+          <UserSearch key={search} value={search} isActive={isActive} ordering={ordering === "full_name" ? undefined : ordering} pageSize={pageSize === 20 ? undefined : pageSize} locale={locale} />
           {canManage ? (
             <Button asChild>
-              <Link href="/users/new">New user</Link>
+              <Link href="/users/new">{t(locale, "New user")}</Link>
             </Button>
           ) : null}
         </div>
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>Accounts</CardTitle>
+          <CardTitle>{t(locale, "Accounts")}</CardTitle>
           <CardDescription>
-            Edit a name or roles. Deactivate stops sign-in. Delete asks you to confirm before it tries to remove the account.
+            {t(locale, "Edit a name or roles. Deactivate stops sign-in. Delete asks you to confirm before it tries to remove the account.")}
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
           {error ? (
             <p className="text-destructive text-sm">{error}</p>
           ) : users.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No users match this list.</p>
+            <p className="text-muted-foreground text-sm">{t(locale, "No users match this list.")}</p>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <SortHead label="Name" field="full_name" ordering={ordering} isActive={isActive} search={search} pageSize={pageSize} />
-                  <SortHead label="Email" field="email" ordering={ordering} isActive={isActive} search={search} pageSize={pageSize} />
-                  <TableHead>Roles</TableHead>
-                  <TableHead>Active</TableHead>
-                  <SortHead label="Last sign-in" field="last_login" ordering={ordering} isActive={isActive} search={search} pageSize={pageSize} />
-                  {canManage ? <TableHead className="text-right">Actions</TableHead> : null}
+                  <SortHead label={t(locale, "Name")} field="full_name" ordering={ordering} isActive={isActive} search={search} pageSize={pageSize} />
+                  <SortHead label={t(locale, "Email")} field="email" ordering={ordering} isActive={isActive} search={search} pageSize={pageSize} />
+                  <TableHead>{t(locale, "Roles")}</TableHead>
+                  <TableHead>{t(locale, "Active")}</TableHead>
+                  <SortHead label={t(locale, "Last sign-in")} field="last_login" ordering={ordering} isActive={isActive} search={search} pageSize={pageSize} />
+                  {canManage ? <TableHead className="text-right">{t(locale, "Actions")}</TableHead> : null}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -138,13 +141,13 @@ export default async function UsersPage({
                     <TableCell>{user.roles.length > 0 ? user.roles.join(", ") : "—"}</TableCell>
                     <TableCell>
                       <Badge variant={user.is_active ? "secondary" : "outline"}>
-                        {user.is_active ? "Yes" : "No"}
+                        {user.is_active ? t(locale, "Yes") : t(locale, "No")}
                       </Badge>
                     </TableCell>
                     <TableCell>{showTime(user.last_login)}</TableCell>
                     {canManage ? (
                       <TableCell>
-                        <UserRowActions id={user.id} active={user.is_active} nextPath={here} />
+                        <UserRowActions id={user.id} active={user.is_active} nextPath={here} locale={locale} />
                       </TableCell>
                     ) : null}
                   </TableRow>
@@ -158,6 +161,7 @@ export default async function UsersPage({
             pageSize={pageSize}
             hrefForPage={(nextPage) => usersHref({ is_active: isActive, search, ordering, page: nextPage, pageSize })}
             hrefForSize={(size) => usersHref({ is_active: isActive, search, ordering, pageSize: size, page: 1 })}
+            locale={locale}
           />
         </CardContent>
       </Card>

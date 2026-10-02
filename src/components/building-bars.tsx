@@ -1,18 +1,23 @@
-import Link from "next/link";
+"use client";
+
+import Link from "@/components/app-link";
 import type { components } from "@/api/schema";
 import { ProgressBar } from "@/components/progress-bar";
+import { useLocale } from "@/components/locale-context";
+import { t } from "@/lib/i18n";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 type Occupancy = components["schemas"]["Occupancy"];
 
 export function BuildingBars({ occupancy, staff }: { occupancy: Occupancy; staff: number }) {
+  const locale = useLocale();
   return (
     <div className="grid gap-4">
       <Card>
         <CardHeader>
           <CardTitle>
             <Link href="/attendance/buildings/all" className="hover:underline">
-              All staff
+              {t(locale, "All staff")}
             </Link>
           </CardTitle>
         </CardHeader>
@@ -20,7 +25,7 @@ export function BuildingBars({ occupancy, staff }: { occupancy: Occupancy; staff
           <ProgressBar
             value={occupancy.total}
             total={staff}
-            caption={`${Math.max(staff - occupancy.total, 0).toLocaleString("en-US")} left`}
+            caption={`${Math.max(staff - occupancy.total, 0).toLocaleString("en-US")} ${t(locale, "left")}`}
           />
         </CardContent>
       </Card>
@@ -40,7 +45,7 @@ export function BuildingBars({ occupancy, staff }: { occupancy: Occupancy; staff
               <ProgressBar
                 value={building.count}
                 total={roster}
-                caption={`${Math.max(roster - building.count, 0).toLocaleString("en-US")} left`}
+                caption={`${Math.max(roster - building.count, 0).toLocaleString("en-US")} ${t(locale, "left")}`}
               />
             </CardContent>
           </Card>
@@ -51,13 +56,13 @@ export function BuildingBars({ occupancy, staff }: { occupancy: Occupancy; staff
           <CardHeader>
             <CardTitle>
               <Link href="/attendance/buildings/none" className="hover:underline">
-                No building
+                {t(locale, "No building")}
               </Link>
             </CardTitle>
-            <p className="text-muted-foreground text-sm">Inside, but the last scan had no door</p>
+            <p className="text-muted-foreground text-sm">{t(locale, "Inside, but the last scan had no door")}</p>
           </CardHeader>
           <CardContent>
-            <ProgressBar value={occupancy.unknown_building} total={occupancy.unknown_building} caption="Still inside" />
+            <ProgressBar value={occupancy.unknown_building} total={occupancy.unknown_building} caption={t(locale, "Still inside")} />
           </CardContent>
         </Card>
       ) : null}

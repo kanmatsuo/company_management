@@ -37,6 +37,7 @@ export async function createDeveloper(_prev: FormState, formData: FormData): Pro
       department: optionalText(formData, "department"),
       position_title: optionalText(formData, "position_title"),
       manager: optionalInt(formData, "manager"),
+      building: optionalInt(formData, "building"),
       user: optionalInt(formData, "user"),
       start_date: optionalText(formData, "start_date"),
       out_date: optionalText(formData, "out_date"),
@@ -62,6 +63,7 @@ export async function updateDeveloper(id: number, _prev: FormState, formData: Fo
       department: text(formData, "department"),
       position_title: text(formData, "position_title"),
       manager: optionalInt(formData, "manager"),
+      building: text(formData, "building") ? optionalInt(formData, "building") : null,
       user: optionalInt(formData, "user"),
       start_date: optionalText(formData, "start_date"),
       out_date: optionalText(formData, "out_date"),
@@ -219,10 +221,22 @@ export async function createBuilding(_prev: FormState, formData: FormData): Prom
 }
 
 export async function updateBuilding(id: number, _prev: FormState, formData: FormData): Promise<FormState> {
+  const managers = formData.get("managers");
+  const owners = formData.get("owners");
+  const ids = (field: string) =>
+    text(formData, field)
+      .split(/[,\s]+/)
+      .map((part) => Number(part))
+      .filter((userId) => Number.isInteger(userId) && userId > 0);
   return commit({
     path: `/api/v1/rfid/buildings/${id}/`,
     method: "PATCH",
-    body: { code: optionalText(formData, "code"), name: optionalText(formData, "name") },
+    body: {
+      code: optionalText(formData, "code"),
+      name: optionalText(formData, "name"),
+      ...(managers === null ? {} : { managers: ids("managers") }),
+      ...(owners === null ? {} : { owners: ids("owners") }),
+    },
     redirectTo: "/buildings",
   });
 }
@@ -254,16 +268,38 @@ export async function submitScan(_prev: FormState, formData: FormData): Promise<
 }
 
 export async function deposit(_prev: FormState, formData: FormData): Promise<FormState> {
+  const key = text(formData, "idempotency") || randomUUID();
   return commit({
     path: "/api/v1/finance/deposits/",
-    headers: idempotent(),
+    headers: { "Idempotency-Key": key },
     body: {
       developer: optionalInt(formData, "developer"),
       amount: text(formData, "amount"),
       description: optionalText(formData, "description"),
+      pin: text(formData, "pin"),
     },
     redirectTo: (data) => `/finance/transactions/${idFrom(data) ?? ""}`,
   });
+}
+
+export type CardTap = {
+  id: number;
+  result: string;
+  developer: { id?: number; full_name?: string; employee_number?: string; department?: string } | null;
+};
+
+export async function recentCardTaps() {
+  const session = await getSession();
+  if (!session) return { taps: [] as CardTap[], allowed: false };
+  try {
+    const page = await djangoFetch<{ results?: CardTap[] } | CardTap[]>(
+      "/api/v1/rfid/events/?ordering=-event_time&page_size=5",
+      { accessToken: session.token },
+    );
+    return { taps: Array.isArray(page) ? page : page.results ?? [], allowed: true };
+  } catch {
+    return { taps: [] as CardTap[], allowed: false };
+  }
 }
 
 export async function adjustBalance(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -475,6 +511,51 @@ export async function testCards(search: string): Promise<TestCard[]> {
   }
 }
 
+export async function openDepositHold(): Promise<{ id: number; positionId: number } | { error: string }> {
+  const session = await getSession();
+  if (!session) return { error: "Not signed in." };
+  try {
+    const listed = await djangoFetch<{ results?: { id: number }[] } | { id: number }[]>(
+      "/api/v1/service-positions/?is_active=true&page_size=1",
+      { accessToken: session.token },
+    );
+    const rows = Array.isArray(listed) ? listed : listed.results ?? [];
+    const positionId = rows[0]?.id;
+    if (!positionId) return { error: "No service position is available for the card reader." };
+    const purchase = await djangoFetch<{ id: number; service_position: number }>("/api/v1/purchases/", {
+      method: "POST",
+      accessToken: session.token,
+      body: JSON.stringify({ service_position: positionId }),
+    });
+    return { id: purchase.id, positionId: purchase.service_position || positionId };
+  } catch (error) {
+    return { error: error instanceof DjangoError ? error.message : "Could not open the card reader." };
+  }
+}
+
+export async function presentedDeveloper(purchaseId: number) {
+  const session = await getSession();
+  if (!session) return null;
+  try {
+    const purchase = await djangoFetch<{
+      presented_card?: { developer?: { id?: number; full_name?: string; employee_number?: string; department?: string } | null } | null;
+    }>(`/api/v1/purchases/${purchaseId}/`, { accessToken: session.token });
+    return purchase.presented_card?.developer ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function cancelDepositHold(purchaseId: number) {
+  const session = await getSession();
+  if (!session) return;
+  try {
+    await djangoFetch(`/api/v1/purchases/${purchaseId}/cancel/`, { method: "POST", accessToken: session.token });
+  } catch {
+    // The draft may already be gone.
+  }
+}
+
 export async function simulateTap(
   purchaseId: number,
   who: { developer: number } | { uid: string },
@@ -568,36 +649,44 @@ export async function confirmPurchase(id: number, _prev: FormState, formData: Fo
 export async function openCourtBooking(_prev: FormState, formData: FormData): Promise<FormState> {
   const session = await getSession();
   if (!session) return { message: "Not signed in." };
-  const position = optionalInt(formData, "service_position");
   const reader = optionalText(formData, "reader");
   const good = optionalInt(formData, "good");
-  const start = text(formData, "start");
-  const slots = optionalInt(formData, "slots") ?? 1;
-  if (!position || !good || !start) return { message: "Choose a time first." };
+  const date = text(formData, "date");
+  const startTime = text(formData, "start_time");
+  const endTime = text(formData, "end_time");
+  if (!good || !date || !startTime || !endTime) return { message: "Choose a time first." };
   let purchaseId: number | null = null;
   try {
-    const purchase = await djangoFetch<{ id: number }>("/api/v1/purchases/", {
+    const purchase = await djangoFetch<{ id: number }>("/api/v1/bookings/checkout/", {
       method: "POST",
       accessToken: session.token,
-      body: JSON.stringify({ service_position: position, ...(reader ? { reader } : {}) }),
+      body: JSON.stringify({
+        good,
+        date,
+        start_time: startTime,
+        end_time: endTime,
+        ...(reader ? { reader } : {}),
+      }),
     });
     purchaseId = purchase.id;
-    await djangoFetch(`/api/v1/purchases/${purchase.id}/bookings/`, {
-      method: "POST",
-      accessToken: session.token,
-      body: JSON.stringify({ good, start, slots }),
-    });
   } catch (error) {
-    if (purchaseId) {
-      try {
-        await djangoFetch(`/api/v1/purchases/${purchaseId}/cancel/`, { method: "POST", accessToken: session.token });
-      } catch {
-        // The draft may already be gone.
-      }
-    }
     return { message: error instanceof DjangoError ? error.message : "Could not open this booking." };
   }
   redirect(`/purchases/${purchaseId}`);
+}
+
+export async function changeBooking(id: number, _prev: FormState, formData: FormData): Promise<FormState> {
+  const good = optionalInt(formData, "good");
+  return commit({
+    path: `/api/v1/bookings/${id}/change/`,
+    body: {
+      date: text(formData, "date"),
+      start_time: text(formData, "start_time"),
+      end_time: text(formData, "end_time"),
+      ...(good ? { good } : {}),
+    },
+    redirectTo: `/bookings/${id}`,
+  });
 }
 
 export async function createSeller(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -627,7 +716,7 @@ export async function updateSeller(id: number, _prev: FormState, formData: FormD
       phone: text(formData, "phone"),
       status: optionalText(formData, "status"),
       notes: text(formData, "notes"),
-      user: optionalInt(formData, "user"),
+      user: text(formData, "user") ? optionalInt(formData, "user") : null,
     },
     redirectTo: `/sellers/${id}`,
   });
@@ -640,6 +729,8 @@ export async function createPosition(_prev: FormState, formData: FormData): Prom
       seller: optionalInt(formData, "seller"),
       name: text(formData, "name"),
       location: optionalText(formData, "location"),
+      building: optionalInt(formData, "building"),
+      manager: optionalInt(formData, "manager"),
       is_active: checked(formData, "is_active"),
     },
     redirectTo: (data) => `/positions/${idFrom(data) ?? ""}`,
@@ -654,6 +745,8 @@ export async function updatePosition(id: number, _prev: FormState, formData: For
       seller: optionalInt(formData, "seller"),
       name: optionalText(formData, "name"),
       location: text(formData, "location"),
+      building: text(formData, "building") ? optionalInt(formData, "building") : null,
+      manager: text(formData, "manager") ? optionalInt(formData, "manager") : null,
       is_active: checked(formData, "is_active"),
     },
     redirectTo: `/positions/${id}`,

@@ -1,3 +1,4 @@
+import { Title } from "@/components/auto-text";
 import type { components } from "@/api/schema";
 import { Facts } from "@/components/facts";
 import { LoadError } from "@/components/no-access";
@@ -14,7 +15,7 @@ export default async function MySellerBalancePage() {
   return (
     <div className="flex flex-col gap-4 md:gap-6">
       <div>
-        <h1 className="font-semibold text-2xl tracking-tight">My seller balance</h1>
+        <Title>My seller balance</Title>
         <p className="text-muted-foreground text-sm">{account.available_balance} {account.currency} available</p>
       </div>
       <Card>

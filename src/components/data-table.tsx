@@ -1,11 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/app-link";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { TablePager, type PageSize } from "@/components/table-pager";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import type { Locale } from "@/lib/i18n";
+import { t } from "@/lib/i18n";
 import {
   Table,
   TableBody,
@@ -27,11 +29,13 @@ export function DataTable({
   rows,
   hrefs,
   struck,
+  locale = "en",
 }: {
   headers: string[];
   rows: string[][];
   hrefs?: Array<string | null>;
   struck?: boolean[];
+  locale?: Locale;
 }) {
   const [search, setSearch] = useState("");
   const [sortIndex, setSortIndex] = useState<number | null>(null);
@@ -69,12 +73,12 @@ export function DataTable({
           setSearch(event.target.value);
           setPage(1);
         }}
-        placeholder="Search this table"
+        placeholder={t(locale, "Search this table")}
         className="max-w-xs"
-        aria-label="Search this table"
+        aria-label={t(locale, "Search this table")}
       />
       {visible.length === 0 ? (
-        <p className="text-muted-foreground text-sm">Nothing matches this search.</p>
+        <p className="text-muted-foreground text-sm">{t(locale, "Nothing matches this search.")}</p>
       ) : (
         <Table>
           <TableHeader>
@@ -98,8 +102,8 @@ export function DataTable({
               <TableRow key={index} className={struck?.[index] ? "text-muted-foreground line-through" : undefined}>
                 {row.map((cell, cellIndex) => (
                   <TableCell key={`${headers[cellIndex]}-${cellIndex}`} className={cellIndex === 0 ? "font-medium" : undefined}>
-                    {headers[cellIndex] === "Status" || headers[cellIndex] === "Result" ? (
-                      <Badge variant="secondary">{cell}</Badge>
+                    {headers[cellIndex] === t(locale, "Status") || headers[cellIndex] === t(locale, "Result") ? (
+                      <Badge variant="secondary">{t(locale, cell)}</Badge>
                     ) : cellIndex === 0 && hrefs?.[index] ? (
                       <Link href={hrefs[index]} className="underline-offset-4 hover:underline">
                         {cell}
@@ -123,6 +127,7 @@ export function DataTable({
           setPageSize(size);
           setPage(1);
         }}
+        locale={locale}
       />
     </div>
   );

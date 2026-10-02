@@ -1,3 +1,4 @@
+import { Title, Hint } from "@/components/auto-text";
 import { createBuilding } from "@/app/(console)/mutations";
 import { FieldForm } from "@/components/field-form";
 import { NoAccess } from "@/components/no-access";
@@ -13,8 +14,8 @@ export default async function NewBuildingPage() {
   return (
     <div className="flex flex-col gap-4 md:gap-6">
       <div>
-        <h1 className="font-semibold text-2xl tracking-tight">New building</h1>
-        <p className="text-muted-foreground text-sm">Code is the short label, such as B1.</p>
+        <Title>New building</Title>
+        <Hint>Code is the short label, such as B1.</Hint>
       </div>
       <Card>
         <CardHeader>

@@ -52,8 +52,15 @@ function explainRule(status: number, code: string | null, details: unknown, mess
     const row = details as { good?: string; start?: string; end?: string };
     return `You already have ${row.good || "another court"} from ${row.start || "that time"} to ${row.end || "later"}. One person cannot hold two courts at the same time.`;
   }
-  if (code === "SLOT_UNAVAILABLE") return "Someone booked that time first. Reload the slots and choose again.";
-  if (code === "RENTAL_NOT_AVAILABLE") return "This rental is not available to book.";
+  if (code === "SLOT_UNAVAILABLE") return "That time was just taken. Reload the schedule and choose again.";
+  if (code === "INVALID_SLOT") return "That time is not on the court's grid, or it is closed, past, or too far ahead. Reload the schedule.";
+  if (code === "RENTAL_NOT_AVAILABLE") return "This court is not available to book.";
+  if (code === "BOOKING_STARTED") return "This booking has already started, so it cannot be moved.";
+  if (code === "BOOKING_PRICE_DIFFERENT" && details && typeof details === "object") {
+    const row = details as { paid?: string; new_price?: string };
+    return `The new time must cost the same. Paid ${row.paid ?? "—"}, new price ${row.new_price ?? "—"}.`;
+  }
+  if (code === "GOOD_NOT_AVAILABLE") return "Courts are booked on the playground desk, not added to a till sale.";
   if (code === "CARD_NOT_PRESENTED") return "Please tap the card. There is no tap yet, or it expired.";
   if (code === "INVALID_PIN" && details && typeof details === "object") {
     const row = details as { attempts_remaining?: number };
@@ -86,6 +93,9 @@ export async function djangoFetch<T>(
 ): Promise<T> {
   const headers = new Headers(init.headers);
   headers.set("Accept", "application/json");
+  if (!headers.has("Accept-Language")) {
+    headers.set("Accept-Language", await requestLocale());
+  }
   if (init.body && !(init.body instanceof FormData) && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
@@ -149,6 +159,15 @@ export async function djangoFetch<T>(
   }
 
   return (body ?? undefined) as T;
+}
+
+async function requestLocale() {
+  try {
+    const { cookies } = await import("next/headers");
+    return (await cookies()).get("locale")?.value === "ko" ? "ko" : "en";
+  } catch {
+    return "en";
+  }
 }
 
 async function cookiesMutable() {

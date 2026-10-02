@@ -1,3 +1,4 @@
+import { AutoText } from "@/components/auto-text";
 import { notFound, redirect } from "next/navigation";
 import { SectionTemplate } from "@/components/section-template";
 import { can, getSession } from "@/lib/current-user";
@@ -50,8 +51,8 @@ export default async function SectionPage({ params }: { params: Promise<{ sectio
   if (!can(session.user, spec.permission)) {
     return (
       <section className="rounded-xl bg-card p-6 text-card-foreground ring-1 ring-foreground/10">
-        <h1 className="font-semibold text-lg">No access</h1>
-        <p className="mt-2 text-muted-foreground text-sm">Your account cannot open this section.</p>
+        <h1 className="font-semibold text-lg"><AutoText>No access</AutoText></h1>
+        <p className="mt-2 text-muted-foreground text-sm"><AutoText>Your account cannot open this section.</AutoText></p>
       </section>
     );
   }

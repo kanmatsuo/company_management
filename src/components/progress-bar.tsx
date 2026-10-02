@@ -1,3 +1,8 @@
+"use client";
+
+import { useLocale } from "@/components/locale-context";
+import { t } from "@/lib/i18n";
+
 export function ProgressBar({
   value,
   total,
@@ -7,6 +12,7 @@ export function ProgressBar({
   total: number;
   caption?: string;
 }) {
+  const locale = useLocale();
   const whole = Math.max(total, value, 0);
   const ratio = whole === 0 ? 0 : Math.round((value / whole) * 100);
   return (
@@ -14,7 +20,7 @@ export function ProgressBar({
       <div className="flex items-baseline justify-between gap-3">
         <p className="font-semibold text-lg tabular-nums">
           {value.toLocaleString("en-US")}
-          <span className="ml-1 font-normal text-muted-foreground text-sm">of {whole.toLocaleString("en-US")}</span>
+          <span className="ml-1 font-normal text-muted-foreground text-sm">{t(locale, "of")} {whole.toLocaleString("en-US")}</span>
         </p>
         <p className="font-medium text-sm tabular-nums text-emerald-600">{ratio}%</p>
       </div>

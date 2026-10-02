@@ -5,7 +5,11 @@ import { useRouter } from "next/navigation";
 import { confirmPurchase, developerBalance } from "@/app/(console)/mutations";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { CreditCard } from "lucide-react";
 import { TapSimulator } from "@/app/(console)/purchases/tap-simulator";
+import { AutoText } from "@/components/auto-text";
+import { t, type Locale } from "@/lib/i18n";
 
 type Person = {
   id?: number;
@@ -44,6 +48,8 @@ export function Checkout({
   currency,
   presented,
   simulator = false,
+  verb = "buy",
+  locale = "en",
 }: {
   purchaseId: number;
   positionId: number;
@@ -53,6 +59,8 @@ export function Checkout({
   currency: string;
   presented: Presented;
   simulator?: boolean;
+  verb?: "buy" | "book";
+  locale?: Locale;
 }) {
   const router = useRouter();
   const [mode, setMode] = useState<"basket" | "waiting" | "ready">(presented?.developer ? "ready" : "basket");
@@ -145,28 +153,39 @@ export function Checkout({
   if (mode === "basket") {
     return (
       <Button type="button" disabled={items.length === 0} onClick={() => setMode(developer ? "ready" : "waiting")}>
-        Scan card to buy
+        {t(locale, verb === "book" ? "Scan card to book" : "Scan card to buy")}
       </Button>
     );
   }
 
   if (mode === "waiting" || !developer) {
     return (
-      <div className="grid gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Waiting for the card</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-3">
-            <p className="text-sm">{live}. Ask the developer to tap their card on the till reader.</p>
-            <div className="h-2 overflow-hidden rounded-full bg-muted">
-              <div className="h-full w-1/3 animate-pulse rounded-full bg-emerald-500" />
+      <Dialog open onOpenChange={(open) => { if (!open) setMode("basket"); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t(locale, "Waiting for the card")}</DialogTitle>
+            <DialogDescription>{t(locale, "Hold the card on the reader. This closes when the card is recognized.")}</DialogDescription>
+          </DialogHeader>
+          <div className="grid place-items-center gap-3 py-2">
+            <div className="flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <CreditCard className="size-6" />
             </div>
+            <div
+              className="h-1.5 w-full overflow-hidden rounded-full bg-muted"
+              role="progressbar"
+              aria-label={t(locale, "Waiting for the card")}
+            >
+              <div className="h-full w-1/3 rounded-full bg-primary motion-safe:animate-[indeterminate_1.4s_ease-in-out_infinite]" />
+            </div>
+            <p className="text-muted-foreground text-xs">{t(locale, live)}</p>
             {problem ? <p className="text-destructive text-sm">{problem}</p> : null}
-          </CardContent>
-        </Card>
-        {simulator ? <TapSimulator purchaseId={purchaseId} /> : null}
-      </div>
+          </div>
+          {simulator ? <TapSimulator purchaseId={purchaseId} /> : null}
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setMode("basket")}>{t(locale, "Cancel")}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     );
   }
 
@@ -180,13 +199,13 @@ export function Checkout({
       </CardHeader>
       <CardContent className="grid gap-4">
         <div className="grid gap-3 sm:grid-cols-2">
-          <p className="text-sm"><span className="text-muted-foreground">Developer · </span>{developer.full_name || "—"}</p>
-          <p className="text-sm"><span className="text-muted-foreground">Employee number · </span>{developer.employee_number || "—"}</p>
-          <p className="text-sm"><span className="text-muted-foreground">Department · </span>{developer.department || "—"}</p>
-          <p className="text-sm"><span className="text-muted-foreground">Card · </span>Recognized{presented?.presented_at ? ` at ${new Date(presented.presented_at).toLocaleTimeString()}` : ""}</p>
-          <p className="text-sm"><span className="text-muted-foreground">Current balance · </span>{balance === null ? "Not available for this account" : `${balance} ${currency}`}</p>
-          <p className="text-sm"><span className="text-muted-foreground">Balance after pay · </span>{after === null ? "—" : `${after} ${currency}`}</p>
-          <p className="text-sm"><span className="text-muted-foreground">To pay · </span>{total} {currency}</p>
+          <p className="text-sm"><span className="text-muted-foreground"><AutoText>Developer ·</AutoText> </span>{developer.full_name || "—"}</p>
+          <p className="text-sm"><span className="text-muted-foreground"><AutoText>Employee number ·</AutoText> </span>{developer.employee_number || "—"}</p>
+          <p className="text-sm"><span className="text-muted-foreground"><AutoText>Department ·</AutoText> </span>{developer.department || "—"}</p>
+          <p className="text-sm"><span className="text-muted-foreground"><AutoText>Card ·</AutoText> </span><AutoText>Recognized</AutoText>{presented?.presented_at ? ` ${new Date(presented.presented_at).toLocaleTimeString()}` : ""}</p>
+          <p className="text-sm"><span className="text-muted-foreground"><AutoText>Current balance ·</AutoText> </span>{balance === null ? t(locale, "Not available for this account") : `${balance} ${currency}`}</p>
+          <p className="text-sm"><span className="text-muted-foreground"><AutoText>Balance after pay ·</AutoText> </span>{after === null ? "—" : `${after} ${currency}`}</p>
+          <p className="text-sm"><span className="text-muted-foreground"><AutoText>To pay ·</AutoText> </span>{total} {currency}</p>
         </div>
         <ul className="grid gap-1 text-sm">
           {items.map((item) => (
@@ -216,13 +235,13 @@ export function Checkout({
           ))}
         </div>
         {problem ? <p className="text-destructive text-sm">{problem}</p> : null}
-        <Button type="button" disabled={!pinReady || selling} onClick={() => setConfirming(true)}>Sell</Button>
+        <Button type="button" disabled={!pinReady || selling} onClick={() => setConfirming(true)}>{t(locale, verb === "book" ? "Book and pay" : "Sell")}</Button>
         {confirming ? (
           <div className="grid gap-3 rounded-lg border p-4">
-            <p className="text-sm">Sell {total} {currency} to {developer.full_name || "this developer"}? This payment cannot be undone.</p>
+            <p className="text-sm">{t(locale, verb === "book" ? "Book and pay" : "Sell")} {total} {currency}. {developer.full_name || t(locale, "this developer")}. {t(locale, "This payment cannot be undone.")}</p>
             <div className="flex gap-2">
-              <Button type="button" disabled={selling} onClick={() => void sell()}>{selling ? "Paying" : "OK"}</Button>
-              <Button type="button" variant="outline" disabled={selling} onClick={() => setConfirming(false)}>Cancel</Button>
+              <Button type="button" disabled={selling} onClick={() => void sell()}>{selling ? t(locale, "Paying") : t(locale, "OK")}</Button>
+              <Button type="button" variant="outline" disabled={selling} onClick={() => setConfirming(false)}>{t(locale, "Cancel")}</Button>
             </div>
           </div>
         ) : null}

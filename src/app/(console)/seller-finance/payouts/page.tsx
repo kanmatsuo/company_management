@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/app-link";
 import type { components } from "@/api/schema";
 import { Button } from "@/components/ui/button";
 import { RecordList } from "@/components/record-list";

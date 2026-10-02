@@ -1,4 +1,5 @@
-import Link from "next/link";
+import { Title, Hint } from "@/components/auto-text";
+import Link from "@/components/app-link";
 import type { components } from "@/api/schema";
 import { NoAccess } from "@/components/no-access";
 import { Button } from "@/components/ui/button";
@@ -28,7 +29,7 @@ export default async function BuildingsPage() {
     <div className="flex flex-col gap-4 md:gap-6">
       <div className="flex items-end justify-between gap-4">
         <div>
-          <h1 className="font-semibold text-2xl tracking-tight">Buildings</h1>
+          <Title>Buildings</Title>
           <p className="text-muted-foreground text-sm">{buildings.length} buildings</p>
         </div>
         {manage ? <Button asChild><Link href="/buildings/new">New building</Link></Button> : null}
@@ -40,7 +41,7 @@ export default async function BuildingsPage() {
         </CardHeader>
         <CardContent>
           {error ? <p className="text-destructive text-sm">{error}</p> : buildings.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No buildings yet.</p>
+            <Hint>No buildings yet.</Hint>
           ) : (
             <DataTable
               headers={manage ? ["Code", "Name", ""] : ["Code", "Name"]}

@@ -1,20 +1,21 @@
 import { createGood } from "@/app/(console)/mutations";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Title, Hint } from "@/components/auto-text";
 import { FieldForm } from "@/components/field-form";
 import { NoAccess } from "@/components/no-access";
-import { canManage } from "@/lib/current-user";
+import { canManage, runsStore } from "@/lib/current-user";
 import { requireSession } from "@/lib/page-data";
 import { positionChoices } from "@/lib/choices";
 
 export default async function NewGoodPage() {
   const session = await requireSession();
-  if (!canManage(session.user, ["goods", "good", "seller"])) return <NoAccess description="Your account cannot create goods." />;
+  if (!canManage(session.user, ["goods", "good", "seller"]) && !(await runsStore())) return <NoAccess description="Your account cannot create goods." />;
   const positions = await positionChoices(session.token);
   return (
     <div className="flex flex-col gap-4 md:gap-6">
       <div>
-        <h1 className="font-semibold text-2xl tracking-tight">New good</h1>
-        <p className="text-muted-foreground text-sm">Stock changes after creation go through the stock action.</p>
+        <Title>New good</Title>
+        <Hint>Stock changes after creation go through the stock action.</Hint>
       </div>
       <Card>
         <CardHeader>

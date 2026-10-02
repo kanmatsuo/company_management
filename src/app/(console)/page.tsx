@@ -1,3 +1,4 @@
+import { Hint, AutoText } from "@/components/auto-text";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartSlot } from "@/components/chart-panel";
@@ -58,8 +59,8 @@ export default async function OverviewPage() {
   return (
     <div className="flex flex-col gap-4 md:gap-6">
       <div>
-        <h1 className="font-semibold text-2xl tracking-tight">Hello, {name}</h1>
-        <p className="text-muted-foreground text-sm">Live totals from the company API. Charts will sit under them.</p>
+        <h1 className="font-semibold text-2xl tracking-tight"><AutoText>Hello,</AutoText> {name}</h1>
+        <Hint>Live totals from the company API. Charts will sit under them.</Hint>
       </div>
       {visible.length > 0 ? (
         <div className="grid grid-cols-1 gap-4 *:data-[slot=card]:bg-linear-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs sm:grid-cols-2 xl:grid-cols-4">
@@ -80,7 +81,7 @@ export default async function OverviewPage() {
                     <div className="font-medium text-3xl tabular-nums leading-none tracking-tight">{values[index]}</div>
                     <Badge variant="secondary">Live</Badge>
                   </div>
-                  <p className="text-muted-foreground text-sm">{stat.hint}</p>
+                  <Hint>{stat.hint}</Hint>
                 </CardContent>
               </Card>
             );

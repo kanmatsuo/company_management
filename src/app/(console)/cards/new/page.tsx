@@ -1,3 +1,4 @@
+import { Title, Hint } from "@/components/auto-text";
 import { createCard } from "@/app/(console)/mutations";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FieldForm } from "@/components/field-form";
@@ -11,8 +12,8 @@ export default async function NewCardPage() {
   return (
     <div className="flex flex-col gap-4 md:gap-6">
       <div>
-        <h1 className="font-semibold text-2xl tracking-tight">New card</h1>
-        <p className="text-muted-foreground text-sm">Cards are retired, not deleted, so scan history stays intact.</p>
+        <Title>New card</Title>
+        <Hint>Cards are retired, not deleted, so scan history stays intact.</Hint>
       </div>
       <Card>
         <CardHeader>

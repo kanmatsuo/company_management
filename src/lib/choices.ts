@@ -26,6 +26,24 @@ export function userChoices(token: string) {
   );
 }
 
+export function buildingChoices(token: string) {
+  return asChoices<{ id: number; code?: string; name?: string }>(token, "/api/v1/rfid/buildings/", (row) =>
+    row.code ? `${row.name ?? row.code} · ${row.code}` : (row.name ?? `Building ${row.id}`),
+  );
+}
+
+/** Users with one role: the only ones who can be linked to that job. */
+export function roleUserChoices(token: string, role: string) {
+  return asChoices<Named>(token, `/api/v1/users/?role=${encodeURIComponent(role)}&ordering=full_name`, (row) =>
+    row.full_name ? `${row.full_name} · ${row.email ?? ""}` : (row.email ?? row.full_name),
+  );
+}
+
+/** Users with the SELLER role: the only ones who can run a store or a position. */
+export function sellerUserChoices(token: string) {
+  return roleUserChoices(token, "SELLER");
+}
+
 export function sellerChoices(token: string) {
   return asChoices<Named>(token, "/api/v1/sellers/?ordering=name", (row) => row.name ?? row.full_name);
 }
@@ -38,7 +56,17 @@ export function positionChoices(token: string) {
   );
 }
 
-export function goodChoices(token: string, servicePosition?: number) {
+export async function goodChoices(token: string, servicePosition?: number) {
   const filter = servicePosition ? `&service_position=${servicePosition}` : "";
-  return asChoices<Named>(token, `/api/v1/goods/?ordering=name&is_active=true${filter}`, (row) => row.name ?? row.full_name);
+  try {
+    const page = await loadFlexible<{ id: number; name?: string; kind?: string }>(
+      token,
+      `/api/v1/goods/?ordering=name&is_active=true${filter}`,
+    );
+    return page.results
+      .filter((row) => row.kind !== "RENTAL")
+      .map((row) => ({ value: String(row.id), label: row.name || `Record ${row.id}` }));
+  } catch {
+    return [];
+  }
 }

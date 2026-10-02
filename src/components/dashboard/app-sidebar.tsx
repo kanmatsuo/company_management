@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/app-link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useState, type ComponentProps } from "react";
 import { ChevronRight, type LucideIcon, LayoutDashboard, UserRound, CreditCard, Radio, ScanLine, CalendarCheck, Users, ScrollText, Wallet, Package, Warehouse, ShoppingCart, Store, Landmark, Briefcase } from "lucide-react";
@@ -25,8 +25,10 @@ import { NavUser } from "@/components/dashboard/nav-user";
 import type { CurrentUser } from "@/lib/current-user";
 import { canManage, canOpen } from "@/lib/permissions";
 import { usePreferencesStore } from "@/stores/preferences/preferences-provider";
+import type { Locale } from "@/lib/i18n";
+import { t } from "@/lib/i18n";
 
-type Child = { title: string; href: string; permission?: string | null; anyOf?: string[]; manage?: string[] };
+type Child = { title: string; href: string; permission?: string | null; anyOf?: string[]; manage?: string[]; seller?: boolean; owner?: boolean };
 
 type Group = {
   title: string;
@@ -40,10 +42,11 @@ const GROUPS: Group[] = [
     icon: LayoutDashboard,
     children: [
       { title: "Dashboard", href: "/", permission: null },
+      { title: "Company statistics", href: "/stats", permission: "stats.view" },
       { title: "Account", href: "/account", permission: null },
       { title: "Rentals", href: "/rentals", permission: null },
       { title: "My bookings", href: "/bookings/me", permission: null },
-      { title: "Rental schedule", href: "/bookings", permission: null },
+      { title: "Playground desk", href: "/bookings", permission: null },
     ],
   },
   {
@@ -134,21 +137,21 @@ const GROUPS: Group[] = [
     title: "Goods",
     icon: Package,
     children: [
-      { title: "All", href: "/goods", anyOf: ["goods", "good", "seller"] },
-      { title: "New", href: "/goods/new", anyOf: ["goods", "good", "seller"], manage: ["goods", "good", "seller"] },
+      { title: "All", href: "/goods", anyOf: ["goods", "good", "seller"], seller: true },
+      { title: "New", href: "/goods/new", anyOf: ["goods", "good", "seller"], manage: ["goods", "good", "seller"], seller: true },
     ],
   },
   {
     title: "Inventory",
     icon: Warehouse,
-    children: [{ title: "Movements", href: "/inventory", anyOf: ["inventory", "goods", "good", "seller"] }],
+    children: [{ title: "Movements", href: "/inventory", anyOf: ["inventory", "goods", "good", "seller"], seller: true }],
   },
   {
     title: "Purchases",
     icon: ShoppingCart,
     children: [
-      { title: "All", href: "/purchases", anyOf: ["purchase", "seller"] },
-      { title: "New", href: "/purchases/new", anyOf: ["purchase", "seller"], manage: ["purchase", "seller"] },
+      { title: "All", href: "/purchases", anyOf: ["purchase", "seller"], seller: true },
+      { title: "New", href: "/purchases/new", anyOf: ["purchase", "seller"], manage: ["purchase", "seller"], seller: true },
     ],
   },
   {
@@ -163,24 +166,26 @@ const GROUPS: Group[] = [
     title: "Positions",
     icon: Briefcase,
     children: [
-      { title: "All", href: "/positions", anyOf: ["service", "position", "seller"] },
-      { title: "New", href: "/positions/new", anyOf: ["service", "position", "seller"], manage: ["service", "position", "seller"] },
+      { title: "All", href: "/positions", anyOf: ["service", "position", "seller"], seller: true },
+      { title: "New", href: "/positions/new", anyOf: ["service", "position", "seller"], manage: ["service", "position", "seller"], owner: true },
     ],
   },
   {
     title: "Seller finance",
     icon: Landmark,
     children: [
-      { title: "Balances", href: "/seller-finance/accounts", anyOf: ["seller", "finance"] },
-      { title: "Transactions", href: "/seller-finance/transactions", anyOf: ["seller", "finance"] },
-      { title: "Payouts", href: "/seller-finance/payouts", anyOf: ["seller", "finance"] },
-      { title: "Request payout", href: "/seller-finance/payouts/new", anyOf: ["seller", "finance"] },
+      { title: "Balances", href: "/seller-finance/accounts", anyOf: ["seller", "finance"], seller: true },
+      { title: "Transactions", href: "/seller-finance/transactions", anyOf: ["seller", "finance"], seller: true },
+      { title: "Payouts", href: "/seller-finance/payouts", anyOf: ["seller", "finance"], seller: true },
+      { title: "Request payout", href: "/seller-finance/payouts/new", anyOf: ["seller", "finance"], seller: true },
       { title: "Adjustment", href: "/seller-finance/adjustments", anyOf: ["seller", "finance"], manage: ["seller", "finance"] },
     ],
   },
 ];
 
-function allowed(user: CurrentUser, child: Child) {
+function allowed(user: CurrentUser, child: Child, isSeller: boolean, isOwner: boolean) {
+  if (child.owner && isOwner) return true;
+  if (child.seller && isSeller) return true;
   if (child.manage && !canManage(user, child.manage)) return false;
   if (child.anyOf) return child.anyOf.some((prefix) => canOpen(user, prefix));
   if (!child.permission) return child.permission === null;
@@ -208,12 +213,14 @@ function NavGroup({
   onOpenChange,
   pathname,
   search,
+  locale,
 }: {
   group: Group & { children: Child[] };
   open: boolean;
   onOpenChange: (open: boolean) => void;
   pathname: string;
   search: URLSearchParams;
+  locale: Locale;
 }) {
   const Icon = group.icon;
   const exact = group.children.filter((child) => childActive(child.href, pathname, search));
@@ -228,7 +235,7 @@ function NavGroup({
         <CollapsibleTrigger asChild>
           <SidebarMenuButton tooltip={group.title}>
             <Icon />
-            <span>{group.title}</span>
+            <span>{t(locale, group.title)}</span>
             <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
           </SidebarMenuButton>
         </CollapsibleTrigger>
@@ -238,7 +245,7 @@ function NavGroup({
               {group.children.map((child) => (
                 <SidebarMenuSubItem key={child.href}>
                   <SidebarMenuSubButton asChild isActive={child.href === activeHref}>
-                    <Link href={child.href}>{child.title}</Link>
+                    <Link href={child.href}>{t(locale, child.title)}</Link>
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
               ))}
@@ -257,7 +264,7 @@ function childActive(href: string, pathname: string, search: { get(key: string):
   return expected.every(([key, value]) => search.get(key) === value);
 }
 
-export function AppSidebar({ user, ...props }: ComponentProps<typeof Sidebar> & { user: CurrentUser }) {
+export function AppSidebar({ user, locale, isSeller = false, isOwner = false, ...props }: ComponentProps<typeof Sidebar> & { user: CurrentUser; locale: Locale; isSeller?: boolean; isOwner?: boolean }) {
   const pathname = usePathname();
   const search = useSearchParams();
   const { sidebarVariant, sidebarCollapsible, isSynced } = usePreferencesStore(
@@ -271,7 +278,7 @@ export function AppSidebar({ user, ...props }: ComponentProps<typeof Sidebar> & 
   const collapsible = isSynced ? sidebarCollapsible : props.collapsible;
   const groups = GROUPS.map((group) => ({
     ...group,
-    children: group.children.filter((child) => allowed(user, child)),
+    children: group.children.filter((child) => allowed(user, child, isSeller, isOwner)),
   })).filter((group) => group.children.length > 0);
   const activeTitle =
     groups.find((group) => group.children.some((child) => inSection(child.href, navPath(pathname))))?.title ?? null;
@@ -290,7 +297,7 @@ export function AppSidebar({ user, ...props }: ComponentProps<typeof Sidebar> & 
             <SidebarMenuButton asChild size="lg">
               <Link href="/">
                 <LayoutDashboard />
-                <span className="font-semibold text-base">Management</span>
+                <span className="font-semibold text-base">{t(locale, "Management")}</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -298,7 +305,7 @@ export function AppSidebar({ user, ...props }: ComponentProps<typeof Sidebar> & 
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Workspace</SidebarGroupLabel>
+          <SidebarGroupLabel>{t(locale, "Workspace")}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {groups.map((group) => (
@@ -309,6 +316,7 @@ export function AppSidebar({ user, ...props }: ComponentProps<typeof Sidebar> & 
                   onOpenChange={(next) => setOpenTitle(next ? group.title : null)}
                   pathname={navPath(pathname)}
                   search={search}
+                  locale={locale}
                 />
               ))}
             </SidebarMenu>
@@ -316,7 +324,7 @@ export function AppSidebar({ user, ...props }: ComponentProps<typeof Sidebar> & 
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={user} />
+        <NavUser user={user} locale={locale} />
       </SidebarFooter>
     </Sidebar>
   );

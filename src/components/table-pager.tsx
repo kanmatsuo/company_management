@@ -1,5 +1,7 @@
-import Link from "next/link";
+import Link from "@/components/app-link";
 import { Button } from "@/components/ui/button";
+import type { Locale } from "@/lib/i18n";
+import { t } from "@/lib/i18n";
 
 export const PAGE_SIZES = [5, 10, 20, 50, "all"] as const;
 export type PageSize = (typeof PAGE_SIZES)[number];
@@ -32,6 +34,7 @@ export function TablePager({
   hrefForSize,
   onPage,
   onSize,
+  locale = "en",
 }: {
   page: number;
   pages: number;
@@ -40,33 +43,34 @@ export function TablePager({
   hrefForSize?: (size: PageSize) => string;
   onPage?: (page: number) => void;
   onSize?: (size: PageSize) => void;
+  locale?: Locale;
 }) {
   const current = Math.min(page, pages);
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-muted-foreground text-sm">Per page</span>
+        <span className="text-muted-foreground text-sm">{t(locale, "Per page")}</span>
         {PAGE_SIZES.map((size) =>
           onSize ? (
             <Button key={size} type="button" size="sm" variant={size === pageSize ? "default" : "outline"} onClick={() => onSize(size)}>
-              {size === "all" ? "All" : size}
+              {size === "all" ? t(locale, "All") : size}
             </Button>
           ) : (
             <Button key={size} asChild size="sm" variant={size === pageSize ? "default" : "outline"}>
-              <Link href={hrefForSize ? hrefForSize(size) : "#"}>{size === "all" ? "All" : size}</Link>
+              <Link href={hrefForSize ? hrefForSize(size) : "#"}>{size === "all" ? t(locale, "All") : size}</Link>
             </Button>
           ),
         )}
       </div>
       {pageSize === "all" ? (
-        <p className="text-muted-foreground text-sm">All rows</p>
+        <p className="text-muted-foreground text-sm">{t(locale, "All rows")}</p>
       ) : (
         <div className="flex flex-wrap items-center gap-1">
           {current <= 1 ? (
-            <Button size="sm" variant="outline" disabled>Previous</Button>
+            <Button size="sm" variant="outline" disabled>{t(locale, "Previous")}</Button>
           ) : (
             <Button asChild={!onPage} size="sm" variant="outline" type="button" onClick={onPage ? () => onPage(current - 1) : undefined}>
-              {onPage ? "Previous" : <Link href={hrefForPage ? hrefForPage(current - 1) : "#"}>Previous</Link>}
+              {onPage ? t(locale, "Previous") : <Link href={hrefForPage ? hrefForPage(current - 1) : "#"}>{t(locale, "Previous")}</Link>}
             </Button>
           )}
           {pageWindow(current, pages).map((item, index) =>
@@ -89,10 +93,10 @@ export function TablePager({
             ),
           )}
           {current >= pages ? (
-            <Button size="sm" variant="outline" disabled>Next</Button>
+            <Button size="sm" variant="outline" disabled>{t(locale, "Next")}</Button>
           ) : (
             <Button asChild={!onPage} size="sm" variant="outline" type="button" onClick={onPage ? () => onPage(current + 1) : undefined}>
-              {onPage ? "Next" : <Link href={hrefForPage ? hrefForPage(current + 1) : "#"}>Next</Link>}
+              {onPage ? t(locale, "Next") : <Link href={hrefForPage ? hrefForPage(current + 1) : "#"}>{t(locale, "Next")}</Link>}
             </Button>
           )}
         </div>

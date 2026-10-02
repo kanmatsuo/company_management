@@ -1,10 +1,11 @@
+import { AutoText } from "@/components/auto-text";
 import { redirect } from "next/navigation";
 import { changeStock, deleteGood, deleteImage, updateGood, uploadImage } from "@/app/(console)/mutations";
 import type { components } from "@/api/schema";
 import { FieldForm } from "@/components/field-form";
 import { LoadError } from "@/components/no-access";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { canManage } from "@/lib/current-user";
+import { canManage, runsStore } from "@/lib/current-user";
 import { show } from "@/lib/load-all";
 import { loadOne } from "@/lib/page-data";
 import { positionChoices } from "@/lib/choices";
@@ -17,7 +18,7 @@ export default async function GoodPage({ params }: { params: Promise<{ id: strin
   const loaded = await loadOne<Good>(`/api/v1/goods/${id}/`);
   if (!loaded.value) return <LoadError title="Good" message={loaded.error ?? "Not found."} />;
   const good = loaded.value;
-  const manage = canManage(loaded.session.user, ["goods", "good", "seller"]);
+  const manage = canManage(loaded.session.user, ["goods", "good", "seller"]) || await runsStore();
   const positions = manage ? await positionChoices(loaded.session.token) : [];
   return (
     <div className="flex flex-col gap-4 md:gap-6">
@@ -68,7 +69,7 @@ export default async function GoodPage({ params }: { params: Promise<{ id: strin
           <CardTitle>Images</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4">
-          {good.images.length === 0 ? <p className="text-muted-foreground text-sm">No images.</p> : null}
+          {good.images.length === 0 ? <p className="text-muted-foreground text-sm"><AutoText>No images.</AutoText></p> : null}
           <div className="grid gap-3 sm:grid-cols-2">
             {good.images.map((image) => (
               <div key={image.id} className="grid gap-2">
