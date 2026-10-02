@@ -9,7 +9,7 @@ import { LoadError } from "@/components/no-access";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { canManage, runsStore } from "@/lib/current-user";
-import { getApiUrl } from "@/lib/env";
+import { getSocketBase } from "@/lib/socket-url";
 import { show, showTime } from "@/lib/load-all";
 import { loadOne } from "@/lib/page-data";
 import { goodChoices } from "@/lib/choices";
@@ -33,7 +33,7 @@ export default async function PurchasePage({ params }: { params: Promise<{ id: s
     presented_at?: string;
     expires_at?: string;
   } | null;
-  const socketBase = getApiUrl().replace(/^http/, "ws");
+  const socketBase = await getSocketBase();
   const locale = await getLocale();
   return (
     <div className="flex flex-col gap-4 md:gap-6">

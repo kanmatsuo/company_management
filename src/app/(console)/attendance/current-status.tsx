@@ -1,7 +1,7 @@
 import type { components } from "@/api/schema";
 import { OccupancyBoard } from "@/app/(console)/occupancy/board";
 import { LoadError } from "@/components/no-access";
-import { getApiUrl } from "@/lib/env";
+import { getSocketBase } from "@/lib/socket-url";
 import { loadCount, loadOne } from "@/lib/page-data";
 import { getLocale } from "@/lib/locale";
 import { t } from "@/lib/i18n";
@@ -13,7 +13,7 @@ export async function CurrentStatus() {
   const loaded = await loadOne<Occupancy>("/api/v1/attendance/occupancy/");
   if (!loaded.value) return <LoadError title={t(locale, "Current status")} message={loaded.error ?? t(locale, "Could not load occupancy.")} />;
   const staff = await loadCount("/api/v1/developers/?status=ACTIVE");
-  const socketBase = getApiUrl().replace(/^http/, "ws");
+  const socketBase = await getSocketBase();
   return (
     <div className="flex flex-col gap-4 md:gap-6">
       <div>

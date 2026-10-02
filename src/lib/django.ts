@@ -99,6 +99,12 @@ export async function djangoFetch<T>(
   if (init.body && !(init.body instanceof FormData) && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
+  // The browser's address, for the backend (e.g. the till reader on the seller's PC is found
+  // by it). nginx sets X-Forwarded-For on requests to this server, so it can't be faked.
+  if (!headers.has("X-Forwarded-For")) {
+    const clientIp = await requestClientIp();
+    if (clientIp) headers.set("X-Forwarded-For", clientIp);
+  }
   if (init.authorization) {
     headers.set("Authorization", init.authorization);
   } else if (init.accessToken) {
@@ -159,6 +165,16 @@ export async function djangoFetch<T>(
   }
 
   return (body ?? undefined) as T;
+}
+
+async function requestClientIp() {
+  try {
+    const { headers } = await import("next/headers");
+    const forwarded = (await headers()).get("x-forwarded-for");
+    return forwarded ? forwarded.split(",")[0].trim() || null : null;
+  } catch {
+    return null;
+  }
 }
 
 async function requestLocale() {
