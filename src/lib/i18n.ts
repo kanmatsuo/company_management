@@ -74,6 +74,10 @@ const ko: Record<string, string> = {
   Password: "비밀번호",
   "Signing in…": "로그인중…",
   "Could not sign in.": "로그인할 수 없습니다.",
+  // Same wording as the backend's translation of this message.
+  "Invalid input.": "입력자료가 옳지 않습니다.",
+  "Enter your email.": "전자우편을 입력하십시오.",
+  "Enter your password.": "비밀번호를 입력하십시오.",
   "Could not reach the app.": "앱에 연결할 수 없습니다.",
   "Per page": "쪽당",
   Previous: "이전",

@@ -2,11 +2,14 @@ import { NextResponse } from "next/server";
 import type { components } from "@/api/schema";
 import { DjangoError, djangoFetch } from "@/lib/django";
 import { clearSession, getRefreshToken, setSession } from "@/lib/session";
+import { getLocale } from "@/lib/locale";
+import { t } from "@/lib/i18n";
 
 type TokenPair = components["schemas"]["TokenObtainPair"];
 type Me = components["schemas"]["Me"];
 
 export async function POST(request: Request) {
+  const locale = await getLocale();
   let email = "";
   let password = "";
   try {
@@ -14,15 +17,15 @@ export async function POST(request: Request) {
     email = body.email?.trim() ?? "";
     password = body.password ?? "";
   } catch {
-    return NextResponse.json({ message: "Invalid input." }, { status: 400 });
+    return NextResponse.json({ message: t(locale, "Invalid input.") }, { status: 400 });
   }
 
   const details: Record<string, string[]> = {};
-  if (!email) details.email = ["Enter your email."];
-  if (!password) details.password = ["Enter your password."];
+  if (!email) details.email = [t(locale, "Enter your email.")];
+  if (!password) details.password = [t(locale, "Enter your password.")];
   if (Object.keys(details).length > 0) {
     return NextResponse.json(
-      { message: "Invalid input.", code: "VALIDATION_ERROR", details },
+      { message: t(locale, "Invalid input."), code: "VALIDATION_ERROR", details },
       { status: 400 },
     );
   }
