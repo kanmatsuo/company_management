@@ -36,9 +36,7 @@ export async function createDeveloper(_prev: FormState, formData: FormData): Pro
       birthday: optionalText(formData, "birthday"),
       department: optionalText(formData, "department"),
       position_title: optionalText(formData, "position_title"),
-      manager: optionalInt(formData, "manager"),
       building: optionalInt(formData, "building"),
-      user: optionalInt(formData, "user"),
       start_date: optionalText(formData, "start_date"),
       out_date: optionalText(formData, "out_date"),
       status: optionalText(formData, "status"),
@@ -62,9 +60,7 @@ export async function updateDeveloper(id: number, _prev: FormState, formData: Fo
       birthday: optionalText(formData, "birthday"),
       department: text(formData, "department"),
       position_title: text(formData, "position_title"),
-      manager: optionalInt(formData, "manager"),
       building: text(formData, "building") ? optionalInt(formData, "building") : null,
-      user: optionalInt(formData, "user"),
       start_date: optionalText(formData, "start_date"),
       out_date: optionalText(formData, "out_date"),
       status: optionalText(formData, "status"),
@@ -121,7 +117,12 @@ export async function updateCard(id: number, _prev: FormState, formData: FormDat
 export async function assignCard(id: number, _prev: FormState, formData: FormData): Promise<FormState> {
   return commit({
     path: `/api/v1/rfid/cards/${id}/assign/`,
-    body: { developer: optionalInt(formData, "developer") },
+    body: {
+      developer: optionalInt(formData, "developer"),
+      building: optionalInt(formData, "building"),
+      pin: text(formData, "pin"),
+      pin_confirm: text(formData, "pin_confirm"),
+    },
     redirectTo: `/cards/${id}`,
   });
 }
@@ -176,7 +177,7 @@ function devicePayload(formData: FormData, patch: boolean) {
     direction: optionalText(formData, "direction"),
     is_active: checked(formData, "is_active"),
   };
-  if (purpose === "TILL") {
+  if (purpose === "TILL" || purpose === "ENROLL") {
     return {
       ...shared,
       sn: optionalText(formData, "sn"),

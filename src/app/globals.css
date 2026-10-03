@@ -314,3 +314,8 @@ html:has([data-landing-page]) {
   0% { transform: translateX(-120%); }
   100% { transform: translateX(360%); }
 }
+
+@keyframes page-spinner-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

@@ -21,7 +21,8 @@ import { getLocale } from "@/lib/locale";
 import { t } from "@/lib/i18n";
 import { redirect } from "next/navigation";
 
-type Developer = components["schemas"]["Developer"];
+// building_name is served by the API but missing from the generated schema types.
+type Developer = components["schemas"]["Developer"] & { building_name?: string | null };
 type DeveloperPage = components["schemas"]["PaginatedDeveloperList"];
 
 const SORTS = ["full_name", "employee_number", "department", "start_date", "out_date", "birthday"] as const;
@@ -151,7 +152,7 @@ export default async function DevelopersPage({
         <CardHeader>
           <CardTitle>{t(locale, "All developers")}</CardTitle>
           <CardDescription>
-            {t(locale, "Search matches name, employee number, and phone. Address and birthday stay on each person's page. A last working day does not change status or release a card.")}
+            {t(locale, "Search matches name, employee number, and phone. The address stays on each person's page. A last working day does not change status or release a card.")}
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
@@ -188,8 +189,9 @@ export default async function DevelopersPage({
                   <SortHead label={t(locale, "Number")} field="employee_number" query={query} />
                   <TableHead>{t(locale, "Phone")}</TableHead>
                   <SortHead label={t(locale, "Department")} field="department" query={query} />
+                  <TableHead>{t(locale, "Building")}</TableHead>
+                  <SortHead label={t(locale, "Birthday")} field="birthday" query={query} />
                   <TableHead>{t(locale, "Title")}</TableHead>
-                  <TableHead>{t(locale, "Manager")}</TableHead>
                   <TableHead>{t(locale, "Status")}</TableHead>
                   <SortHead label={t(locale, "Started")} field="start_date" query={query} />
                   <SortHead label={t(locale, "Last day")} field="out_date" query={query} />
@@ -206,8 +208,9 @@ export default async function DevelopersPage({
                     <TableCell>{developer.employee_number}</TableCell>
                     <TableCell>{developer.phone || "—"}</TableCell>
                     <TableCell>{developer.department || "—"}</TableCell>
+                    <TableCell>{developer.building_name || "—"}</TableCell>
+                    <TableCell>{developer.birthday || "—"}</TableCell>
                     <TableCell>{developer.position_title || "—"}</TableCell>
-                    <TableCell>{developer.manager_detail?.full_name || "—"}</TableCell>
                     <TableCell>
                       <Badge variant={developer.status === "ACTIVE" ? "secondary" : "outline"}>
                         {t(locale, STATUS_LABEL[developer.status ?? ""] ?? developer.status ?? "—")}

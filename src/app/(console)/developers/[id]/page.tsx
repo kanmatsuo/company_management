@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { canManage } from "@/lib/current-user";
 import { show, showTime } from "@/lib/load-all";
 import { loadOne } from "@/lib/page-data";
-import { buildingChoices, developerChoices, userChoices } from "@/lib/choices";
+import { buildingChoices } from "@/lib/choices";
 
 type Developer = components["schemas"]["Developer"] & { building?: number | null; building_name?: string | null };
 
@@ -26,13 +26,7 @@ export default async function DeveloperDetailPage({ params }: { params: Promise<
   if (!loaded.value) return <LoadError title="Developer" message={loaded.error ?? "Not found."} />;
   const developer = loaded.value;
   const manage = canManage(loaded.session.user, ["developer"]);
-  const [managers, users, buildings] = manage
-    ? await Promise.all([
-        developerChoices(loaded.session.token),
-        userChoices(loaded.session.token),
-        buildingChoices(loaded.session.token),
-      ])
-    : [[], [], []];
+  const buildings = manage ? await buildingChoices(loaded.session.token) : [];
 
   return (
     <div className="flex flex-col gap-4 md:gap-6">
@@ -61,8 +55,6 @@ export default async function DeveloperDetailPage({ params }: { params: Promise<
                 { name: "department", label: "Department", defaultValue: developer.department ?? "" },
                 { name: "position_title", label: "Title", defaultValue: developer.position_title ?? "" },
                 { name: "building", label: "Home building", type: "select", options: buildings, defaultValue: developer.building ? String(developer.building) : "" },
-                { name: "manager", label: "Manager", type: "select", options: managers, defaultValue: developer.manager ? String(developer.manager) : "" },
-                { name: "user", label: "Linked user", type: "select", options: users, defaultValue: developer.user ? String(developer.user) : "" },
                 { name: "start_date", label: "Start date", type: "date", defaultValue: developer.start_date ?? "" },
                 { name: "out_date", label: "Last working day", type: "date", defaultValue: developer.out_date ?? "" },
                 { name: "status", label: "Status", type: "select", options: STATUS, defaultValue: developer.status ?? "ACTIVE" },
@@ -77,7 +69,6 @@ export default async function DeveloperDetailPage({ params }: { params: Promise<
                 { label: "Department", value: show(developer.department) },
                 { label: "Title", value: show(developer.position_title) },
                 { label: "Home building", value: show(developer.building_name) },
-                { label: "Manager", value: show(developer.manager_detail?.full_name) },
                 { label: "Status", value: show(developer.status) },
                 { label: "Started", value: show(developer.start_date) },
                 { label: "Last day", value: show(developer.out_date) },

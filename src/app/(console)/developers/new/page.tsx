@@ -5,7 +5,7 @@ import { FieldForm } from "@/components/field-form";
 import { NoAccess } from "@/components/no-access";
 import { canManage } from "@/lib/current-user";
 import { requireSession } from "@/lib/page-data";
-import { buildingChoices, developerChoices, userChoices } from "@/lib/choices";
+import { buildingChoices } from "@/lib/choices";
 
 const STATUS = [
   { value: "ACTIVE", label: "Active" },
@@ -19,11 +19,7 @@ export default async function NewDeveloperPage() {
   if (!canManage(session.user, ["developer"])) {
     return <NoAccess description="Your account cannot create developers." />;
   }
-  const [managers, users, buildings] = await Promise.all([
-    developerChoices(session.token),
-    userChoices(session.token),
-    buildingChoices(session.token),
-  ]);
+  const buildings = await buildingChoices(session.token);
   return (
     <div className="flex flex-col gap-4 md:gap-6">
       <div>
@@ -48,8 +44,6 @@ export default async function NewDeveloperPage() {
               { name: "department", label: "Department" },
               { name: "position_title", label: "Title" },
               { name: "building", label: "Home building", type: "select", options: buildings },
-              { name: "manager", label: "Manager", type: "select", options: managers },
-              { name: "user", label: "Linked user", type: "select", options: users },
               { name: "start_date", label: "Start date", type: "date" },
               { name: "out_date", label: "Last working day", type: "date" },
               { name: "status", label: "Status", type: "select", options: STATUS, defaultValue: "ACTIVE" },

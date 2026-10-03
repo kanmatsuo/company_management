@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { canManage } from "@/lib/current-user";
 import { show, showTime } from "@/lib/load-all";
 import { loadOne } from "@/lib/page-data";
-import { developerChoices } from "@/lib/choices";
+import { buildingChoices, developerChoices } from "@/lib/choices";
 
 type CardRow = components["schemas"]["RFIDCard"];
 
@@ -20,7 +20,10 @@ export default async function CardDetailPage({ params }: { params: Promise<{ id:
   const card = loaded.value;
   const manage = canManage(loaded.session.user, ["rfid"]);
   const holder = card.current_assignment?.developer?.full_name;
-  const developers = manage ? await developerChoices(loaded.session.token) : [];
+  const assigned = Boolean(card.current_assignment);
+  const [developers, buildings] = manage && !assigned
+    ? await Promise.all([developerChoices(loaded.session.token), buildingChoices(loaded.session.token)])
+    : [[], []];
   return (
     <div className="flex flex-col gap-4 md:gap-6">
       <div>
@@ -49,24 +52,36 @@ export default async function CardDetailPage({ params }: { params: Promise<{ id:
       </Card>
       {manage ? (
         <div className="grid gap-4 xl:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Assign</CardTitle>
-              <CardDescription>Give this card to a developer.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <FieldForm action={assignCard.bind(null, card.id)} submitLabel="Assign" fields={[{ name: "developer", label: "Developer", type: "select", required: true, options: developers }]} />
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Unassign</CardTitle>
-              <CardDescription>Take the card back. The history stays.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <FieldForm action={unassignCard.bind(null, card.id)} submitLabel="Unassign" variant="outline" fields={[]} />
-            </CardContent>
-          </Card>
+          {assigned ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Unassign</CardTitle>
+                <CardDescription>Take the card back. The history stays.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <FieldForm action={unassignCard.bind(null, card.id)} submitLabel="Unassign" variant="outline" fields={[]} />
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle>Assign</CardTitle>
+                <CardDescription>Give this card to a developer and set their building. The developer types a new 4-6 digit purchase PIN twice.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <FieldForm
+                  action={assignCard.bind(null, card.id)}
+                  submitLabel="Assign"
+                  fields={[
+                    { name: "developer", label: "Developer", type: "select", required: true, options: developers },
+                    { name: "building", label: "Building", type: "select", options: [{ value: "", label: "Keep current building" }, ...buildings] },
+                    { name: "pin", label: "PIN", type: "password", required: true },
+                    { name: "pin_confirm", label: "PIN again", type: "password", required: true },
+                  ]}
+                />
+              </CardContent>
+            </Card>
+          )}
           <Card>
             <CardHeader>
               <CardTitle>Block</CardTitle>

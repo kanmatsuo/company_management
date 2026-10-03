@@ -28,7 +28,10 @@ import { usePreferencesStore } from "@/stores/preferences/preferences-provider";
 import type { Locale } from "@/lib/i18n";
 import { t } from "@/lib/i18n";
 
-type Child = { title: string; href: string; permission?: string | null; anyOf?: string[]; manage?: string[]; seller?: boolean; owner?: boolean };
+type Child = { title: string; href: string; permission?: string | null; anyOf?: string[]; manage?: string[]; seller?: boolean; owner?: boolean; hiddenFor?: string[] };
+
+// The BOSS only reads statistics and data; personal and desk pages are clutter for them.
+const NOT_BOSS = ["BOSS"];
 
 type Group = {
   title: string;
@@ -41,12 +44,12 @@ const GROUPS: Group[] = [
     title: "Overview",
     icon: LayoutDashboard,
     children: [
-      { title: "Dashboard", href: "/", permission: null },
+      { title: "Dashboard", href: "/", permission: null, hiddenFor: NOT_BOSS },
       { title: "Company statistics", href: "/stats", permission: "stats.view" },
       { title: "Account", href: "/account", permission: null },
-      { title: "Rentals", href: "/rentals", permission: null },
-      { title: "My bookings", href: "/bookings/me", permission: null },
-      { title: "Playground desk", href: "/bookings", permission: null },
+      { title: "Rentals", href: "/rentals", permission: null, hiddenFor: NOT_BOSS },
+      { title: "My bookings", href: "/bookings/me", permission: null, hiddenFor: NOT_BOSS },
+      { title: "Playground desk", href: "/bookings", permission: null, hiddenFor: NOT_BOSS },
     ],
   },
   {
@@ -71,6 +74,7 @@ const GROUPS: Group[] = [
       { title: "Blocked", href: "/cards?status=BLOCKED", permission: "rfid.view" },
       { title: "Retired", href: "/cards?status=RETIRED", permission: "rfid.view" },
       { title: "Unassigned", href: "/cards?assigned=false", permission: "rfid.view" },
+      { title: "Assign card", href: "/cards/assign", permission: "rfid.assign" },
       { title: "Assignments", href: "/assignments", permission: "rfid.view" },
       { title: "New", href: "/cards/new", permission: "rfid.view", manage: ["rfid"] },
     ],
@@ -83,6 +87,7 @@ const GROUPS: Group[] = [
       { title: "Offline", href: "/readers?online=false", permission: "rfid.view" },
       { title: "Doors", href: "/readers?purpose=ATTENDANCE", permission: "rfid.view" },
       { title: "Till readers", href: "/readers?purpose=TILL", permission: "rfid.view" },
+      { title: "Card assign readers", href: "/readers?purpose=ENROLL", permission: "rfid.view" },
       { title: "Buildings", href: "/buildings", permission: "rfid.view" },
       { title: "New device", href: "/readers/new", permission: "rfid.view", manage: ["rfid"] },
     ],
@@ -127,6 +132,7 @@ const GROUPS: Group[] = [
     title: "Finance",
     icon: Wallet,
     children: [
+      { title: "Statistics", href: "/finance/statistics", permission: "seller_finance.view" },
       { title: "Wallets", href: "/finance/accounts", permission: "finance" },
       { title: "Transactions", href: "/finance/transactions", permission: "finance" },
       { title: "Deposit", href: "/finance/deposits", permission: "finance", manage: ["finance"] },
@@ -183,7 +189,14 @@ const GROUPS: Group[] = [
   },
 ];
 
+/** A role in `hiddenFor` hides the item, unless the user is also an ADMIN. */
+function hidden(user: CurrentUser, child: Child) {
+  if (!child.hiddenFor || user.roles.includes("ADMIN")) return false;
+  return child.hiddenFor.some((role) => user.roles.includes(role));
+}
+
 function allowed(user: CurrentUser, child: Child, isSeller: boolean, isOwner: boolean) {
+  if (hidden(user, child)) return false;
   if (child.owner && isOwner) return true;
   if (child.seller && isSeller) return true;
   if (child.manage && !canManage(user, child.manage)) return false;

@@ -3,7 +3,7 @@ import type { components } from "@/api/schema";
 import { SeriesChart } from "@/components/ui/chart";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { PeriodPicker } from "@/components/period-picker";
 import { RecordList } from "@/components/record-list";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { canManage, getSession, runsStore } from "@/lib/current-user";
@@ -12,6 +12,7 @@ import { show, showTime } from "@/lib/load-all";
 import { loadList } from "@/lib/page-data";
 import { getLocale } from "@/lib/locale";
 import { t } from "@/lib/i18n";
+import { daySpan, resolvePeriod, shift, startOfWeek, todayIso } from "@/lib/period";
 
 type Purchase = components["schemas"]["Purchase"];
 type PerformanceRow = {
@@ -26,34 +27,10 @@ type PerformanceRow = {
   total: string;
 };
 
-function iso(date: Date) {
-  return date.toISOString().slice(0, 10);
-}
 
-function shift(day: string, days: number) {
-  const date = new Date(`${day}T00:00:00Z`);
-  date.setUTCDate(date.getUTCDate() + days);
-  return iso(date);
-}
 
-function startOfWeek(day: string) {
-  const date = new Date(`${day}T00:00:00Z`);
-  const weekday = date.getUTCDay();
-  return shift(day, weekday === 0 ? -6 : 1 - weekday);
-}
 
-function endOfMonth(day: string) {
-  const date = new Date(`${day.slice(0, 7)}-01T00:00:00Z`);
-  date.setUTCMonth(date.getUTCMonth() + 1);
-  date.setUTCDate(0);
-  return iso(date);
-}
 
-function daySpan(from: string, to: string) {
-  const start = new Date(`${from}T00:00:00Z`).getTime();
-  const end = new Date(`${to}T00:00:00Z`).getTime();
-  return Math.round((end - start) / 86400000) + 1;
-}
 
 function cents(value: string | null | undefined) {
   if (!value) return 0;
@@ -78,16 +55,8 @@ export default async function PurchasesPage({
   searchParams: Promise<{ from?: string; to?: string }>;
 }) {
   const query = await searchParams;
-  const today = iso(new Date());
-  const from = /^\d{4}-\d{2}-\d{2}$/.test(query.from ?? "") ? query.from! : today;
-  const to = /^\d{4}-\d{2}-\d{2}$/.test(query.to ?? "") ? query.to! : today;
-  const start = from <= to ? from : to;
-  const end = from <= to ? to : from;
-  const presets = [
-    { label: "Today", from: today, to: today },
-    { label: "This week", from: startOfWeek(today), to: shift(startOfWeek(today), 6) },
-    { label: "This month", from: `${today.slice(0, 7)}-01`, to: endOfMonth(today) },
-  ];
+  const today = todayIso();
+  const { start, end } = resolvePeriod(query, { start: today, end: today });
   const session = await getSession();
   const locale = await getLocale();
   let performance: PerformanceRow[] = [];
@@ -153,24 +122,7 @@ export default async function PurchasesPage({
         </div>
         {manage ? <Button asChild><Link href="/purchases/new">{t(locale, "New purchase")}</Link></Button> : null}
       </div>
-      <div className="flex flex-wrap items-end gap-2">
-        {presets.map((preset) => (
-          <Button key={preset.label} asChild size="sm" variant={preset.from === start && preset.to === end ? "default" : "outline"}>
-            <Link href={`/purchases?from=${preset.from}&to=${preset.to}`}>{t(locale, preset.label)}</Link>
-          </Button>
-        ))}
-        <form className="flex flex-wrap items-end gap-2" method="get">
-          <label className="grid gap-1 text-sm">
-            {t(locale, "From")}
-            <Input type="date" name="from" defaultValue={start} required />
-          </label>
-          <label className="grid gap-1 text-sm">
-            {t(locale, "To")}
-            <Input type="date" name="to" defaultValue={end} required />
-          </label>
-          <Button type="submit" size="sm">{t(locale, "Show range")}</Button>
-        </form>
-      </div>
+      <PeriodPicker path="/purchases" period={{ start, end }} today={today} locale={locale} />
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {[
           ["Paid sales", paid.length, t(locale, "Confirmed purchases")],

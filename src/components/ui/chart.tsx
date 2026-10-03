@@ -1,6 +1,8 @@
 "use client";
 
+import { LoaderCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import {
   Bar,
   BarChart,
@@ -38,6 +40,26 @@ export type ChartSeries = {
   color: string;
 };
 
+const compact = new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 });
+
+/** Axis label for a value: full below 10,000, compact (14K, 1.2M) above. */
+function formatTick(value: unknown) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return String(value ?? "");
+  return Math.abs(number) < 10000 ? number.toLocaleString("en-US") : compact.format(number);
+}
+
+/** Axis width that fits the longest value label (about 7px per character at 12px). */
+function valueAxisWidth(data: ChartRow[], series: ChartSeries[], stacked: boolean) {
+  let max = 0;
+  for (const row of data) {
+    const values = series.map((item) => Math.abs(Number(row[item.key]) || 0));
+    max = Math.max(max, stacked ? values.reduce((sum, value) => sum + value, 0) : Math.max(0, ...values));
+  }
+  // Recharts rounds the top tick up, so size for a little headroom.
+  return Math.max(32, formatTick(Math.ceil(max * 1.25)).length * 7 + 12);
+}
+
 const tooltipStyle = {
   background: "var(--popover)",
   border: "1px solid var(--border)",
@@ -63,10 +85,19 @@ export function SeriesChart({
 }) {
   const router = useRouter();
   const vertical = layout === "vertical";
+  const valueWidth = valueAxisWidth(data, series, stacked);
+  // Recharts draws nothing until the browser has measured the container: spin until then.
+  const [measured, setMeasured] = useState(false);
   if (data.length === 0) return <p className="text-muted-foreground text-sm">No numbers for this chart.</p>;
   return (
-    <div className="w-full" style={{ height }}>
-      <ResponsiveContainer width="100%" height="100%">
+    <div className="relative w-full" style={{ height }}>
+      {measured ? null : (
+        <div role="status" className="absolute inset-0 flex items-center justify-center">
+          <LoaderCircle aria-hidden className="size-6 text-muted-foreground motion-safe:animate-spin" />
+          <span className="sr-only">Loading chart…</span>
+        </div>
+      )}
+      <ResponsiveContainer width="100%" height="100%" onResize={(width) => width > 0 && setMeasured(true)}>
         <BarChart
           data={data}
           layout={vertical ? "vertical" : "horizontal"}
@@ -79,14 +110,25 @@ export function SeriesChart({
         >
           <CartesianGrid stroke="var(--border)" vertical={!vertical} horizontal={vertical} />
           {vertical ? (
-            <XAxis type="number" tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} allowDecimals={false} />
+            <XAxis type="number" tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} allowDecimals={false} tickFormatter={formatTick} />
           ) : (
-            <XAxis dataKey={categoryKey} tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} interval={0} />
+            <XAxis
+              dataKey={categoryKey}
+              tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
+              interval="preserveStartEnd"
+              minTickGap={12}
+              tickMargin={6}
+            />
           )}
           {vertical ? (
             <YAxis type="category" dataKey={categoryKey} width={120} tick={{ fill: "var(--foreground)", fontSize: 12 }} />
           ) : (
-            <YAxis tick={{ fill: "var(--muted-foreground)", fontSize: 12 }} allowDecimals={false} width={40} />
+            <YAxis
+              tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
+              allowDecimals={false}
+              tickFormatter={formatTick}
+              width={valueWidth}
+            />
           )}
           <Tooltip
             cursor={{ fill: "var(--muted)" }}

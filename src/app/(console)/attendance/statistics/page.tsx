@@ -1,48 +1,23 @@
 import type { components } from "@/api/schema";
 import { SeriesChart } from "@/components/ui/chart";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { PeriodPicker } from "@/components/period-picker";
 import { listPath, one } from "@/lib/load-all";
 import { loadRecords } from "@/lib/load-records";
 import { loadList, loadOne } from "@/lib/page-data";
 import { getLocale } from "@/lib/locale";
 import { t } from "@/lib/i18n";
-import Link from "@/components/app-link";
+import { daySpan, resolvePeriod, startOfWeek, todayIso } from "@/lib/period";
 
 type Day = components["schemas"]["DailyAttendance"];
 type Record = components["schemas"]["AttendanceRecord"];
 type Occupancy = components["schemas"]["Occupancy"];
 type Device = { code: string; building?: number | null };
 
-function iso(date: Date) {
-  return date.toISOString().slice(0, 10);
-}
 
-function shift(day: string, days: number) {
-  const date = new Date(`${day}T00:00:00Z`);
-  date.setUTCDate(date.getUTCDate() + days);
-  return iso(date);
-}
 
-function startOfWeek(day: string) {
-  const date = new Date(`${day}T00:00:00Z`);
-  const weekday = date.getUTCDay();
-  return shift(day, weekday === 0 ? -6 : 1 - weekday);
-}
 
-function endOfMonth(day: string) {
-  const date = new Date(`${day.slice(0, 7)}-01T00:00:00Z`);
-  date.setUTCMonth(date.getUTCMonth() + 1);
-  date.setUTCDate(0);
-  return iso(date);
-}
 
-function daySpan(from: string, to: string) {
-  const start = new Date(`${from}T00:00:00Z`).getTime();
-  const end = new Date(`${to}T00:00:00Z`).getTime();
-  return Math.round((end - start) / 86400000) + 1;
-}
 
 export default async function StatisticsPage({
   searchParams,
@@ -51,17 +26,9 @@ export default async function StatisticsPage({
 }) {
   const query = await searchParams;
   const locale = await getLocale();
-  const today = iso(new Date());
-  const from = /^\d{4}-\d{2}-\d{2}$/.test(query.from ?? "") ? query.from! : today;
-  const to = /^\d{4}-\d{2}-\d{2}$/.test(query.to ?? "") ? query.to! : today;
-  const start = from <= to ? from : to;
-  const end = from <= to ? to : from;
+  const today = todayIso();
+  const { start, end } = resolvePeriod(query, { start: today, end: today });
   const buildingId = one(query.building);
-  const presets = [
-    { label: "Today", from: today, to: today },
-    { label: "This week", from: startOfWeek(today), to: shift(startOfWeek(today), 6) },
-    { label: "This month", from: `${today.slice(0, 7)}-01`, to: endOfMonth(today) },
-  ];
 
   const [days, scans, devices, occupancyLoaded] = await Promise.all([
     loadRecords<Day>("attendance.view", listPath("/api/v1/attendance/daily/?ordering=work_date", { date_from: start, date_to: end })),
@@ -153,25 +120,7 @@ export default async function StatisticsPage({
           {days.error || scans.error ? ` ${days.error || scans.error}` : ""}
         </p>
       </div>
-      <div className="flex flex-wrap items-end gap-2">
-        {presets.map((preset) => (
-          <Button key={preset.label} asChild variant={preset.from === start && preset.to === end && !buildingId ? "default" : "outline"} size="sm">
-            <Link href={`/attendance/statistics?from=${preset.from}&to=${preset.to}`}>{t(locale, preset.label)}</Link>
-          </Button>
-        ))}
-        <form className="flex flex-wrap items-end gap-2" method="get">
-          <label className="grid gap-1 text-sm">
-            {t(locale, "From")}
-            <Input type="date" name="from" defaultValue={start} required />
-          </label>
-          <label className="grid gap-1 text-sm">
-            {t(locale, "To")}
-            <Input type="date" name="to" defaultValue={end} required />
-          </label>
-          {buildingId ? <input type="hidden" name="building" value={buildingId} /> : null}
-          <Button type="submit" size="sm">{t(locale, "Show range")}</Button>
-        </form>
-      </div>
+      <PeriodPicker path="/attendance/statistics" period={{ start, end }} today={today} locale={locale} keep={{ building: buildingId }} />
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {[
           ["People", people.size, t(locale, "Different people recorded in this date range")],

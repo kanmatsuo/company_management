@@ -112,6 +112,8 @@ const ko: Record<string, string> = {
   Today: "오늘",
   "This week": "이번 주",
   "This month": "이번 달",
+  "Last week": "지난 주",
+  "Last month": "지난 달",
   "Show range": "기간 보기",
   From: "부터",
   To: "까지",
@@ -183,8 +185,8 @@ const ko: Record<string, string> = {
   people: "명",
   "New developer": "개발자 추가",
   "All developers": "전체 개발자",
-  "Search matches name, employee number, and phone. Address and birthday stay on each person's page. A last working day does not change status or release a card.":
-    "이름, 직원번호, 전화로 찾습니다. 주소와 생일은 각 사람의 쪽에 있습니다. 마지막 근무일은 상태나 카드를 바꾸지 않습니다.",
+  "Search matches name, employee number, and phone. The address stays on each person's page. A last working day does not change status or release a card.":
+    "이름, 직원번호, 전화로 찾습니다. 주소는 각 사람의 쪽에 있습니다. 마지막 근무일은 상태나 카드를 바꾸지 않습니다.",
   "Name, number, or phone": "이름, 번호, 전화",
   "Any birthday month": "생일 달 전체",
   "Left after": "이후 퇴직",

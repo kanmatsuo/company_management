@@ -1,13 +1,13 @@
 import { SeriesChart } from "@/components/ui/chart";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { PeriodPicker } from "@/components/period-picker";
 import { NoAccess } from "@/components/no-access";
 import { DjangoError, djangoFetch } from "@/lib/django";
 import { can } from "@/lib/current-user";
 import { getLocale } from "@/lib/locale";
 import { t } from "@/lib/i18n";
 import { requireSession } from "@/lib/page-data";
+import { last30Days, resolvePeriod, todayIso } from "@/lib/period";
 
 type BuildingScope = { id: number; name?: string; code?: string };
 type DayCount = { date: string; present?: number; avg_worked_hours?: number; deposits?: string; spending?: string };
@@ -29,10 +29,6 @@ type Stats = {
   };
 };
 
-function iso(date: Date) {
-  return date.toISOString().slice(0, 10);
-}
-
 export default async function CompanyStatsPage({
   searchParams,
 }: {
@@ -42,9 +38,8 @@ export default async function CompanyStatsPage({
   const locale = await getLocale();
   if (!can(session.user, "stats.view")) return <NoAccess description="Your account cannot open company statistics." />;
   const query = await searchParams;
-  const today = iso(new Date());
-  const start = /^\d{4}-\d{2}-\d{2}$/.test(query.from ?? "") ? query.from! : iso(new Date(Date.now() - 29 * 86400000));
-  const end = /^\d{4}-\d{2}-\d{2}$/.test(query.to ?? "") ? query.to! : today;
+  const today = todayIso();
+  const { start, end } = resolvePeriod(query, last30Days(today));
   let stats: Stats | null = null;
   let error: string | null = null;
   try {
@@ -67,11 +62,7 @@ export default async function CompanyStatsPage({
           {scope ? ` · ${scope.map((building) => building.name || building.code).filter(Boolean).join(", ")}` : ""}
         </p>
       </div>
-      <form className="flex flex-wrap items-end gap-2" method="get">
-        <label className="grid gap-1 text-sm">{t(locale, "From")}<Input type="date" name="from" defaultValue={start} required /></label>
-        <label className="grid gap-1 text-sm">{t(locale, "To")}<Input type="date" name="to" defaultValue={end} required /></label>
-        <Button type="submit" size="sm">{t(locale, "Show range")}</Button>
-      </form>
+      <PeriodPicker path="/stats" period={{ start, end }} today={today} locale={locale} />
       {error ? <p className="text-destructive text-sm">{error}</p> : null}
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {[

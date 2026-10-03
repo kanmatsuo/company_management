@@ -2,6 +2,7 @@ import { Hint, AutoText } from "@/components/auto-text";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartSlot } from "@/components/chart-panel";
+import { redirect } from "next/navigation";
 import { djangoFetch } from "@/lib/django";
 import { can, canOpen, getSession } from "@/lib/current-user";
 import {
@@ -51,6 +52,9 @@ async function loadCount(token: string, path: string) {
 export default async function OverviewPage() {
   const session = await getSession();
   if (!session) return null;
+  // The BOSS has no dashboard in the menu: company statistics is their home page.
+  const { roles } = session.user;
+  if (roles.includes("BOSS") && !roles.includes("ADMIN") && can(session.user, "stats.view")) redirect("/stats");
 
   const visible = STATS.filter((stat) => can(session.user, stat.permission) || canOpen(session.user, stat.permission));
   const values = await Promise.all(visible.map((stat) => loadCount(session.token, stat.path)));

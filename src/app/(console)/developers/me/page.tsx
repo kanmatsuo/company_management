@@ -30,7 +30,6 @@ export default async function MyDeveloperPage() {
               { label: "Birthday", value: show(profile.birthday) },
               { label: "Department", value: show(profile.department) },
               { label: "Title", value: show(profile.position_title) },
-              { label: "Manager", value: show(profile.manager?.full_name) },
               { label: "Status", value: show(profile.status) },
               { label: "Started", value: show(profile.start_date) },
               { label: "Last day", value: show(profile.out_date) },
