@@ -22,6 +22,8 @@ export type CardRead = {
     new: boolean;
     assigned: boolean;
     holder: string | null;
+    /** The holder (null when not assigned, or in another building for a building manager). */
+    developer?: { id: number; full_name: string; employee_number: string; department: string; status: string } | null;
   } | null;
 };
 

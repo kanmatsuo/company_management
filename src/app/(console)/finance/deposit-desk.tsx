@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { CreditCard } from "lucide-react";
-import { cancelDepositHold, deposit, developerBalance, openDepositHold, presentedDeveloper } from "@/app/(console)/mutations";
-import { TapSimulator } from "@/app/(console)/purchases/tap-simulator";
+import { deposit, developerBalance } from "@/app/(console)/mutations";
+import { NoReader } from "@/app/(console)/cards/assign/assign-by-reader";
+import { ReaderPicker, useCardReader, useChosenReader, type Reader } from "@/app/(console)/cards/card-reader";
 import { AutoText } from "@/components/auto-text";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -39,12 +40,13 @@ function money(value: number) {
   return `${sign}${Math.floor(abs / 100)}.${String(abs % 100).padStart(2, "0")}`;
 }
 
-export function DepositDesk({ locale, socketBase, simulator = false }: { locale: Locale; socketBase: string; simulator?: boolean }) {
+export function DepositDesk({ locale, readers }: { locale: Locale; readers: Reader[] }) {
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
-  const [mode, setMode] = useState<"form" | "waiting" | "ready">("form");
-  const [hold, setHold] = useState<{ id: number; positionId: number } | null>(null);
-  const [holder, setHolder] = useState<Person | null>(null);
+  const [mode, setMode] = useState<"form" | "scan">("form");
+  const [device, setDevice] = useChosenReader(readers);
+  // Only taps made after "Tap card to deposit" count: the reader is read while scanning.
+  const { read, problem: readerProblem, clear } = useCardReader(mode === "scan" ? device : "");
   const [balance, setBalance] = useState<string | null>(null);
   const [problem, setProblem] = useState("");
   const [pin, setPin] = useState(["", "", "", ""]);
@@ -54,79 +56,36 @@ export function DepositDesk({ locale, socketBase, simulator = false }: { locale:
   const inputs = useRef<Array<HTMLInputElement | null>>([]);
   const amountOk = cents(amount) > 0;
 
+  const card = read?.card ?? null;
+  const holder: Person | null = card?.developer ?? null;
+  const tapProblem = !read
+    ? ""
+    : !card || !card.assigned
+      ? t(locale, "This card is not assigned to anyone. Tap another card.")
+      : card.status !== "ACTIVE"
+        ? t(locale, "This card is blocked or retired. Tap another card.")
+        : !holder
+          ? t(locale, "This card belongs to a developer of another building.")
+          : "";
+  const ready = mode === "scan" && holder !== null && tapProblem === "";
+
   useEffect(() => {
     const id = holder?.id;
-    if (mode !== "ready" || typeof id !== "number") return;
+    if (!ready || typeof id !== "number") return;
     void developerBalance(id).then(setBalance);
-  }, [mode, holder?.id]);
+  }, [ready, holder?.id]);
 
-  useEffect(() => {
-    if (mode !== "waiting" || !hold) return;
-    const purchaseId = hold.id;
-    const positionId = hold.positionId;
-    let stopped = false;
-    let socket: WebSocket | null = null;
-    let wait = 1000;
-    let timer = 0;
-
-    function accept(person: Person) {
-      if (stopped || typeof person.id !== "number") return;
-      setHolder(person);
-      setProblem("");
-      setMode("ready");
-    }
-
-    async function poll() {
-      const person = await presentedDeveloper(purchaseId);
-      if (person?.id) accept(person);
-    }
-
-    async function connect() {
-      const response = await fetch("/api/realtime/ticket", { method: "POST" });
-      if (!response.ok || stopped) return;
-      const body = (await response.json()) as { ticket?: string };
-      if (!body.ticket || stopped) return;
-      socket = new WebSocket(`${socketBase}/ws/counters/${positionId}/?ticket=${encodeURIComponent(body.ticket)}`);
-      socket.onmessage = (event) => {
-        const message = JSON.parse(String(event.data)) as { type?: string; data?: { accepted?: boolean; display_message?: string } };
-        if (message.type !== "card_tapped" || !message.data) return;
-        if (!message.data.accepted) {
-          setProblem(message.data.display_message || "Card was not accepted");
-          return;
-        }
-        void poll();
-      };
-      socket.onclose = () => {
-        if (!stopped) timer = window.setTimeout(connect, wait);
-        wait = Math.min(wait * 2, 10000);
-      };
-    }
-
-    const timerPoll = window.setInterval(() => void poll(), 1000);
-    void poll();
-    void connect();
-    return () => {
-      stopped = true;
-      window.clearInterval(timerPoll);
-      window.clearTimeout(timer);
-      socket?.close();
-    };
-  }, [hold, mode, socketBase]);
-
-  async function begin() {
+  function begin() {
     setProblem("");
-    const opened = await openDepositHold();
-    if ("error" in opened) {
-      setProblem(opened.error);
-      return;
-    }
-    setHold(opened);
-    setMode("waiting");
+    setBalance(null);
+    clear();
+    setMode("scan");
   }
 
   function stopWaiting() {
-    if (hold) void cancelDepositHold(hold.id);
-    setHold(null);
+    clear();
+    setPin(["", "", "", ""]);
+    setConfirming(false);
     setMode("form");
   }
 
@@ -142,7 +101,6 @@ export function DepositDesk({ locale, socketBase, simulator = false }: { locale:
     if (!holder?.id) return;
     setPosting(true);
     setProblem("");
-    if (hold) await cancelDepositHold(hold.id);
     const data = new FormData();
     data.set("developer", String(holder.id));
     data.set("amount", amount);
@@ -176,14 +134,19 @@ export function DepositDesk({ locale, socketBase, simulator = false }: { locale:
               <Label htmlFor="description">{t(locale, "Description")}</Label>
               <Input id="description" value={description} onChange={(event) => setDescription(event.target.value)} />
             </div>
+            {readers.length === 0 ? (
+              <NoReader />
+            ) : (
+              <ReaderPicker readers={readers} value={device} onChange={setDevice} />
+            )}
             {problem ? <p className="text-destructive text-sm">{problem}</p> : null}
-            <Button type="button" disabled={!amountOk} onClick={() => void begin()}>
+            <Button type="button" disabled={!amountOk || !device} onClick={begin}>
               {t(locale, "Tap card to deposit")}
             </Button>
           </>
         ) : null}
 
-        {mode === "waiting" && hold ? (
+        {mode === "scan" && !ready ? (
           <Dialog open onOpenChange={(open) => { if (!open) stopWaiting(); }}>
             <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
               <DialogHeader>
@@ -198,9 +161,9 @@ export function DepositDesk({ locale, socketBase, simulator = false }: { locale:
                   <div className="h-full w-1/3 rounded-full bg-primary motion-safe:animate-[indeterminate_1.4s_ease-in-out_infinite]" />
                 </div>
                 <p className="text-sm">{amount}</p>
-                {problem ? <p className="text-destructive text-sm">{problem}</p> : null}
+                {read ? <p className="font-mono text-sm">{read.uid}</p> : null}
+                {tapProblem || readerProblem ? <p className="text-destructive text-sm">{tapProblem || t(locale, readerProblem ?? "")}</p> : null}
               </div>
-              {simulator ? <TapSimulator purchaseId={hold.id} /> : null}
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={stopWaiting}>{t(locale, "Cancel")}</Button>
               </DialogFooter>
@@ -208,7 +171,7 @@ export function DepositDesk({ locale, socketBase, simulator = false }: { locale:
           </Dialog>
         ) : null}
 
-        {mode === "ready" && holder ? (
+        {ready && holder ? (
           <>
             <div className="grid gap-3 sm:grid-cols-2">
               <p className="text-sm"><span className="text-muted-foreground"><AutoText>Developer ·</AutoText> </span>{holder.full_name || "—"}</p>
@@ -248,7 +211,7 @@ export function DepositDesk({ locale, socketBase, simulator = false }: { locale:
               >
                 {t(locale, "Deposit")}
               </Button>
-              <Button type="button" variant="outline" onClick={() => { if (hold) void cancelDepositHold(hold.id); setHold(null); setMode("form"); setHolder(null); setPin(["", "", "", ""]); }}>
+              <Button type="button" variant="outline" onClick={stopWaiting}>
                 {t(locale, "Cancel")}
               </Button>
             </div>

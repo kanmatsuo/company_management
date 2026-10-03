@@ -535,51 +535,6 @@ export async function testCards(search: string): Promise<TestCard[]> {
   }
 }
 
-export async function openDepositHold(): Promise<{ id: number; positionId: number } | { error: string }> {
-  const session = await getSession();
-  if (!session) return { error: "Not signed in." };
-  try {
-    const listed = await djangoFetch<{ results?: { id: number }[] } | { id: number }[]>(
-      "/api/v1/service-positions/?is_active=true&page_size=1",
-      { accessToken: session.token },
-    );
-    const rows = Array.isArray(listed) ? listed : listed.results ?? [];
-    const positionId = rows[0]?.id;
-    if (!positionId) return { error: "No service position is available for the card reader." };
-    const purchase = await djangoFetch<{ id: number; service_position: number }>("/api/v1/purchases/", {
-      method: "POST",
-      accessToken: session.token,
-      body: JSON.stringify({ service_position: positionId }),
-    });
-    return { id: purchase.id, positionId: purchase.service_position || positionId };
-  } catch (error) {
-    return { error: error instanceof DjangoError ? error.message : "Could not open the card reader." };
-  }
-}
-
-export async function presentedDeveloper(purchaseId: number) {
-  const session = await getSession();
-  if (!session) return null;
-  try {
-    const purchase = await djangoFetch<{
-      presented_card?: { developer?: { id?: number; full_name?: string; employee_number?: string; department?: string } | null } | null;
-    }>(`/api/v1/purchases/${purchaseId}/`, { accessToken: session.token });
-    return purchase.presented_card?.developer ?? null;
-  } catch {
-    return null;
-  }
-}
-
-export async function cancelDepositHold(purchaseId: number) {
-  const session = await getSession();
-  if (!session) return;
-  try {
-    await djangoFetch(`/api/v1/purchases/${purchaseId}/cancel/`, { method: "POST", accessToken: session.token });
-  } catch {
-    // The draft may already be gone.
-  }
-}
-
 export async function simulateTap(
   purchaseId: number,
   who: { developer: number } | { uid: string },
