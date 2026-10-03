@@ -8,6 +8,7 @@ import { NoAccess } from "@/components/no-access";
 import { can, canManage, getSession } from "@/lib/current-user";
 import { DjangoError, djangoFetch } from "@/lib/django";
 import { redirect } from "next/navigation";
+import { sellerChoices } from "@/lib/choices";
 
 type Building = components["schemas"]["Building"];
 
@@ -38,7 +39,10 @@ export default async function NewReaderPage() {
           <CardDescription>There is no delete. Clear Active later to turn a device off. Registration still shows an API key once, even for a door that uses a fixed IP.</CardDescription>
         </CardHeader>
         <CardContent>
-          <DeviceForm buildings={buildings.map((building) => ({ id: building.id, label: `${building.code} · ${building.name}` }))} />
+          <DeviceForm
+            buildings={buildings.map((building) => ({ id: building.id, label: `${building.code} · ${building.name}` }))}
+            sellers={await sellerChoices(session.token)}
+          />
         </CardContent>
       </Card>
     </div>

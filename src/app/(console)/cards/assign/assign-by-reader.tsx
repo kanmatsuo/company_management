@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { assignCard } from "@/app/(console)/mutations";
-import { ReaderPicker, TapStatus, useCardReader, type Reader } from "@/app/(console)/cards/card-reader";
+import { ReaderPicker, TapStatus, useCardReader, useChosenReader, type Reader } from "@/app/(console)/cards/card-reader";
 import { FieldForm } from "@/components/field-form";
 import { useLocale } from "@/components/locale-context";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +11,7 @@ type Choice = { value: string; label: string };
 
 export function AssignByReader({ readers, developers, buildings }: { readers: Reader[]; developers: Choice[]; buildings: Choice[] }) {
   const locale = useLocale();
-  const [device, setDevice] = useState(readers.length === 1 ? String(readers[0].id) : "");
+  const [device, setDevice] = useChosenReader(readers);
   const { read, problem, clear } = useCardReader(device);
 
   if (readers.length === 0) return <NoReader />;
@@ -73,7 +72,7 @@ export function NoReader() {
       <CardHeader>
         <CardTitle>{t(locale, "No card assign reader")}</CardTitle>
         <CardDescription>
-          {t(locale, "Register one under Readers → New device with the kind Card assign reader and its serial number.")}
+          {t(locale, "Register one under Readers → New device with the kind Card assign reader and the ID it sends (e.g. Master1).")}
         </CardDescription>
       </CardHeader>
     </Card>

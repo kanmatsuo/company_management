@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { detectedReaders, openCourtBooking, type TillReader } from "@/app/(console)/mutations";
+import { useState } from "react";
+import { openCourtBooking } from "@/app/(console)/mutations";
 import { Button } from "@/components/ui/button";
 import type { Locale } from "@/lib/i18n";
 import { t } from "@/lib/i18n";
@@ -45,7 +45,6 @@ export function BookCourt({
   date,
   maxPerBooking,
   slots,
-  reader,
   initialStart = "",
   locale = "en",
 }: {
@@ -56,7 +55,6 @@ export function BookCourt({
   date: string;
   maxPerBooking: number;
   slots: Slot[];
-  reader: TillReader | null;
   initialStart?: string;
   locale?: Locale;
 }) {
@@ -64,13 +62,6 @@ export function BookCourt({
   const [count, setCount] = useState(1);
   const [message, setMessage] = useState("");
   const [pending, setPending] = useState(false);
-  const [connected, setConnected] = useState(reader);
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      void detectedReaders().then((next) => setConnected(next.reader));
-    }, 30_000);
-    return () => window.clearInterval(timer);
-  }, []);
 
   const startIndex = slots.findIndex((slot) => hhmm(slot.start_time, slot.start) === start);
   const chosen = startIndex >= 0 ? slots.slice(startIndex, startIndex + count) : [];
@@ -87,7 +78,6 @@ export function BookCourt({
     data.set("date", date);
     data.set("start_time", start);
     data.set("end_time", endTime);
-    if (connected?.code) data.set("reader", connected.code);
     const result = await openCourtBooking(null, data);
     setPending(false);
     if (result?.message) setMessage(result.message);
@@ -95,11 +85,7 @@ export function BookCourt({
 
   return (
     <div className="grid max-w-md gap-4">
-      <p className="text-sm">
-        {connected
-          ? `${t(locale, "Reader on this PC")}: ${connected.name || connected.code}.`
-          : t(locale, "No till reader is connected to this PC yet. The first card tap can still attach one.")}
-      </p>
+      <p className="text-sm">{t(locale, "The card is tapped on the seller's till reader (chosen on the next page if the seller has several).")}</p>
       <p className="text-sm">{t(locale, "Up to")} {maxPerBooking} {t(locale, "slots in one booking. Who is booking is known after the card tap.")}</p>
       <label className="grid gap-1 text-sm">
         {t(locale, "Start")}

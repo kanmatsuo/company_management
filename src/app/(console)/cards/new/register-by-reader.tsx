@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import Link from "@/components/app-link";
 import { updateCard } from "@/app/(console)/mutations";
-import { ReaderPicker, TapStatus, useCardReader, type Reader } from "@/app/(console)/cards/card-reader";
+import { ReaderPicker, TapStatus, useCardReader, useChosenReader, type Reader } from "@/app/(console)/cards/card-reader";
+import { NoReader } from "@/app/(console)/cards/assign/assign-by-reader";
 import { FieldForm } from "@/components/field-form";
 import { useLocale } from "@/components/locale-context";
 import { Button } from "@/components/ui/button";
@@ -13,9 +13,10 @@ import { t } from "@/lib/i18n";
 /** New card by tapping it on a card assign reader: the tap registers it; then name it. */
 export function RegisterByReader({ readers }: { readers: Reader[] }) {
   const locale = useLocale();
-  const [device, setDevice] = useState(readers.length === 1 ? String(readers[0].id) : "");
+  const [device, setDevice] = useChosenReader(readers);
   const { read, problem, clear } = useCardReader(device);
   const card = read?.card;
+  if (readers.length === 0) return <NoReader />;
 
   return (
     <Card>

@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation";
-import { detectedReaders } from "@/app/(console)/mutations";
 import { BookCourt } from "@/app/(console)/rentals/book-court";
 import type { components } from "@/api/schema";
 import { Facts } from "@/components/facts";
@@ -30,10 +29,7 @@ export default async function RentalPage({
   if (!loaded.value) return <LoadError title="Rental" message={loaded.error ?? "Not found."} />;
   const rental = loaded.value;
   const locale = await getLocale();
-  const [slots, detected] = await Promise.all([
-    loadList<Slot>(`/api/v1/rentals/${id}/availability/?date=${date}`),
-    detectedReaders(),
-  ]);
+  const slots = await loadList<Slot>(`/api/v1/rentals/${id}/availability/?date=${date}`);
 
   return (
     <div className="flex flex-col gap-4 md:gap-6">
@@ -80,7 +76,6 @@ export default async function RentalPage({
             date={date}
             maxPerBooking={rental.rental.max_slots_per_booking ?? 1}
             slots={slots.results}
-            reader={detected.reader}
             initialStart={query.start ?? ""}
             locale={locale}
           />

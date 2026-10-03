@@ -10,6 +10,7 @@ import { can, canManage, getSession } from "@/lib/current-user";
 import { DjangoError, djangoFetch } from "@/lib/django";
 import { show, showTime } from "@/lib/load-all";
 import { loadOne } from "@/lib/page-data";
+import { sellerChoices } from "@/lib/choices";
 
 type Device = components["schemas"]["RFIDDevice"];
 type Building = components["schemas"]["Building"];
@@ -41,13 +42,14 @@ export default async function ReaderPage({ params }: { params: Promise<{ id: str
       <Card>
         <CardHeader>
           <CardTitle>Settings</CardTitle>
-          <CardDescription>A door uses a building. A till reader uses a serial number and is not tied to a counter.</CardDescription>
+          <CardDescription>A door unit has a building and its own fixed IP; units of one door share the code. Till and card assign readers are recognised by their code alone.</CardDescription>
         </CardHeader>
         <CardContent>
           {manage ? (
             <DeviceForm
               id={device.id}
               buildings={buildings.map((building) => ({ id: building.id, label: `${building.code} · ${building.name}` }))}
+              sellers={await sellerChoices(loaded.session.token)}
               defaults={{
                 code: device.code,
                 name: device.name ?? "",
@@ -56,7 +58,7 @@ export default async function ReaderPage({ params }: { params: Promise<{ id: str
                 building: device.building ? String(device.building) : "",
                 servicePosition: device.service_position ? String(device.service_position) : "",
                 allowedIp: device.allowed_ip ?? "",
-                sn: device.sn ?? "",
+                seller: (device as { seller?: number | null }).seller ? String((device as { seller?: number | null }).seller) : "",
                 direction: device.direction ?? "BOTH",
                 active: Boolean(device.is_active),
               }}
@@ -64,8 +66,8 @@ export default async function ReaderPage({ params }: { params: Promise<{ id: str
           ) : (
             <Facts
               items={[
-                { label: "Serial number", value: show(device.sn) },
                 { label: "Building", value: device.building ? String(device.building) : "—" },
+                { label: "Seller", value: show((device as { seller_name?: string | null }).seller_name) },
                 { label: "Allowed IP", value: show(device.allowed_ip) },
                 { label: "Last IP", value: show(device.last_ip) },
                 { label: "Version", value: show(device.app_version) },

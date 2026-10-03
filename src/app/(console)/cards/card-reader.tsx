@@ -1,7 +1,7 @@
 "use client";
 
 import { LoaderCircle } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "@/components/app-link";
 import { useLocale } from "@/components/locale-context";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +26,38 @@ export type CardRead = {
 };
 
 const POLL_MS = 1000;
+const CHOSEN_KEY = "card-assign-reader";
+
+function readChosen() {
+  try {
+    return window.localStorage.getItem(CHOSEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function subscribeChosen(onChange: () => void) {
+  window.addEventListener("storage", onChange);
+  return () => window.removeEventListener("storage", onChange);
+}
+
+/** The card assign reader the user picked (remembered in this browser, shared by the New
+ * card and Assign card pages); the only reader when there is just one. */
+export function useChosenReader(readers: Reader[]): [string, (id: string) => void] {
+  const stored = useSyncExternalStore(subscribeChosen, readChosen, () => null);
+  const [picked, setPicked] = useState<string | null>(null);
+  const known = (id: string | null) => (id && readers.some((r) => String(r.id) === id) ? id : "");
+  const device = picked ?? (known(stored) || (readers.length === 1 ? String(readers[0].id) : ""));
+  const choose = (id: string) => {
+    setPicked(id);
+    try {
+      window.localStorage.setItem(CHOSEN_KEY, id);
+    } catch {
+      // private window or blocked storage: the choice just isn't kept
+    }
+  };
+  return [device, choose];
+}
 
 /** Polls for cards tapped on `device` after the page opened; `read` is the newest tap. */
 export function useCardReader(device: string) {

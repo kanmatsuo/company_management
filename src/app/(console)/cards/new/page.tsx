@@ -26,7 +26,7 @@ export default async function NewCardPage() {
         <Title>New card</Title>
         <Hint>Cards are retired, not deleted, so scan history stays intact.</Hint>
       </div>
-      {readers.length > 0 ? <RegisterByReader readers={readers} /> : null}
+      {can(session.user, "rfid.assign") ? <RegisterByReader readers={readers} /> : null}
       <Card>
         <CardHeader>
           <CardTitle>{readers.length > 0 ? "Or type the UID" : "Card"}</CardTitle>

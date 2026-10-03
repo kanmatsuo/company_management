@@ -4,8 +4,8 @@ export const koUi: Record<string, string> = {
   "A building that still has doors stays in place and the server reports that it is in use.":
     "출입문이 남아 있으면 건물은 그대로 있고, 서버는 사용 중이라고 알립니다.",
   "A debit cannot use money already reserved by open payouts.": "진행 중인 지급에 묶인 돈은 차감할 수 없습니다.",
-  "A door uses a building. A till reader uses a serial number and is not tied to a counter.":
-    "출입문은 건물을 쓰고, 계산 단말기는 일련번호를 쓰며 매장에 묶이지 않습니다.",
+  "A door unit has a building and its own fixed IP; units of one door share the code. Till and card assign readers are recognised by their code alone.":
+    "출입문 장치에는 건물과 고정 IP가 있으며, 한 출입문의 장치들은 같은 코드를 씁니다. 계산 단말기와 카드 배정 단말기는 코드만으로 알아봅니다.",
   "A last working day does not change status or release the card. Set status to Terminated when someone leaves. Delete is a soft delete.":
     "마지막 근무일은 상태나 카드를 바꾸지 않습니다. 떠날 때는 상태를 퇴직으로 하십시오. 삭제는 숨김입니다.",
   "A reason is required.": "사유가 필요합니다.",
@@ -83,8 +83,6 @@ export const koUi: Record<string, string> = {
   "Device request": "단말기 요청",
   Door: "출입문",
   "Door IP": "출입문 IP",
-  "Doors and till readers. Online means the device was heard from in the last two minutes.":
-    "출입문과 계산 단말기입니다. 접속은 최근 2분 안에 신호를 받은 것입니다.",
   "Doors are registered separately and point at this building.": "출입문은 따로 등록하고 이 건물을 가리킵니다.",
   "Each submission carries its own idempotency key.": "보낼 때마다 새 중복방지 열쇠가 붙습니다.",
   "Email is the sign-in name.": "전자우편이 로그인 이름입니다.",
@@ -368,11 +366,17 @@ export const koUi: Record<string, string> = {
   "Allowed IP": "허용 IP",
   Both: "둘 다",
   Purpose: "용도",
-  "Serial number": "일련번호",
-  "A door needs a building. It can sign in from a fixed IP, or with the API key shown once after you save.":
-    "출입문에는 건물이 필요합니다. 고정 IP로 로그인하거나, 저장 후 한 번 보이는 API 열쇠로 로그인합니다.",
-  "A till reader is not tied to a counter. It needs the serial number on the device and signs in with that serial number and its code.":
-    "계산 단말기는 매장에 묶이지 않습니다. 장치의 일련번호가 필요하며 그 번호와 코드로 로그인합니다.",
+  "Register every unit of a door separately: the same code (the door's ID, e.g. Door1), its own name (e.g. Door1-1) and its own fixed IP. The unit is recognised by its ID and IP.":
+    "출입문의 장치마다 따로 등록하십시오. 같은 코드(출입문 ID, 례: Door1), 자기 이름(례: Door1-1), 자기 고정 IP를 씁니다. 장치는 ID와 IP로 알아봅니다.",
+  "A till reader is not tied to a counter. It is recognised by its ID alone, from any PC. Each ID can be used once.":
+    "계산 단말기는 매장에 묶이지 않습니다. 어느 PC에서나 ID만으로 알아봅니다. ID마다 한 번만 쓸 수 있습니다.",
+  "A card assign reader is recognised by its ID alone (e.g. Master1). Tapping a card on it fills the New card and Assign card pages. Each ID can be used once.":
+    "카드 배정 단말기는 ID만으로 알아봅니다(례: Master1). 카드를 대면 새 카드와 카드 배정 쪽에 채워집니다. ID마다 한 번만 쓸 수 있습니다.",
+  "Card assign reader": "카드 배정 단말기",
+  "Fixed IP of this unit": "이 장치의 고정 IP",
+  "Name of this unit": "이 장치의 이름",
+  "Door units, till readers and card assign readers. Online means the device sent a tap in the last two minutes.":
+    "출입문 장치, 계산 단말기, 카드 배정 단말기입니다. 온라인은 최근 2분 안에 카드를 읽은 장치입니다.",
   Kind: "종류",
   Actor: "실행한 사람",
   "Alt text": "그림 설명",

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { confirmPurchase, developerBalance } from "@/app/(console)/mutations";
+import { confirmPurchase, developerBalance, stopWaitingForCard, waitForCard } from "@/app/(console)/mutations";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -47,6 +47,7 @@ export function Checkout({
   total,
   currency,
   presented,
+  waitingForCard = false,
   simulator = false,
   verb = "buy",
   locale = "en",
@@ -58,12 +59,14 @@ export function Checkout({
   total: string;
   currency: string;
   presented: Presented;
+  /** The server still holds this purchase as the one waiting on its reader. */
+  waitingForCard?: boolean;
   simulator?: boolean;
   verb?: "buy" | "book";
   locale?: Locale;
 }) {
   const router = useRouter();
-  const [mode, setMode] = useState<"basket" | "waiting" | "ready">(presented?.developer ? "ready" : "basket");
+  const [chosenMode, setMode] = useState<"basket" | "waiting" | "ready">(presented?.developer ? "ready" : "basket");
   const [live, setLive] = useState("Waiting for the card");
   const [problem, setProblem] = useState("");
   const [pin, setPin] = useState(["", "", "", ""]);
@@ -72,10 +75,14 @@ export function Checkout({
   const [selling, setSelling] = useState(false);
   const inputs = useRef<Array<HTMLInputElement | null>>([]);
   const developer = presented?.developer ?? null;
+  // Waiting ends as soon as the tapped card shows up on the purchase.
+  const mode = chosenMode === "waiting" && developer ? "ready" : chosenMode;
 
-  useEffect(() => {
-    if (mode === "waiting" && developer) setMode("ready");
-  }, [mode, developer]);
+  // The wait ends without a tap when another purchase starts waiting on the same reader
+  // or the 2 minutes run out: say so instead of waiting forever.
+  const [seenWaiting, setSeenWaiting] = useState(false);
+  if (mode === "waiting" && waitingForCard && !seenWaiting) setSeenWaiting(true);
+  const waitEnded = mode === "waiting" && seenWaiting && !waitingForCard && !developer;
 
   useEffect(() => {
     const id = developer?.id;
@@ -150,17 +157,41 @@ export function Checkout({
     if (result?.message) setProblem(result.message);
   }
 
+  async function startScan() {
+    if (developer) {
+      setMode("ready");
+      return;
+    }
+    setSeenWaiting(false);
+    // Only a purchase waiting for a card on its reader takes the next tap.
+    setProblem("");
+    const result = await waitForCard(purchaseId);
+    if (result.message) {
+      setProblem(result.message);
+      return;
+    }
+    setMode("waiting");
+  }
+
+  function stopScan() {
+    void stopWaitingForCard(purchaseId);
+    setMode("basket");
+  }
+
   if (mode === "basket") {
     return (
-      <Button type="button" disabled={items.length === 0} onClick={() => setMode(developer ? "ready" : "waiting")}>
-        {t(locale, verb === "book" ? "Scan card to book" : "Scan card to buy")}
-      </Button>
+      <div className="grid justify-items-start gap-2">
+        <Button type="button" disabled={items.length === 0} onClick={() => void startScan()}>
+          {t(locale, verb === "book" ? "Scan card to book" : "Scan card to buy")}
+        </Button>
+        {problem ? <p className="text-destructive text-sm">{problem}</p> : null}
+      </div>
     );
   }
 
   if (mode === "waiting" || !developer) {
     return (
-      <Dialog open onOpenChange={(open) => { if (!open) setMode("basket"); }}>
+      <Dialog open onOpenChange={(open) => { if (!open) stopScan(); }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t(locale, "Waiting for the card")}</DialogTitle>
@@ -179,10 +210,18 @@ export function Checkout({
             </div>
             <p className="text-muted-foreground text-xs">{t(locale, live)}</p>
             {problem ? <p className="text-destructive text-sm">{problem}</p> : null}
+            {waitEnded ? (
+              <div className="grid justify-items-center gap-2">
+                <p className="text-destructive text-sm">
+                  {t(locale, "No longer waiting: another purchase is scanning on this reader, or 2 minutes passed.")}
+                </p>
+                <Button type="button" size="sm" onClick={() => void startScan()}>{t(locale, "Scan again")}</Button>
+              </div>
+            ) : null}
           </div>
           {simulator ? <TapSimulator purchaseId={purchaseId} /> : null}
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setMode("basket")}>{t(locale, "Cancel")}</Button>
+            <Button type="button" variant="outline" onClick={stopScan}>{t(locale, "Cancel")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

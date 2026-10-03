@@ -121,7 +121,7 @@ export default async function PurchasePage({ params }: { params: Promise<{ id: s
       </Card>
       {draft && manage ? (
         <div className="grid gap-4">
-          <PurchaseReader purchaseId={purchase.id} current={purchase.reader ?? null} />
+          <PurchaseReader purchaseId={purchase.id} positionId={purchase.service_position} current={purchase.reader ?? null} />
           <Checkout
             purchaseId={purchase.id}
             positionId={purchase.service_position}
@@ -130,6 +130,7 @@ export default async function PurchasePage({ params }: { params: Promise<{ id: s
             total={purchase.total}
             currency={purchase.currency}
             presented={presented}
+            waitingForCard={Boolean((purchase as { waiting_for_card?: boolean }).waiting_for_card)}
             simulator={process.env.TAP_SIMULATOR === "true"}
             verb={booking ? "book" : "buy"}
             locale={locale}

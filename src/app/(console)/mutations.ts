@@ -180,7 +180,7 @@ function devicePayload(formData: FormData, patch: boolean) {
   if (purpose === "TILL" || purpose === "ENROLL") {
     return {
       ...shared,
-      sn: optionalText(formData, "sn"),
+      seller: purpose === "TILL" ? optionalInt(formData, "seller") ?? null : null,
       ...(patch ? { building: null, allowed_ip: null, service_position: null } : {}),
     };
   }
@@ -188,7 +188,7 @@ function devicePayload(formData: FormData, patch: boolean) {
     ...shared,
     building: optionalInt(formData, "building"),
     allowed_ip: optionalText(formData, "allowed_ip"),
-    ...(patch ? { service_position: null, sn: null } : {}),
+    ...(patch ? { service_position: null } : {}),
   };
 }
 
@@ -461,14 +461,37 @@ export async function developerBalance(developerId: number) {
   }
 }
 
-export async function detectedReaders() {
+/** The till readers of the counter's seller (readers are assigned to sellers). */
+export async function tillReaders(positionId: number): Promise<TillReader[]> {
   const session = await getSession();
-  const empty = { ip: null as string | null, reader: null as TillReader | null, candidates: [] as TillReader[] };
-  if (!session) return empty;
+  if (!session) return [];
   try {
-    return await djangoFetch<typeof empty>("/api/v1/purchases/detected-reader/", { accessToken: session.token });
+    return await djangoFetch<TillReader[]>(`/api/v1/purchases/readers/?service_position=${positionId}`, {
+      accessToken: session.token,
+    });
   } catch {
-    return empty;
+    return [];
+  }
+}
+
+/** "Scan card to buy": the next tap on the purchase's reader goes to this purchase. */
+export async function waitForCard(id: number): Promise<{ message?: string }> {
+  return purchaseStep(`/api/v1/purchases/${id}/wait/`);
+}
+
+/** The scan dialog was closed: taps no longer go to this purchase. */
+export async function stopWaitingForCard(id: number): Promise<{ message?: string }> {
+  return purchaseStep(`/api/v1/purchases/${id}/stop-waiting/`);
+}
+
+async function purchaseStep(path: string): Promise<{ message?: string }> {
+  const session = await getSession();
+  if (!session) return { message: "Not signed in." };
+  try {
+    await djangoFetch(path, { method: "POST", accessToken: session.token });
+    return {};
+  } catch (error) {
+    return { message: error instanceof DjangoError ? error.message : "Could not reach the server." };
   }
 }
 

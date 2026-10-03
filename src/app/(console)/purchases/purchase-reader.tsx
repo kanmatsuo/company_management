@@ -1,33 +1,31 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { detectedReaders, setPurchaseReader, type TillReader } from "@/app/(console)/mutations";
+import { setPurchaseReader, tillReaders, type TillReader } from "@/app/(console)/mutations";
 import { FieldForm } from "@/components/field-form";
 
-export function PurchaseReader({ purchaseId, current }: { purchaseId: number; current: string | null }) {
-  const [readers, setReaders] = useState<TillReader[]>([]);
+/** The purchase's till reader, chosen among its seller's readers. */
+export function PurchaseReader({ purchaseId, positionId, current }: { purchaseId: number; positionId: number; current: string | null }) {
+  const [readers, setReaders] = useState<TillReader[] | null>(null);
   useEffect(() => {
     let stopped = false;
-    async function load() {
-      const detected = await detectedReaders();
-      if (!stopped) setReaders(detected.candidates ?? []);
-    }
-    void load();
-    const timer = window.setInterval(() => void load(), 30_000);
+    void tillReaders(positionId).then((list) => {
+      if (!stopped) setReaders(list);
+    });
     return () => {
       stopped = true;
-      window.clearInterval(timer);
     };
-  }, []);
+  }, [positionId]);
+  const list = readers ?? [];
   return (
     <div className="grid gap-2">
       <p className="text-muted-foreground text-sm">
-        {current ? `This purchase uses ${current}.` : "No till reader is on this purchase yet."}
-        {readers.length === 0 ? " No till reader is connected to this PC." : ` Connected now: ${readers.map((reader) => reader.name || reader.code).join(", ")}.`}
+        {current ? `This purchase uses ${current}.` : "No till reader is on this purchase yet: choose one before scanning."}
+        {readers !== null && list.length === 0 ? " This seller has no till reader; ask an admin to assign one." : ""}
       </p>
-      {readers.length > 0 ? (
+      {list.length > 1 || (list.length === 1 && current !== list[0].code) ? (
         <FieldForm
-          key={readers.map((reader) => reader.code).join(",")}
+          key={list.map((reader) => reader.code).join(",")}
           action={setPurchaseReader.bind(null, purchaseId)}
           submitLabel="Use this reader"
           variant="outline"
@@ -36,8 +34,8 @@ export function PurchaseReader({ purchaseId, current }: { purchaseId: number; cu
             label: "Till reader",
             type: "select",
             required: true,
-            defaultValue: current && readers.some((reader) => reader.code === current) ? current : readers[0]?.code,
-            options: readers.map((reader) => ({ value: reader.code, label: reader.name || reader.code })),
+            defaultValue: current && list.some((reader) => reader.code === current) ? current : list[0]?.code,
+            options: list.map((reader) => ({ value: reader.code, label: reader.name ? `${reader.name} · ${reader.code}` : reader.code })),
           }]}
         />
       ) : null}
