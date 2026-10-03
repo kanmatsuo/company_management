@@ -6,6 +6,8 @@ const REFRESH_MAX_AGE = 7 * 24 * 60 * 60;
 
 type Tokens = { access: string; refresh: string; at: number };
 
+// Refresh tokens rotate, so concurrent requests reuse a fresh exchange for REUSE_MS.
+const REUSE_MS = 15_000;
 const recent = new Map<string, Tokens>();
 let inflightKey: string | null = null;
 let inflight: Promise<Tokens> | null = null;
@@ -23,7 +25,7 @@ function accessExpired(token: string) {
 
 function exchange(refresh: string) {
   const cached = recent.get(refresh);
-  if (cached && Date.now() - cached.at < 15_000) return Promise.resolve(cached);
+  if (cached && Date.now() - cached.at < REUSE_MS) return Promise.resolve(cached);
   if (inflight && inflightKey === refresh) return inflight;
   inflightKey = refresh;
   const api = process.env.API_URL?.trim().replace(/\/$/, "");
@@ -39,6 +41,9 @@ function exchange(refresh: string) {
       const body = (await response.json()) as { access?: string; refresh?: string };
       if (!body.access || !body.refresh) throw new Error("refresh failed");
       const tokens = { access: body.access, refresh: body.refresh, at: Date.now() };
+      for (const [key, value] of recent) {
+        if (tokens.at - value.at >= REUSE_MS) recent.delete(key);
+      }
       recent.set(refresh, tokens);
       recent.set(tokens.refresh, tokens);
       return tokens;
