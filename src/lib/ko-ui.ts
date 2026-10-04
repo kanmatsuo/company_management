@@ -707,7 +707,7 @@ export const koUi: Record<string, string> = {
   "Tables and filters for this section will sit here.": "이 구역의 표와 거름이 여기 있습니다.",
   "Take an unassigned card out of circulation.": "배정되지 않은 카드를 사용에서 삭제합니다.",
   "Take the card back. The history stays.": "카드를 돌려받습니다. 기록은 남습니다.",
-  taken: "잡힘",
+  taken: "예약됨",
   "Tap a card first.": "먼저 카드를 대십시오.",
   "Tap another card to replace it.": "바꿀 다른 카드를 대십시오.",
   "Tap card to deposit": "카드를 읽어 입금",

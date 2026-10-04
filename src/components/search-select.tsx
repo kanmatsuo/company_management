@@ -14,6 +14,7 @@ export function SearchSelect({
   defaultValue = "",
   options,
   locale,
+  onValueChange,
 }: {
   id?: string;
   name: string;
@@ -21,6 +22,7 @@ export function SearchSelect({
   defaultValue?: string;
   options: { value: string; label: string }[];
   locale: Locale;
+  onValueChange?: (value: string) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -37,6 +39,7 @@ export function SearchSelect({
     setValue(next);
     setQuery("");
     setOpen(false);
+    onValueChange?.(next);
   }
 
   return (

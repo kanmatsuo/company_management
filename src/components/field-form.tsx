@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,6 +20,8 @@ export type Field = {
   options?: { value: string; label: string }[];
   /** Text fields: values to pick from while typing (any other text is still accepted). */
   suggestions?: string[];
+  /** Hide this field until another field (usually a select) has this value. */
+  visibleWhen?: { name: string; value: string };
 };
 
 const control =
@@ -40,6 +42,14 @@ export function FieldForm({
 }) {
   const [state, formAction, pending] = useActionState(action, null as FormState);
   const locale = useLocale();
+  const watched = useMemo(() => new Set(fields.flatMap((field) => (field.visibleWhen ? [field.visibleWhen.name] : []))), [fields]);
+  const [values, setValues] = useState(() => {
+    const next: Record<string, string> = {};
+    for (const field of fields) {
+      if (watched.has(field.name)) next[field.name] = field.defaultValue ?? "";
+    }
+    return next;
+  });
 
   return (
     <form action={formAction} encType={fields.some((field) => field.type === "file") ? "multipart/form-data" : undefined} className="grid max-w-md gap-4">
@@ -62,6 +72,7 @@ export function FieldForm({
         </div>
       ) : null}
       {fields.map((field) => {
+        if (field.visibleWhen && values[field.visibleWhen.name] !== field.visibleWhen.value) return null;
         const errors = state?.fields?.[field.name];
         if (field.type === "hidden") {
           return <input key={field.name} type="hidden" name={field.name} value={field.defaultValue ?? ""} />;
@@ -94,6 +105,7 @@ export function FieldForm({
                 defaultValue={field.defaultValue}
                 locale={locale}
                 options={(field.options ?? []).map((option) => ({ value: option.value, label: t(locale, option.label) }))}
+                onValueChange={watched.has(field.name) ? (value) => setValues((prev) => ({ ...prev, [field.name]: value })) : undefined}
               />
             ) : (
               <>
