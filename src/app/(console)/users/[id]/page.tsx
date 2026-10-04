@@ -56,9 +56,9 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
   return (
     <div className="flex flex-col gap-4 md:gap-6">
       <div>
-        <h1 className="font-semibold text-2xl tracking-tight">{user.full_name || user.email}</h1>
+        <h1 className="font-semibold text-2xl tracking-tight">{user.full_name || user.username}</h1>
         <p className="text-muted-foreground text-sm">
-          {user.email} · Joined {showTime(user.date_joined)} · Last sign-in {showTime(user.last_login)}
+          {user.username} · Joined {showTime(user.date_joined)} · Last sign-in {showTime(user.last_login)}
         </p>
       </div>
       {canManage ? <UserRowActions id={user.id} active={user.is_active} nextPath="/users" showEdit={false} /> : null}
@@ -73,7 +73,7 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
         </CardHeader>
         <CardContent>
           {canManage ? (
-            <EditUserForm id={user.id} fullName={user.full_name} isActive={user.is_active} />
+            <EditUserForm id={user.id} username={user.username} fullName={user.full_name} isActive={user.is_active} />
           ) : (
             <p className="text-sm">{user.is_active ? "Active" : "Inactive"}</p>
           )}

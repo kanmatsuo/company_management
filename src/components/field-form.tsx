@@ -18,6 +18,8 @@ export type Field = {
   defaultValue?: string;
   placeholder?: string;
   options?: { value: string; label: string }[];
+  /** Text fields: values to pick from while typing (any other text is still accepted). */
+  suggestions?: string[];
 };
 
 const control =
@@ -94,14 +96,25 @@ export function FieldForm({
                 options={(field.options ?? []).map((option) => ({ value: option.value, label: t(locale, option.label) }))}
               />
             ) : (
-              <Input
-                id={field.name}
-                name={field.name}
-                type={field.type ?? "text"}
-                required={field.required}
-                defaultValue={field.defaultValue}
-                placeholder={field.placeholder ? t(locale, field.placeholder) : undefined}
-              />
+              <>
+                <Input
+                  id={field.name}
+                  name={field.name}
+                  type={field.type ?? "text"}
+                  required={field.required}
+                  defaultValue={field.defaultValue}
+                  placeholder={field.placeholder ? t(locale, field.placeholder) : undefined}
+                  list={field.suggestions?.length ? `${field.name}-suggestions` : undefined}
+                  autoComplete={field.suggestions?.length ? "off" : undefined}
+                />
+                {field.suggestions?.length ? (
+                  <datalist id={`${field.name}-suggestions`}>
+                    {field.suggestions.map((value) => (
+                      <option key={value} value={value} />
+                    ))}
+                  </datalist>
+                ) : null}
+              </>
             )}
             {errors?.map((error) => (
               <p key={error} className="text-destructive text-xs">{error}</p>

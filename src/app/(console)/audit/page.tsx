@@ -43,7 +43,7 @@ export default async function AuditPage() {
       hrefs={data.results.map((entry) => `/audit/${entry.id}`)}
       rows={data.results.map((entry) => [
         showTime(entry.created_at),
-        show(entry.actor_email),
+        show(entry.actor_username),
         show(entry.action),
         `${show(entry.entity_type)} ${show(entry.entity_id)}`,
         changed(entry.old_values, entry.new_values),

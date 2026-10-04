@@ -12,7 +12,7 @@ type FieldErrors = Record<string, string[]>;
 
 export function LoginForm({ notice, locale }: { notice?: string; locale: Locale }) {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState(notice ?? "");
   const [fields, setFields] = useState<FieldErrors>({});
@@ -27,7 +27,7 @@ export function LoginForm({ notice, locale }: { notice?: string; locale: Locale 
       const response = await fetch("/api/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ username, password }),
       });
       const body = (await response.json().catch(() => null)) as {
         message?: string;
@@ -51,18 +51,19 @@ export function LoginForm({ notice, locale }: { notice?: string; locale: Locale 
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
       {message ? <p className="text-destructive text-sm">{message}</p> : null}
       <div className="grid gap-1.5">
-        <Label htmlFor="email">{t(locale, "Email")}</Label>
+        <Label htmlFor="username">{t(locale, "Username")}</Label>
         <Input
-          id="email"
-          name="email"
-          type="email"
+          id="username"
+          name="username"
           autoComplete="username"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          placeholder="boss@demo.local"
-          aria-invalid={Boolean(fields.email)}
+          autoCapitalize="none"
+          spellCheck={false}
+          value={username}
+          onChange={(event) => setUsername(event.target.value)}
+          placeholder="boss"
+          aria-invalid={Boolean(fields.username)}
         />
-        {fields.email?.map((error) => (
+        {fields.username?.map((error) => (
           <p key={error} className="text-destructive text-xs">
             {error}
           </p>

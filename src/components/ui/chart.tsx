@@ -1,6 +1,6 @@
 "use client";
 
-import { LoaderCircle } from "lucide-react";
+import { BrandMark } from "@/components/brand-mark";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
@@ -93,7 +93,7 @@ export function SeriesChart({
     <div className="relative w-full" style={{ height }}>
       {measured ? null : (
         <div role="status" className="absolute inset-0 flex items-center justify-center">
-          <LoaderCircle aria-hidden className="size-6 text-muted-foreground motion-safe:animate-spin" />
+          <BrandMark className="size-10 text-muted-foreground" />
           <span className="sr-only">Loading chart…</span>
         </div>
       )}

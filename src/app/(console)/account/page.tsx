@@ -22,8 +22,8 @@ export default async function AccountPage() {
       </div>
       <Card className="max-w-2xl">
         <CardHeader>
-          <CardTitle>{user.full_name || user.email}</CardTitle>
-          <CardDescription>{user.email}</CardDescription>
+          <CardTitle>{user.full_name || user.username}</CardTitle>
+          <CardDescription>{user.username}</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 text-sm">
           <div>

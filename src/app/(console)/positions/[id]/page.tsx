@@ -14,7 +14,7 @@ type Position = components["schemas"]["ServicePosition"] & {
   building?: number | null;
   building_name?: string | null;
   manager?: number | null;
-  manager_email?: string | null;
+  manager_username?: string | null;
 };
 
 export default async function PositionPage({ params }: { params: Promise<{ id: string }> }) {
@@ -60,7 +60,7 @@ export default async function PositionPage({ params }: { params: Promise<{ id: s
               items={[
                 { label: "Location", value: show(position.location) },
                 { label: "Building", value: show(position.building_name) },
-                { label: "Position manager", value: show(position.manager_email) },
+                { label: "Position manager", value: show(position.manager_username) },
                 { label: "Active", value: position.is_active ? "Yes" : "No" },
               ]}
             />

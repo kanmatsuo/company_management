@@ -341,6 +341,49 @@ export async function resetAccountPin(id: number, prev: FormState, formData: For
   return accountStatus(id, "reset-pin")(prev, formData);
 }
 
+export type DeskAccount = { id: number; has_pin: boolean; pin_locked_until: string | null; status: string };
+
+/** The wallet of a developer identified at a desk (PIN desk), or null. */
+export async function developerAccount(developerId: number): Promise<DeskAccount | null> {
+  const session = await getSession();
+  if (!session) return null;
+  try {
+    const page = await djangoFetch<{ results: DeskAccount[] }>(`/api/v1/finance/accounts/?developer=${developerId}`, {
+      accessToken: session.token,
+    });
+    return page.results[0] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** PIN desk: the developer types the current PIN and the new one twice. */
+export async function changePinAtDesk(accountId: number, currentPin: string, pin: string, pinConfirm: string) {
+  return pinDeskCall(`/api/v1/finance/accounts/${accountId}/change-pin/`, {
+    current_pin: currentPin,
+    pin,
+    pin_confirm: pinConfirm,
+  });
+}
+
+/** PIN desk: a forgotten PIN is replaced by a new one the developer types twice. */
+export async function resetPinAtDesk(accountId: number, pin: string, pinConfirm: string) {
+  return pinDeskCall(`/api/v1/finance/accounts/${accountId}/reset-pin/`, { pin, pin_confirm: pinConfirm });
+}
+
+async function pinDeskCall(path: string, body: Record<string, string>): Promise<{ message?: string }> {
+  const session = await getSession();
+  if (!session) return { message: "Not signed in." };
+  try {
+    await djangoFetch(path, { method: "POST", accessToken: session.token, body: JSON.stringify(body) });
+    return {};
+  } catch (error) {
+    if (!(error instanceof DjangoError)) return { message: "Could not reach the server." };
+    const details = Object.values(error.details ?? {}).flat().filter((x): x is string => typeof x === "string");
+    return { message: details[0] ?? error.message };
+  }
+}
+
 export async function setMyPin(_prev: FormState, formData: FormData): Promise<FormState> {
   return commit({
     path: "/api/v1/finance/accounts/me/pin/",

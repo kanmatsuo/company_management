@@ -25,7 +25,7 @@ import { redirect } from "next/navigation";
 type User = components["schemas"]["User"];
 type UserPage = components["schemas"]["PaginatedUserList"];
 
-const SORTS = ["full_name", "email", "last_login"] as const;
+const SORTS = ["full_name", "username", "last_login"] as const;
 
 function usersHref(query: { is_active?: string; search?: string; ordering?: string; page?: number; pageSize?: PageSize }) {
   const params = new URLSearchParams();
@@ -126,7 +126,7 @@ export default async function UsersPage({
               <TableHeader>
                 <TableRow>
                   <SortHead label={t(locale, "Name")} field="full_name" ordering={ordering} isActive={isActive} search={search} pageSize={pageSize} />
-                  <SortHead label={t(locale, "Email")} field="email" ordering={ordering} isActive={isActive} search={search} pageSize={pageSize} />
+                  <SortHead label={t(locale, "Username")} field="username" ordering={ordering} isActive={isActive} search={search} pageSize={pageSize} />
                   <TableHead>{t(locale, "Roles")}</TableHead>
                   <TableHead>{t(locale, "Active")}</TableHead>
                   <SortHead label={t(locale, "Last sign-in")} field="last_login" ordering={ordering} isActive={isActive} search={search} pageSize={pageSize} />
@@ -137,7 +137,7 @@ export default async function UsersPage({
                 {users.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell className="font-medium">{show(user.full_name)}</TableCell>
-                    <TableCell>{user.email}</TableCell>
+                    <TableCell>{user.username}</TableCell>
                     <TableCell>{user.roles.length > 0 ? user.roles.join(", ") : "—"}</TableCell>
                     <TableCell>
                       <Badge variant={user.is_active ? "secondary" : "outline"}>

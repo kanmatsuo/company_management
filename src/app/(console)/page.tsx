@@ -58,7 +58,7 @@ export default async function OverviewPage() {
 
   const visible = STATS.filter((stat) => can(session.user, stat.permission) || canOpen(session.user, stat.permission));
   const values = await Promise.all(visible.map((stat) => loadCount(session.token, stat.path)));
-  const name = session.user.full_name || session.user.email;
+  const name = session.user.full_name || session.user.username;
 
   return (
     <div className="flex flex-col gap-4 md:gap-6">

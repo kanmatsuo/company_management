@@ -9,7 +9,7 @@ import { positionChoices } from "@/lib/choices";
 export default async function NewPurchasePage() {
   const session = await requireSession();
   if (!canManage(session.user, ["purchase", "seller"]) && !(await runsStore())) return <NoAccess description="Your account cannot open a till draft." />;
-  const positions = await positionChoices(session.token);
+  const positions = await positionChoices(session.token, { sellingOnly: true });
   return (
     <div className="flex flex-col gap-4 md:gap-6">
       <div>

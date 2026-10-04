@@ -6,7 +6,7 @@ import { canManage, getSession } from "@/lib/current-user";
 import { show } from "@/lib/load-all";
 import { loadList } from "@/lib/page-data";
 
-type Seller = components["schemas"]["Seller"] & { user_email?: string | null };
+type Seller = components["schemas"]["Seller"] & { user_username?: string | null };
 
 export default async function SellersPage() {
   const session = await getSession();
@@ -22,7 +22,7 @@ export default async function SellersPage() {
       extra={manage ? <Button asChild><Link href="/sellers/new">New seller</Link></Button> : null}
       headers={["Name", "Store login", "Contact", "Email", "Phone", "Status"]}
       hrefs={data.results.map((seller) => `/sellers/${seller.id}`)}
-      rows={data.results.map((seller) => [seller.name, show(seller.user_email), show(seller.contact_name), show(seller.email), show(seller.phone), show(seller.status)])}
+      rows={data.results.map((seller) => [seller.name, show(seller.user_username), show(seller.contact_name), show(seller.email), show(seller.phone), show(seller.status)])}
     />
   );
 }

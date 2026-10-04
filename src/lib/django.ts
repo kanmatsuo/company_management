@@ -79,7 +79,7 @@ function explainRule(status: number, code: string | null, details: unknown, mess
     return "Too many attempts. Wait a minute and try again.";
   }
   if (code === "NO_ACTIVE_ACCOUNT") {
-    return "Wrong email or password.";
+    return "Wrong username or password.";
   }
   if (status === 401 || code === "NOT_AUTHENTICATED" || code === "TOKEN_NOT_VALID") {
     return "Your session expired. Sign in again.";

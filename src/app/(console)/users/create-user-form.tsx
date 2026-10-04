@@ -14,9 +14,9 @@ export function CreateUserForm() {
     <form action={action} className="grid max-w-md gap-4">
       {state?.message ? <p className="text-destructive text-sm">{state.message}</p> : null}
       <div className="grid gap-1.5">
-        <Label htmlFor="email">Email</Label>
-        <Input id="email" name="email" type="email" autoComplete="off" required />
-        {state?.fields?.email?.map((error) => (
+        <Label htmlFor="username">Username</Label>
+        <Input id="username" name="username" autoComplete="off" required minLength={3} maxLength={150} pattern="[A-Za-z0-9._\-]{3,150}" title="3 to 150 letters, digits, dots, underscores or hyphens" />
+        {state?.fields?.username?.map((error) => (
           <p key={error} className="text-destructive text-xs">{error}</p>
         ))}
       </div>

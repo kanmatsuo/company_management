@@ -5,7 +5,7 @@ import { FieldForm } from "@/components/field-form";
 import { NoAccess } from "@/components/no-access";
 import { canManage } from "@/lib/current-user";
 import { requireSession } from "@/lib/page-data";
-import { buildingChoices } from "@/lib/choices";
+import { buildingChoices, departmentNames } from "@/lib/choices";
 
 const STATUS = [
   { value: "ACTIVE", label: "Active" },
@@ -19,7 +19,7 @@ export default async function NewDeveloperPage() {
   if (!canManage(session.user, ["developer"])) {
     return <NoAccess description="Your account cannot create developers." />;
   }
-  const buildings = await buildingChoices(session.token);
+  const [buildings, departments] = await Promise.all([buildingChoices(session.token), departmentNames(session.token)]);
   return (
     <div className="flex flex-col gap-4 md:gap-6">
       <div>
@@ -41,7 +41,7 @@ export default async function NewDeveloperPage() {
               { name: "phone", label: "Phone" },
               { name: "home_address", label: "Home address" },
               { name: "birthday", label: "Birthday", type: "date" },
-              { name: "department", label: "Department" },
+              { name: "department", label: "Department", suggestions: departments, placeholder: "Type to search, or a new one" },
               { name: "position_title", label: "Title" },
               { name: "building", label: "Home building", type: "select", options: buildings },
               { name: "start_date", label: "Start date", type: "date" },

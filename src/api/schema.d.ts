@@ -1827,7 +1827,7 @@ export interface components {
             readonly id: number;
             /** @description Null for system actions (Celery tasks, RFID devices, migrations). */
             actor?: number | null;
-            actor_email?: string;
+            actor_username?: string;
             action: string;
             entity_type: string;
             entity_id: string;
@@ -2228,8 +2228,7 @@ export interface components {
         };
         Me: {
             readonly id: number;
-            /** Format: email */
-            readonly email: string;
+            readonly username: string;
             readonly full_name: string;
             readonly is_active: boolean;
             readonly roles: string[];
@@ -3285,7 +3284,7 @@ export interface components {
             readonly refresh: string;
         };
         TokenObtainPairRequest: {
-            email: string;
+            username: string;
             password: string;
         };
         TokenRefresh: {
@@ -3297,8 +3296,7 @@ export interface components {
         };
         User: {
             readonly id: number;
-            /** Format: email */
-            readonly email: string;
+            readonly username: string;
             readonly full_name: string;
             readonly is_active: boolean;
             readonly roles: string[];
@@ -3308,8 +3306,7 @@ export interface components {
             readonly last_login: string | null;
         };
         UserCreateRequest: {
-            /** Format: email */
-            email: string;
+            username: string;
             full_name?: string;
             password: string;
         };

@@ -11,7 +11,7 @@ import { show, showTime } from "@/lib/load-all";
 import { loadOne } from "@/lib/page-data";
 import { sellerUserChoices } from "@/lib/choices";
 
-type Seller = components["schemas"]["Seller"] & { user_email?: string | null };
+type Seller = components["schemas"]["Seller"] & { user_username?: string | null };
 
 const STATUS = [
   { value: "ACTIVE", label: "Active" },
@@ -32,9 +32,9 @@ export default async function SellerPage({ params }: { params: Promise<{ id: str
       <div>
         <h1 className="font-semibold text-2xl tracking-tight">{seller.name}</h1>
         <p className="text-muted-foreground text-sm">
-          {seller.user_email ? (
+          {seller.user_username ? (
             <>
-              <AutoText>Store login</AutoText>: {seller.user_email}
+              <AutoText>Store login</AutoText>: {seller.user_username}
             </>
           ) : (
             <AutoText>No store login yet</AutoText>
@@ -65,7 +65,7 @@ export default async function SellerPage({ params }: { params: Promise<{ id: str
           ) : (
             <Facts
               items={[
-                { label: "Store login", value: show(seller.user_email) },
+                { label: "Store login", value: show(seller.user_username) },
                 { label: "Email", value: show(seller.email) },
                 { label: "Phone", value: show(seller.phone) },
                 { label: "Status", value: show(seller.status) },

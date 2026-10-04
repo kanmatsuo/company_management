@@ -41,7 +41,7 @@ export function UserSearch({
     <Input
       value={text}
       onChange={(event) => setText(event.target.value)}
-      placeholder={t(locale, "Search name or email")}
+      placeholder={t(locale, "Search name or username")}
       className="max-w-xs"
       aria-label={t(locale, "Search users")}
     />

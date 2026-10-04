@@ -25,7 +25,7 @@ function formError(error: unknown): FormState {
 export async function createUser(_prev: FormState, formData: FormData): Promise<FormState> {
   const session = await sessionOrLogin();
   if (!can(session.user, "user.manage")) return { message: "You don't have access." };
-  const email = String(formData.get("email") ?? "").trim();
+  const username = String(formData.get("username") ?? "").trim();
   const fullName = String(formData.get("full_name") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   try {
@@ -33,7 +33,7 @@ export async function createUser(_prev: FormState, formData: FormData): Promise<
       method: "POST",
       accessToken: session.token,
       body: JSON.stringify({
-        email,
+        username,
         password,
         ...(fullName ? { full_name: fullName } : {}),
       }),
@@ -47,13 +47,14 @@ export async function createUser(_prev: FormState, formData: FormData): Promise<
 export async function updateUser(id: number, _prev: FormState, formData: FormData): Promise<FormState> {
   const session = await sessionOrLogin();
   if (!can(session.user, "user.manage")) return { message: "You don't have access." };
+  const username = String(formData.get("username") ?? "").trim();
   const fullName = String(formData.get("full_name") ?? "").trim();
   const isActive = formData.get("is_active") === "on";
   try {
     await djangoFetch(`/api/v1/users/${id}/`, {
       method: "PATCH",
       accessToken: session.token,
-      body: JSON.stringify({ full_name: fullName, is_active: isActive }),
+      body: JSON.stringify({ ...(username ? { username } : {}), full_name: fullName, is_active: isActive }),
     });
   } catch (error) {
     return formError(error);

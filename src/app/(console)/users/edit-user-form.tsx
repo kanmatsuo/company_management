@@ -10,10 +10,12 @@ import { Label } from "@/components/ui/label";
 
 export function EditUserForm({
   id,
+  username,
   fullName,
   isActive,
 }: {
   id: number;
+  username: string;
   fullName: string;
   isActive: boolean;
 }) {
@@ -23,6 +25,13 @@ export function EditUserForm({
   return (
     <form action={formAction} className="grid max-w-md gap-4">
       {state?.message ? <p className="text-destructive text-sm">{state.message}</p> : null}
+      <div className="grid gap-1.5">
+        <Label htmlFor="username">Username</Label>
+        <Input id="username" name="username" defaultValue={username} required autoComplete="off" pattern="[A-Za-z0-9._\-]{3,150}" />
+        {state?.fields?.username?.map((error) => (
+          <p key={error} className="text-destructive text-xs">{error}</p>
+        ))}
+      </div>
       <div className="grid gap-1.5">
         <Label htmlFor="full_name">Full name</Label>
         <Input id="full_name" name="full_name" defaultValue={fullName} />

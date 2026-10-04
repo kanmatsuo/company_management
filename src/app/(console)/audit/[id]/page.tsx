@@ -32,7 +32,7 @@ export default async function AuditDetailPage({ params }: { params: Promise<{ id
         <CardContent>
           <Facts
             items={[
-              { label: "Who", value: show(entry.actor_email) },
+              { label: "Who", value: show(entry.actor_username) },
               { label: "IP", value: show(entry.ip_address) },
               { label: "Request", value: show(entry.request_id) },
               { label: "User agent", value: show(entry.user_agent) },

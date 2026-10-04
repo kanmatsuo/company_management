@@ -10,18 +10,18 @@ type Me = components["schemas"]["Me"];
 
 export async function POST(request: Request) {
   const locale = await getLocale();
-  let email = "";
+  let username = "";
   let password = "";
   try {
-    const body = (await request.json()) as { email?: string; password?: string };
-    email = body.email?.trim() ?? "";
+    const body = (await request.json()) as { username?: string; password?: string };
+    username = body.username?.trim() ?? "";
     password = body.password ?? "";
   } catch {
     return NextResponse.json({ message: t(locale, "Invalid input.") }, { status: 400 });
   }
 
   const details: Record<string, string[]> = {};
-  if (!email) details.email = [t(locale, "Enter your email.")];
+  if (!username) details.username = [t(locale, "Enter your username.")];
   if (!password) details.password = [t(locale, "Enter your password.")];
   if (Object.keys(details).length > 0) {
     return NextResponse.json(
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
   try {
     const tokens = await djangoFetch<TokenPair>("/api/v1/auth/token/", {
       method: "POST",
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ username, password }),
     });
     const user = await djangoFetch<Me>("/api/v1/auth/me/", {
       accessToken: tokens.access,
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       user: {
         id: user.id,
-        email: user.email,
+        username: user.username,
         full_name: user.full_name,
         roles: user.roles,
         permissions: user.permissions,

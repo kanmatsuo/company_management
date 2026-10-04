@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { canManage } from "@/lib/current-user";
 import { show, showTime } from "@/lib/load-all";
 import { loadOne } from "@/lib/page-data";
-import { buildingChoices } from "@/lib/choices";
+import { buildingChoices, departmentNames } from "@/lib/choices";
 
 type Developer = components["schemas"]["Developer"] & { building?: number | null; building_name?: string | null };
 
@@ -26,7 +26,9 @@ export default async function DeveloperDetailPage({ params }: { params: Promise<
   if (!loaded.value) return <LoadError title="Developer" message={loaded.error ?? "Not found."} />;
   const developer = loaded.value;
   const manage = canManage(loaded.session.user, ["developer"]);
-  const buildings = manage ? await buildingChoices(loaded.session.token) : [];
+  const [buildings, departments] = manage
+    ? await Promise.all([buildingChoices(loaded.session.token), departmentNames(loaded.session.token)])
+    : [[], []];
 
   return (
     <div className="flex flex-col gap-4 md:gap-6">
@@ -52,7 +54,7 @@ export default async function DeveloperDetailPage({ params }: { params: Promise<
                 { name: "phone", label: "Phone", defaultValue: developer.phone ?? "" },
                 { name: "home_address", label: "Home address", defaultValue: developer.home_address ?? "" },
                 { name: "birthday", label: "Birthday", type: "date", defaultValue: developer.birthday ?? "" },
-                { name: "department", label: "Department", defaultValue: developer.department ?? "" },
+                { name: "department", label: "Department", defaultValue: developer.department ?? "", suggestions: departments, placeholder: "Type to search, or a new one" },
                 { name: "position_title", label: "Title", defaultValue: developer.position_title ?? "" },
                 { name: "building", label: "Home building", type: "select", options: buildings, defaultValue: developer.building ? String(developer.building) : "" },
                 { name: "start_date", label: "Start date", type: "date", defaultValue: developer.start_date ?? "" },

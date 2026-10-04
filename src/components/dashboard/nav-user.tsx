@@ -27,7 +27,7 @@ export function NavUser({ user, locale = "en" }: { user: CurrentUser; locale?: L
   const router = useRouter();
   const { isMobile } = useSidebar();
   const [pending, setPending] = useState(false);
-  const name = user.full_name || user.email;
+  const name = user.full_name || user.username;
 
   async function onLogout() {
     setPending(true);
@@ -54,7 +54,7 @@ export function NavUser({ user, locale = "en" }: { user: CurrentUser; locale?: L
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
                 <span className="truncate font-medium">{name}</span>
-                <span className="truncate text-muted-foreground text-xs">{user.email}</span>
+                <span className="truncate text-muted-foreground text-xs">{user.username}</span>
               </div>
               <EllipsisVertical className="ml-auto size-4 group-data-[collapsible=icon]:hidden" />
             </SidebarMenuButton>

@@ -1,4 +1,5 @@
 import "server-only";
+import { djangoFetch } from "@/lib/django";
 import { loadFlexible } from "@/lib/load-all";
 
 export type Choice = { value: string; label: string };
@@ -12,7 +13,7 @@ async function asChoices<T extends { id: number }>(token: string, path: string, 
   }
 }
 
-type Named = { id: number; full_name: string; employee_number?: string; email?: string; name?: string };
+type Named = { id: number; full_name: string; employee_number?: string; username?: string; name?: string };
 
 export function developerChoices(token: string) {
   return asChoices<Named>(token, "/api/v1/developers/?ordering=full_name", (row) =>
@@ -22,7 +23,7 @@ export function developerChoices(token: string) {
 
 export function userChoices(token: string) {
   return asChoices<Named>(token, "/api/v1/users/?ordering=full_name", (row) =>
-    row.full_name ? `${row.full_name} · ${row.email ?? ""}` : (row.email ?? row.full_name),
+    row.full_name ? `${row.full_name} · ${row.username ?? ""}` : (row.username ?? row.full_name),
   );
 }
 
@@ -35,7 +36,7 @@ export function buildingChoices(token: string) {
 /** Users with one role: the only ones who can be linked to that job. */
 export function roleUserChoices(token: string, role: string) {
   return asChoices<Named>(token, `/api/v1/users/?role=${encodeURIComponent(role)}&ordering=full_name`, (row) =>
-    row.full_name ? `${row.full_name} · ${row.email ?? ""}` : (row.email ?? row.full_name),
+    row.full_name ? `${row.full_name} · ${row.username ?? ""}` : (row.username ?? row.full_name),
   );
 }
 
@@ -48,10 +49,12 @@ export function sellerChoices(token: string) {
   return asChoices<Named>(token, "/api/v1/sellers/?ordering=name", (row) => row.name ?? row.full_name);
 }
 
-export function positionChoices(token: string) {
+export function positionChoices(token: string, { sellingOnly = false } = {}) {
+  // sellingOnly: counters that can sell now (active, of an active seller), e.g. for the till.
+  const filters = sellingOnly ? "&is_active=true&seller_status=ACTIVE" : "";
   return asChoices<{ id: number; name: string; seller_detail?: { name?: string } }>(
     token,
-    "/api/v1/service-positions/?ordering=name",
+    `/api/v1/service-positions/?ordering=name${filters}`,
     (row) => (row.seller_detail?.name ? `${row.name} · ${row.seller_detail.name}` : row.name),
   );
 }
@@ -66,6 +69,15 @@ export async function goodChoices(token: string, servicePosition?: number) {
     return page.results
       .filter((row) => row.kind !== "RENTAL")
       .map((row) => ({ value: String(row.id), label: row.name || `Record ${row.id}` }));
+  } catch {
+    return [];
+  }
+}
+
+/** Departments already used, to suggest while typing one. */
+export async function departmentNames(token: string): Promise<string[]> {
+  try {
+    return await djangoFetch<string[]>("/api/v1/developers/departments/", { accessToken: token });
   } catch {
     return [];
   }
