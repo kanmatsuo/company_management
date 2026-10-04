@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 112" fill="none" aria-hidden="true">
-  <g stroke="#000" stroke-linejoin="miter" stroke-linecap="square">
+  <g stroke="currentColor" stroke-linejoin="miter" stroke-linecap="square">
     <!-- Globe -->
     <circle cx="48" cy="18" r="14" stroke-width="4.5"/>
     <path d="M34.8 11.2h26.4M34.2 18h27.6M34.8 24.8h26.4" stroke-width="2.8"/>

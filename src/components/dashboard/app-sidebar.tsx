@@ -4,6 +4,7 @@ import Link from "@/components/app-link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useState, type ComponentProps } from "react";
 import { ChevronRight, type LucideIcon, LayoutDashboard, UserRound, CreditCard, Radio, ScanLine, CalendarCheck, Users, ScrollText, Wallet, Package, Warehouse, ShoppingCart, Store, Landmark, Briefcase } from "lucide-react";
+import { AppLogo } from "@/components/app-logo";
 import { useShallow } from "zustand/react/shallow";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
@@ -311,7 +312,7 @@ export function AppSidebar({ user, locale, isSeller = false, isOwner = false, ..
           <SidebarMenuItem>
             <SidebarMenuButton asChild size="lg" tooltip={t(locale, "Management")} className="group-data-[collapsible=icon]:justify-center">
               <Link href="/">
-                <LayoutDashboard />
+                <AppLogo className="size-9! shrink-0 text-sidebar-foreground" />
                 <span className="font-semibold text-base group-data-[collapsible=icon]:hidden">{t(locale, "Management")}</span>
               </Link>
             </SidebarMenuButton>
