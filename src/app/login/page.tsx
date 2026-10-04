@@ -11,8 +11,9 @@ export default async function LoginPage() {
   if (await getAccessToken()) redirect("/");
   const locale = await getLocale();
 
+  // Login stays night mode even when the rest of the app is set to light.
   return (
-    <div className="relative flex min-h-dvh items-center justify-center overflow-hidden px-4 py-10">
+    <div className="dark relative flex min-h-dvh items-center justify-center overflow-hidden bg-slate-950 px-4 py-10 text-foreground">
       <Image
         src="/images/login-bg.jpg"
         alt=""
