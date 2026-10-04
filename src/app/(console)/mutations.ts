@@ -464,6 +464,23 @@ export async function changeStock(id: number, _prev: FormState, formData: FormDa
   });
 }
 
+/** Inventory page: a stock change for the good chosen in the form. */
+export async function addStock(_prev: FormState, formData: FormData): Promise<FormState> {
+  const good = optionalInt(formData, "good");
+  if (!good) return { message: "Choose a good.", fields: { good: ["Choose a good."] } };
+  const kind = text(formData, "kind");
+  const amount = optionalInt(formData, "quantity");
+  return commit({
+    path: `/api/v1/goods/${good}/stock/`,
+    body: {
+      kind,
+      ...(kind === "ADJUSTMENT" ? { counted_quantity: amount } : { quantity: amount }),
+      reason: optionalText(formData, "reason"),
+    },
+    redirectTo: "/inventory",
+  });
+}
+
 export async function uploadImage(id: number, _prev: FormState, formData: FormData): Promise<FormState> {
   const file = formData.get("image");
   if (!(file instanceof File) || file.size === 0) {

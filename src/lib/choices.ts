@@ -82,3 +82,12 @@ export async function departmentNames(token: string): Promise<string[]> {
     return [];
   }
 }
+
+/** Goods with stock tracking (the caller's own for a seller), labelled with the stock now. */
+export function stockGoodChoices(token: string) {
+  return asChoices<{ id: number; name: string; quantity?: number; position_detail?: { name?: string } }>(
+    token,
+    "/api/v1/goods/?track_stock=true&is_active=true&ordering=name",
+    (row) => `${row.name}${row.position_detail?.name ? ` · ${row.position_detail.name}` : ""} · ${row.quantity ?? 0} in stock`,
+  );
+}
