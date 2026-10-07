@@ -4,6 +4,8 @@ import type { components } from "@/api/schema";
 import { UserRowActions } from "@/app/(console)/users/user-row-actions";
 import { UserSearch } from "@/app/(console)/users/user-search";
 import { Badge } from "@/components/ui/badge";
+import { FilterChips } from "@/components/filter-chips";
+import { FilterSelect } from "@/components/filter-select";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -27,9 +29,12 @@ type UserPage = components["schemas"]["PaginatedUserList"];
 
 const SORTS = ["full_name", "username", "last_login"] as const;
 
-function usersHref(query: { is_active?: string; search?: string; ordering?: string; page?: number; pageSize?: PageSize }) {
+type UsersQuery = { is_active?: string; role?: string; search?: string; ordering?: string; page?: number; pageSize?: PageSize };
+
+function usersHref(query: UsersQuery) {
   const params = new URLSearchParams();
   if (query.is_active) params.set("is_active", query.is_active);
+  if (query.role) params.set("role", query.role);
   if (query.search) params.set("search", query.search);
   if (query.ordering) params.set("ordering", query.ordering);
   if (query.pageSize && query.pageSize !== 20) params.set("page_size", String(query.pageSize));
@@ -47,10 +52,11 @@ function nextSort(field: (typeof SORTS)[number], current: string) {
 export default async function UsersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ is_active?: string; search?: string; ordering?: string; page?: string; page_size?: string }>;
+  searchParams: Promise<{ is_active?: string; role?: string; search?: string; ordering?: string; page?: string; page_size?: string }>;
 }) {
   const raw = await searchParams;
-  const isActive = one(raw.is_active);
+  const isActive = one(raw.is_active) === "true" || one(raw.is_active) === "false" ? one(raw.is_active) : undefined;
+  const role = one(raw.role) && /^[A-Z][A-Z0-9_]*$/.test(one(raw.role) ?? "") ? one(raw.role) : undefined;
   const search = one(raw.search) ?? "";
   const requested = one(raw.ordering);
   const ordering = requested && SORTS.some((field) => requested === field || requested === `-${field}`) ? requested : "full_name";
@@ -78,6 +84,7 @@ export default async function UsersPage({
     const path = listPath("/api/v1/users/", {
       ordering,
       is_active: isActive,
+      role,
       search: search || undefined,
       ...(pageSize === "all" ? {} : { page: String(page), page_size: String(pageSize) }),
     });
@@ -90,8 +97,13 @@ export default async function UsersPage({
     error = caught instanceof DjangoError ? caught.message : t(locale, "Could not load users.");
   }
 
+  const roles = can(session.user, "role.view")
+    ? await djangoFetch<{ code: string; name: string }[]>("/api/v1/roles/", { accessToken: session.token }).catch(() => [])
+    : [];
+  const roleName = new Map(roles.map((item) => [item.code, item.name]));
   const pages = pageSize === "all" ? 1 : Math.max(1, Math.ceil(count / pageSize));
-  const here = usersHref({ is_active: isActive, search, ordering, page, pageSize });
+  const base = { is_active: isActive, role, search, ordering, pageSize };
+  const here = usersHref({ ...base, page });
 
   return (
     <div className="flex flex-col gap-4 md:gap-6">
@@ -101,7 +113,6 @@ export default async function UsersPage({
           <p className="text-muted-foreground text-sm">{count.toLocaleString()} {t(locale, "users")}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <UserSearch key={search} value={search} isActive={isActive} ordering={ordering === "full_name" ? undefined : ordering} pageSize={pageSize === 20 ? undefined : pageSize} locale={locale} />
           {canManage ? (
             <Button asChild>
               <Link href="/users/new">{t(locale, "New user")}</Link>
@@ -113,35 +124,69 @@ export default async function UsersPage({
         <CardHeader>
           <CardTitle>{t(locale, "Accounts")}</CardTitle>
           <CardDescription>
-            {t(locale, "Edit a name or roles. Deactivate stops sign-in. Delete asks you to confirm before it tries to remove the account.")}
+            {t(locale, "Open a user to change their name, password or roles. Deactivate stops sign-in.")}
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <FilterChips
+              items={[
+                { label: t(locale, "All"), href: usersHref({ ...base, is_active: undefined }), active: !isActive },
+                { label: t(locale, "Active"), href: usersHref({ ...base, is_active: "true" }), active: isActive === "true" },
+                { label: t(locale, "Inactive"), href: usersHref({ ...base, is_active: "false" }), active: isActive === "false" },
+              ]}
+            />
+            <div className="flex flex-wrap items-center gap-2">
+              <UserSearch key={search} value={search} isActive={isActive} role={role} ordering={ordering === "full_name" ? undefined : ordering} pageSize={pageSize === 20 ? undefined : pageSize} locale={locale} />
+              {roles.length ? (
+                <FilterSelect
+                  name="role"
+                  query={{ is_active: isActive, role, search: search || undefined, ordering: ordering === "full_name" ? undefined : ordering, page_size: pageSize === 20 ? undefined : String(pageSize) }}
+                  locale={locale}
+                  options={[{ value: "", label: t(locale, "Any role") }, ...roles.map((item) => ({ value: item.code, label: t(locale, item.name) }))]}
+                />
+              ) : null}
+            </div>
+          </div>
           {error ? (
             <p className="text-destructive text-sm">{error}</p>
           ) : users.length === 0 ? (
-            <p className="text-muted-foreground text-sm">{t(locale, "No users match this list.")}</p>
+            <p className="text-muted-foreground text-sm">{t(locale, isActive || role || search ? "No users match these filters." : "No users yet.")}</p>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <SortHead label={t(locale, "Name")} field="full_name" ordering={ordering} isActive={isActive} search={search} pageSize={pageSize} />
-                  <SortHead label={t(locale, "Username")} field="username" ordering={ordering} isActive={isActive} search={search} pageSize={pageSize} />
+                  <SortHead label={t(locale, "Name")} field="full_name" ordering={ordering} query={base} />
+                  <SortHead label={t(locale, "Username")} field="username" ordering={ordering} query={base} />
                   <TableHead>{t(locale, "Roles")}</TableHead>
-                  <TableHead>{t(locale, "Active")}</TableHead>
-                  <SortHead label={t(locale, "Last sign-in")} field="last_login" ordering={ordering} isActive={isActive} search={search} pageSize={pageSize} />
+                  <TableHead>{t(locale, "Status")}</TableHead>
+                  <SortHead label={t(locale, "Last sign-in")} field="last_login" ordering={ordering} query={base} />
                   {canManage ? <TableHead className="text-right">{t(locale, "Actions")}</TableHead> : null}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {users.map((user) => (
                   <TableRow key={user.id}>
-                    <TableCell className="font-medium">{show(user.full_name)}</TableCell>
+                    <TableCell className="font-medium">
+                      <Link href={`/users/${user.id}`} className="underline-offset-4 hover:underline">
+                        {show(user.full_name)}
+                      </Link>
+                    </TableCell>
                     <TableCell>{user.username}</TableCell>
-                    <TableCell>{user.roles.length > 0 ? user.roles.join(", ") : "—"}</TableCell>
+                    <TableCell>
+                      {user.roles.length > 0 ? (
+                        <span className="flex flex-wrap gap-1">
+                          {user.roles.map((code) => (
+                            <Badge key={code} variant="outline">{t(locale, roleName.get(code) ?? code)}</Badge>
+                          ))}
+                        </span>
+                      ) : (
+                        "—"
+                      )}
+                    </TableCell>
                     <TableCell>
                       <Badge variant={user.is_active ? "secondary" : "outline"}>
-                        {user.is_active ? t(locale, "Yes") : t(locale, "No")}
+                        {user.is_active ? t(locale, "Active") : t(locale, "Inactive")}
                       </Badge>
                     </TableCell>
                     <TableCell>{showTime(user.last_login)}</TableCell>
@@ -159,8 +204,8 @@ export default async function UsersPage({
             page={page}
             pages={pages}
             pageSize={pageSize}
-            hrefForPage={(nextPage) => usersHref({ is_active: isActive, search, ordering, page: nextPage, pageSize })}
-            hrefForSize={(size) => usersHref({ is_active: isActive, search, ordering, pageSize: size, page: 1 })}
+            hrefForPage={(nextPage) => usersHref({ ...base, page: nextPage })}
+            hrefForSize={(size) => usersHref({ ...base, pageSize: size, page: 1 })}
             locale={locale}
           />
         </CardContent>
@@ -169,29 +214,12 @@ export default async function UsersPage({
   );
 }
 
-function SortHead({
-  label,
-  field,
-  ordering,
-  isActive,
-  search,
-  pageSize,
-}: {
-  label: string;
-  field: (typeof SORTS)[number];
-  ordering: string;
-  isActive?: string;
-  search: string;
-  pageSize: PageSize;
-}) {
+function SortHead({ label, field, ordering, query }: { label: string; field: (typeof SORTS)[number]; ordering: string; query: UsersQuery }) {
   const active = ordering === field || ordering === `-${field}`;
   const Icon = ordering === `-${field}` ? ArrowDown : ArrowUp;
   return (
     <TableHead>
-      <Link
-        href={usersHref({ is_active: isActive, search, ordering: nextSort(field, ordering), pageSize })}
-        className="inline-flex items-center gap-1"
-      >
+      <Link href={usersHref({ ...query, ordering: nextSort(field, ordering), page: 1 })} className="inline-flex items-center gap-1">
         {label}
         {active ? <Icon className="size-3.5" /> : null}
       </Link>

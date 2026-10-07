@@ -113,8 +113,6 @@ const GROUPS: Group[] = [
     icon: Users,
     children: [
       { title: "All users", href: "/users", permission: "user.view" },
-      { title: "Active", href: "/users?is_active=true", permission: "user.view" },
-      { title: "Inactive", href: "/users?is_active=false", permission: "user.view" },
       { title: "New user", href: "/users/new", permission: "user.manage" },
       { title: "Roles", href: "/users/roles", permission: "role.view" },
     ],

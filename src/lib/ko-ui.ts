@@ -1426,4 +1426,8 @@ export const koUi: Record<string, string> = {
   "Your account cannot create roles.": "이 계정은 역할을 만들수 없습니다.",
   "What you can do": "할수 있는것",
   "Only your own records.": "자기 기록만.",
+  "Any role": "역할 전체",
+  "No users match these filters.": "조건에 맞는 사용자가 없습니다.",
+  "No users yet.": "아직 사용자가 없습니다.",
+  "Open a user to change their name, password or roles. Deactivate stops sign-in.": "사용자를 열어 이름, 비밀번호, 역할을 바꾸십시오. 비활성화하면 로그인할수 없습니다.",
 };
