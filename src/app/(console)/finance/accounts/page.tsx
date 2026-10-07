@@ -1,16 +1,19 @@
 import type { components } from "@/api/schema";
 import { RecordList } from "@/components/record-list";
+import { t } from "@/lib/i18n";
 import { show } from "@/lib/load-all";
+import { getLocale } from "@/lib/locale";
 import { loadList } from "@/lib/page-data";
 
 type Account = components["schemas"]["DeveloperAccount"];
 
 export default async function FinanceAccountsPage() {
+  const locale = await getLocale();
   const data = await loadList<Account>("/api/v1/finance/accounts/?ordering=developer");
   return (
     <RecordList
       title="Wallets"
-      summary={`${data.count.toLocaleString()} accounts`}
+      summary={`${data.count.toLocaleString()} ${t(locale, "accounts")}`}
       description="Developer balances. Frozen accounts can still receive deposits."
       error={data.error}
       empty="No wallets yet."

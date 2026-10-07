@@ -1,4 +1,6 @@
+import { ArrowDownToLine, ArrowUpFromLine, Download, Scale, Wallet } from "lucide-react";
 import { SeriesChart } from "@/components/ui/chart";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PeriodPicker } from "@/components/period-picker";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -82,31 +84,50 @@ export default async function FinanceStatsPage({ searchParams }: { searchParams:
   );
   const rankHref = (value: string) =>
     `/finance/statistics?${new URLSearchParams({ from: period.start, to: period.end, rank: value })}`;
+  const net = Number(money?.deposits?.total ?? 0) - Number(money?.spending?.total ?? 0);
   const daily = (money?.daily ?? []).map((day) => ({ name: day.date.slice(5), deposits: Number(day.deposits ?? 0), spending: Number(day.spending ?? 0) }));
 
   return (
     <div className="flex flex-col gap-4 md:gap-6">
-      <div>
-        <h1 className="font-semibold text-2xl tracking-tight">{t(locale, "Finance statistics")}</h1>
-        <p className="text-muted-foreground text-sm">
-          {period.start} {t(locale, "to")} {period.end}
-          {scope ? ` · ${scope.map((building) => building.name || building.code).filter(Boolean).join(", ")}` : ""}
-        </p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="font-semibold text-2xl tracking-tight">{t(locale, "Finance statistics")}</h1>
+          <p className="text-muted-foreground text-sm">
+            {period.start} {t(locale, "to")} {period.end}
+            {scope ? ` · ${scope.map((building) => building.name || building.code).filter(Boolean).join(", ")}` : ""}
+          </p>
+        </div>
+        <Button asChild>
+          <a href={`/api/excel/finance-stats?${new URLSearchParams({ date_from: period.start, date_to: period.end })}`} download>
+            <Download />
+            {t(locale, "Download Excel")}
+          </a>
+        </Button>
       </div>
-      <PeriodPicker path="/finance/statistics" period={period} today={today} locale={locale} keep={{ rank: rank === "count" ? "count" : undefined }} />
+      <Card>
+        <CardContent>
+          <PeriodPicker path="/finance/statistics" period={period} today={today} locale={locale} keep={{ rank: rank === "count" ? "count" : undefined }} />
+        </CardContent>
+      </Card>
       {error ? <p className="text-destructive text-sm">{error}</p> : null}
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         {[
-          ["Deposits", amount(money?.deposits?.total), `${money?.deposits?.count ?? 0} ${t(locale, "deposits")}`],
-          ["Spending", amount(money?.spending?.total), `${money?.spending?.count ?? 0} ${t(locale, "payments")}`],
-          ["Money held", amount(money?.developer_accounts?.total_balance), t(locale, "Developer balances now")],
-        ].map(([label, value, hint]) => (
-          <Card key={label}>
-            <CardHeader>
-              <CardDescription>{t(locale, label)}</CardDescription>
-              <CardTitle className="text-2xl tabular-nums">{value}</CardTitle>
-              <p className="text-muted-foreground text-sm">{hint}</p>
-            </CardHeader>
+          { label: "Deposits", value: amount(money?.deposits?.total), hint: `${money?.deposits?.count ?? 0} ${t(locale, "deposits")}`, icon: ArrowDownToLine, tone: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" },
+          { label: "Spending", value: amount(money?.spending?.total), hint: `${money?.spending?.count ?? 0} ${t(locale, "payments")}`, icon: ArrowUpFromLine, tone: "bg-primary/10 text-primary" },
+          { label: "Net", value: amount(String(net)), hint: t(locale, "Deposits minus spending"), icon: Scale, tone: "bg-amber-500/15 text-amber-600 dark:text-amber-400" },
+          { label: "Money held", value: amount(money?.developer_accounts?.total_balance), hint: t(locale, "Developer balances now"), icon: Wallet, tone: "bg-sky-500/15 text-sky-600 dark:text-sky-400" },
+        ].map((tile) => (
+          <Card key={tile.label} className="py-4">
+            <CardContent className="flex items-start justify-between gap-3 px-4">
+              <div className="min-w-0">
+                <p className="text-muted-foreground text-xs">{t(locale, tile.label)}</p>
+                <p className="font-semibold text-2xl tabular-nums tracking-tight">{tile.value}</p>
+                <p className="mt-1 text-muted-foreground text-xs">{tile.hint}</p>
+              </div>
+              <span className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${tile.tone}`}>
+                <tile.icon className="size-4" />
+              </span>
+            </CardContent>
           </Card>
         ))}
       </div>
@@ -164,6 +185,7 @@ export default async function FinanceStatsPage({ searchParams }: { searchParams:
                   <TableHead>{t(locale, "Seller")}</TableHead>
                   <TableHead className="text-right">{t(locale, "Till sales")}</TableHead>
                   <TableHead className="text-right">{t(locale, "Court bookings")}</TableHead>
+                  <TableHead className="text-right">{t(locale, "Total")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -174,6 +196,7 @@ export default async function FinanceStatsPage({ searchParams }: { searchParams:
                     </TableCell>
                     <TableCell className="text-right tabular-nums">{amount(row.sales_total)} <span className="text-muted-foreground">({row.sales_count})</span></TableCell>
                     <TableCell className="text-right tabular-nums">{amount(row.bookings_total)} <span className="text-muted-foreground">({row.bookings_count})</span></TableCell>
+                    <TableCell className="text-right font-semibold tabular-nums">{amount(String(Number(row.sales_total) + Number(row.bookings_total)))}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

@@ -5,8 +5,10 @@ import type { components } from "@/api/schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { NoAccess } from "@/components/no-access";
-import { can, canManage, getSession } from "@/lib/current-user";
+import { can, getSession } from "@/lib/current-user";
 import { DjangoError, djangoFetch } from "@/lib/django";
+import { t } from "@/lib/i18n";
+import { getLocale } from "@/lib/locale";
 import { redirect } from "next/navigation";
 
 type Building = components["schemas"]["Building"];
@@ -14,9 +16,10 @@ type Building = components["schemas"]["Building"];
 export default async function NewReaderPage() {
   const session = await getSession();
   if (!session) redirect("/login");
-  if (!canManage(session.user, ["rfid"]) && !can(session.user, "rfid.device.manage")) {
+  if (!can(session.user, "reader.manage")) {
     return <NoAccess description="Your account cannot register devices." />;
   }
+  const locale = await getLocale();
   let buildings: Building[] = [];
   try {
     buildings = await djangoFetch<Building[]>("/api/v1/rfid/buildings/", { accessToken: session.token });
@@ -30,7 +33,7 @@ export default async function NewReaderPage() {
           <Title>New device</Title>
           <Hint>The code must match the ID the hardware sends, such as Door1 or Reader2.</Hint>
         </div>
-        <Button asChild variant="outline"><Link href="/buildings">Buildings</Link></Button>
+        <Button asChild variant="outline"><Link href="/buildings">{t(locale, "Buildings")}</Link></Button>
       </div>
       <Card>
         <CardHeader>

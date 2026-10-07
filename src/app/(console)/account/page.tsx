@@ -1,18 +1,24 @@
 import { Title, Hint, AutoText } from "@/components/auto-text";
-import Link from "@/components/app-link";
 import { redirect } from "next/navigation";
 import { changePassword } from "@/app/(console)/mutations";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Check } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FieldForm } from "@/components/field-form";
 import { getSession } from "@/lib/current-user";
+import { t } from "@/lib/i18n";
+import { getLocale } from "@/lib/locale";
+import { loadCatalog } from "@/lib/permission-catalog";
 
 export default async function AccountPage() {
   const session = await getSession();
   if (!session) redirect("/login");
   const user = session.user;
   const lastLogin = user.last_login ? new Date(user.last_login).toLocaleString() : null;
+  const locale = await getLocale();
+  const held = new Set(user.permissions);
+  const mine = (await loadCatalog(session.token))
+    .map((area) => ({ ...area, permissions: area.permissions.filter((permission) => held.has(permission.codename)) }))
+    .filter((area) => area.permissions.length > 0);
 
   return (
     <div className="flex flex-col gap-4 md:gap-6">
@@ -35,18 +41,26 @@ export default async function AccountPage() {
             <p className="mt-1">{lastLogin ?? <AutoText>No previous sign-in</AutoText>}</p>
           </div>
           <div>
-            <p className="text-muted-foreground"><AutoText>Permissions</AutoText></p>
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {user.permissions.length > 0 ? (
-                user.permissions.map((code) => (
-                  <Badge key={code} variant="secondary" className="font-mono">
-                    {code}
-                  </Badge>
-                ))
-              ) : (
-                <span><AutoText>None</AutoText></span>
-              )}
-            </div>
+            <p className="text-muted-foreground"><AutoText>What you can do</AutoText></p>
+            {mine.length === 0 ? (
+              <p className="mt-1"><AutoText>Only your own records.</AutoText></p>
+            ) : (
+              <div className="mt-2 grid gap-3">
+                {mine.map((area) => (
+                  <div key={area.area}>
+                    <p className="font-medium text-xs">{t(locale, area.area)}</p>
+                    <ul className="mt-1 grid gap-0.5">
+                      {area.permissions.map((permission) => (
+                        <li key={permission.codename} className="flex items-start gap-2">
+                          <Check className="mt-0.5 size-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                          <span>{t(locale, permission.description)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -64,21 +78,6 @@ export default async function AccountPage() {
               { name: "new_password", label: "New password", type: "password", required: true },
             ]}
           />
-        </CardContent>
-      </Card>
-      <Card className="max-w-2xl">
-        <CardHeader>
-          <CardTitle>Your records</CardTitle>
-          <CardDescription>These use the signed-in account. The server returns an error if you have no matching profile.</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-wrap gap-2">
-          <Button asChild variant="outline" size="sm"><Link href="/developers/me">My developer profile</Link></Button>
-          <Button asChild variant="outline" size="sm"><Link href="/attendance/me">My attendance</Link></Button>
-          <Button asChild variant="outline" size="sm"><Link href="/attendance/records/me">My attendance records</Link></Button>
-          <Button asChild variant="outline" size="sm"><Link href="/finance/accounts/me">My wallet</Link></Button>
-          <Button asChild variant="outline" size="sm"><Link href="/finance/transactions/me">My transactions</Link></Button>
-          <Button asChild variant="outline" size="sm"><Link href="/purchases/me">My purchases</Link></Button>
-          <Button asChild variant="outline" size="sm"><Link href="/sellers/me">My seller profile</Link></Button>
         </CardContent>
       </Card>
     </div>

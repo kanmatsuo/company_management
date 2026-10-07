@@ -16,7 +16,7 @@ export default async function BuildingPage({ params }: { params: Promise<{ id: s
   const loaded = await loadOne<Building>(`/api/v1/rfid/buildings/${id}/`);
   if (!loaded.value) return <LoadError title="Building" message={loaded.error ?? "Not found."} />;
   const building = loaded.value;
-  const manage = can(loaded.session.user, "rfid.device.manage") || canManage(loaded.session.user, ["rfid"]);
+  const manage = can(loaded.session.user, "building.manage");
   const assignPeople = can(loaded.session.user, "user.manage") || can(loaded.session.user, "role.assign");
   const [owners, managers] = assignPeople
     ? await Promise.all([
@@ -24,7 +24,7 @@ export default async function BuildingPage({ params }: { params: Promise<{ id: s
         roleUserChoices(loaded.session.token, "BUILDING_MANAGER"),
       ])
     : [[], []];
-  if (!manage && !can(loaded.session.user, "rfid.view")) {
+  if (!manage && !can(loaded.session.user, "reader.view")) {
     return <NoAccess description="Your account cannot open buildings." />;
   }
   return (

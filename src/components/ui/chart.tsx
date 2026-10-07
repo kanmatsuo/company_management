@@ -1,5 +1,6 @@
 "use client";
 
+import { AutoText } from "@/components/auto-text";
 import { BrandMark } from "@/components/brand-mark";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -88,13 +89,13 @@ export function SeriesChart({
   const valueWidth = valueAxisWidth(data, series, stacked);
   // Recharts draws nothing until the browser has measured the container: spin until then.
   const [measured, setMeasured] = useState(false);
-  if (data.length === 0) return <p className="text-muted-foreground text-sm">No numbers for this chart.</p>;
+  if (data.length === 0) return <p className="text-muted-foreground text-sm"><AutoText>No numbers for this chart.</AutoText></p>;
   return (
     <div className="relative w-full" style={{ height }}>
       {measured ? null : (
         <div role="status" className="absolute inset-0 flex items-center justify-center">
           <BrandMark className="size-10 text-muted-foreground" />
-          <span className="sr-only">Loading chart…</span>
+          <span className="sr-only"><AutoText>Loading chart…</AutoText></span>
         </div>
       )}
       <ResponsiveContainer width="100%" height="100%" onResize={(width) => width > 0 && setMeasured(true)}>

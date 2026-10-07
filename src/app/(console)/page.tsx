@@ -29,8 +29,8 @@ const STATS: {
   icon: LucideIcon;
 }[] = [
   { label: "Developers", hint: "People on file", permission: "developer.view", path: "/api/v1/developers/?page_size=1", icon: UserRound },
-  { label: "Cards", hint: "RFID cards", permission: "rfid.view", path: "/api/v1/rfid/cards/?page_size=1", icon: CreditCard },
-  { label: "Readers", hint: "Registered readers", permission: "rfid.view", path: "/api/v1/rfid/devices/?page_size=1", icon: Radio },
+  { label: "Cards", hint: "RFID cards", permission: "card.view", path: "/api/v1/rfid/cards/?page_size=1", icon: CreditCard },
+  { label: "Readers", hint: "Registered readers", permission: "reader.view", path: "/api/v1/rfid/devices/?page_size=1", icon: Radio },
   { label: "Users", hint: "Accounts that can sign in", permission: "user.view", path: "/api/v1/users/?page_size=1", icon: Users },
   { label: "Attendance days", hint: "Stored daily rows", permission: "attendance.view", path: "/api/v1/attendance/daily/?page_size=1", icon: CalendarCheck },
   { label: "Audit events", hint: "Recorded changes", permission: "audit.view", path: "/api/v1/audit-logs/?page_size=1", icon: ScrollText },

@@ -8,13 +8,14 @@ import type { FormState } from "@/lib/form";
 import { t } from "@/lib/i18n";
 import { useLocale } from "@/components/locale-context";
 import { CreatableSelect } from "@/components/creatable-select";
+import { DatePicker, DateTimePicker, TimePicker } from "@/components/date-picker";
 import { SearchSelect } from "@/components/search-select";
 import { UserMultiSelect } from "@/components/user-multi-select";
 
 export type Field = {
   name: string;
   label: string;
-  type?: "text" | "email" | "password" | "number" | "date" | "datetime-local" | "textarea" | "select" | "users" | "checkbox" | "file" | "hidden";
+  type?: "text" | "email" | "password" | "number" | "date" | "time" | "datetime-local" | "textarea" | "select" | "users" | "checkbox" | "file" | "hidden";
   required?: boolean;
   defaultValue?: string;
   placeholder?: string;
@@ -34,12 +35,15 @@ export function FieldForm({
   submitLabel,
   pendingLabel = "Saving…",
   variant = "default",
+  columns,
 }: {
   action: (prev: FormState, data: FormData) => Promise<FormState>;
   fields: Field[];
   submitLabel: string;
   pendingLabel?: string;
   variant?: "default" | "outline" | "destructive";
+  /** 1 keeps a single column (narrow side cards); default: two from three fields. */
+  columns?: 1;
 }) {
   const [state, formAction, pending] = useActionState(action, null as FormState);
   const locale = useLocale();
@@ -52,11 +56,20 @@ export function FieldForm({
     return next;
   });
 
+  // Three or more visible fields: two columns (long text, checkboxes and messages span both).
+  const shown = fields.filter((field) => field.type !== "hidden" && !(field.visibleWhen && values[field.visibleWhen.name] !== field.visibleWhen.value));
+  const wide = columns !== 1 && shown.length >= 3;
+  const full = wide ? "sm:col-span-2" : "";
+
   return (
-    <form action={formAction} encType={fields.some((field) => field.type === "file") ? "multipart/form-data" : undefined} className="grid max-w-md gap-4">
-      {state?.message ? <p className="text-destructive text-sm">{state.message}</p> : null}
+    <form
+      action={formAction}
+      encType={fields.some((field) => field.type === "file") ? "multipart/form-data" : undefined}
+      className={wide ? "grid max-w-3xl gap-4 sm:grid-cols-2" : "grid max-w-md gap-4"}
+    >
+      {state?.message ? <p className={`text-destructive text-sm ${full}`}>{state.message}</p> : null}
       {state?.notice ? (
-        <div className="grid gap-2 rounded-lg border bg-muted p-3">
+        <div className={`grid gap-2 rounded-lg border bg-muted p-3 ${full}`}>
           <p className="text-sm">{t(locale, "This key is shown only once. Copy it before you leave the page.")}</p>
           <p className="break-all font-mono text-sm">{state.notice}</p>
           <Button
@@ -80,14 +93,14 @@ export function FieldForm({
         }
         if (field.type === "checkbox") {
           return (
-            <label key={field.name} className="flex items-center gap-2 text-sm">
+            <label key={field.name} className={`flex items-center gap-2 text-sm ${full}`}>
               <input name={field.name} type="checkbox" defaultChecked={field.defaultValue === "on"} className="size-4" />
               {t(locale, field.label)}
             </label>
           );
         }
         return (
-          <div key={field.name} className="grid gap-1.5">
+          <div key={field.name} className={`grid content-start gap-1.5 ${field.type === "textarea" || field.type === "users" ? full : ""}`}>
             <Label htmlFor={field.name}>{t(locale, field.label)}</Label>
             {field.type === "textarea" ? (
               <textarea id={field.name} name={field.name} required={field.required} defaultValue={field.defaultValue} className={`${control} min-h-20 py-2`} />
@@ -108,6 +121,12 @@ export function FieldForm({
                 options={(field.options ?? []).map((option) => ({ value: option.value, label: t(locale, option.label) }))}
                 onValueChange={watched.has(field.name) ? (value) => setValues((prev) => ({ ...prev, [field.name]: value })) : undefined}
               />
+            ) : field.type === "date" ? (
+              <DatePicker id={field.name} name={field.name} required={field.required} defaultValue={field.defaultValue} locale={locale} />
+            ) : field.type === "time" ? (
+              <TimePicker id={field.name} name={field.name} required={field.required} defaultValue={field.defaultValue} locale={locale} />
+            ) : field.type === "datetime-local" ? (
+              <DateTimePicker id={field.name} name={field.name} required={field.required} defaultValue={field.defaultValue} locale={locale} />
             ) : field.suggestions ? (
               <CreatableSelect
                 id={field.name}
@@ -134,7 +153,7 @@ export function FieldForm({
           </div>
         );
       })}
-      <Button type="submit" variant={variant} disabled={pending}>
+      <Button type="submit" variant={variant} disabled={pending} className={`min-w-40 justify-self-start ${full}`}>
         {pending ? t(locale, pendingLabel) : t(locale, submitLabel)}
       </Button>
     </form>

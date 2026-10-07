@@ -1,16 +1,19 @@
 import type { components } from "@/api/schema";
 import { RecordList } from "@/components/record-list";
+import { t } from "@/lib/i18n";
 import { show, showTime } from "@/lib/load-all";
+import { getLocale } from "@/lib/locale";
 import { loadList } from "@/lib/page-data";
 
 type Day = components["schemas"]["DailyAttendance"];
 
 export default async function MyAttendancePage() {
+  const locale = await getLocale();
   const data = await loadList<Day>("/api/v1/attendance/daily/me/?ordering=-work_date");
   return (
     <RecordList
       title="My attendance"
-      summary={`${data.count.toLocaleString()} days`}
+      summary={`${data.count.toLocaleString()} ${t(locale, "days")}`}
       description="Daily rows for the signed-in developer."
       error={data.error}
       empty="No attendance for this account."

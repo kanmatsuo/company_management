@@ -3,12 +3,12 @@ import { submitScan } from "@/app/(console)/mutations";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FieldForm } from "@/components/field-form";
 import { NoAccess } from "@/components/no-access";
-import { canManage } from "@/lib/current-user";
+import { can } from "@/lib/current-user";
 import { requireSession } from "@/lib/page-data";
 
 export default async function SubmitScanPage() {
   const session = await requireSession();
-  if (!canManage(session.user, ["rfid"])) return <NoAccess description="Your account cannot submit reader scans." />;
+  if (!can(session.user, "reader.manage")) return <NoAccess description="Your account cannot submit reader scans." />;
   return (
     <div className="flex flex-col gap-4 md:gap-6">
       <div>

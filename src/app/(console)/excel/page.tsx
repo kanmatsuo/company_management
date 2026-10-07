@@ -1,7 +1,7 @@
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/date-picker";
 import { Label } from "@/components/ui/label";
 import { NoAccess } from "@/components/no-access";
 import { can } from "@/lib/current-user";
@@ -44,7 +44,7 @@ const IMPORTS = [
   },
   {
     kind: "cards",
-    permissions: ["rfid.assign"],
+    permissions: ["card.assign"],
     title: "Cards",
     description: "New card UIDs are registered and labels updated. With an employee number, the card is assigned to that developer.",
   },
@@ -72,11 +72,11 @@ function PeriodDownload({ file, locale, from, to }: { file: string; locale: Loca
     <form action={`/api/excel/${file}`} method="get" className="flex flex-wrap items-end gap-2">
       <div className="grid gap-1">
         <Label htmlFor={`${file}-from`}>{t(locale, "From")}</Label>
-        <Input id={`${file}-from`} name="date_from" type="date" defaultValue={from} className="w-40" />
+        <DatePicker id={`${file}-from`} name="date_from" defaultValue={from} locale={locale} className="w-40" />
       </div>
       <div className="grid gap-1">
         <Label htmlFor={`${file}-to`}>{t(locale, "To")}</Label>
-        <Input id={`${file}-to`} name="date_to" type="date" defaultValue={to} className="w-40" />
+        <DatePicker id={`${file}-to`} name="date_to" defaultValue={to} locale={locale} className="w-40" />
       </div>
       <Button type="submit" variant="outline" size="sm">
         <Download />
@@ -89,8 +89,10 @@ function PeriodDownload({ file, locale, from, to }: { file: string; locale: Loca
 export default async function ExcelPage() {
   const session = await requireSession();
   const locale = await getLocale();
-  const exports = EXPORTS.filter((item) => can(session.user, item.permission));
-  const imports = IMPORTS.filter((item) => item.permissions.some((permission) => can(session.user, permission)));
+  const exports = can(session.user, "excel.export") ? EXPORTS.filter((item) => can(session.user, item.permission)) : [];
+  const imports = can(session.user, "excel.import")
+    ? IMPORTS.filter((item) => item.permissions.some((permission) => can(session.user, permission)))
+    : [];
   if (exports.length === 0 && imports.length === 0) {
     return <NoAccess description="Your account cannot import or export data." />;
   }

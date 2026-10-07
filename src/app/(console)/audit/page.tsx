@@ -1,7 +1,9 @@
 import type { components } from "@/api/schema";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { RecordList } from "@/components/record-list";
+import { t } from "@/lib/i18n";
 import { show, showTime } from "@/lib/load-all";
+import { getLocale } from "@/lib/locale";
 import { loadRecords } from "@/lib/load-records";
 
 type Entry = components["schemas"]["AuditLog"];
@@ -21,6 +23,7 @@ function changed(oldValues: unknown, newValues: unknown) {
 }
 
 export default async function AuditPage() {
+  const locale = await getLocale();
   const data = await loadRecords<Entry>("audit.view", "/api/v1/audit-logs/?ordering=-created_at");
   if (data.denied) {
     return (
@@ -35,7 +38,7 @@ export default async function AuditPage() {
   return (
     <RecordList
       title="Audit"
-      summary={`${data.count.toLocaleString()} events`}
+      summary={`${data.count.toLocaleString()} ${t(locale, "events")}`}
       description="Who changed what, with the previous and next values."
       error={data.error}
       empty="No audit events yet."

@@ -7,8 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useLocale } from "@/components/locale-context";
+import { SearchSelect } from "@/components/search-select";
 
 export function TapSimulator({ purchaseId }: { purchaseId: number }) {
+  const locale = useLocale();
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [cards, setCards] = useState<TestCard[]>([]);
@@ -57,21 +60,17 @@ export function TapSimulator({ purchaseId }: { purchaseId: number }) {
         </div>
         <div className="grid gap-1">
           <Label htmlFor="sim-developer">Developer paying</Label>
-          <select
+          <SearchSelect
             id="sim-developer"
-            className="border-input bg-background h-9 rounded-md border px-3 text-sm"
-            value={developer ?? ""}
-            onChange={(event) => setDeveloper(Number(event.target.value) || null)}
-          >
-            {cards.length === 0 ? <option value="">No matching developers</option> : null}
-            {cards.map((card) => (
-              <option key={card.developer} value={card.developer}>
-                {card.full_name} ({card.employee_number}) · {card.balance ?? "-"} ·{" "}
-                {card.has_pin ? "PIN ✓" : "no PIN"}
-                {card.card_status !== "ACTIVE" ? ` · card ${card.card_status}` : ""}
-              </option>
-            ))}
-          </select>
+            value={developer ? String(developer) : ""}
+            onValueChange={(value) => setDeveloper(Number(value) || null)}
+            locale={locale}
+            placeholder={cards.length === 0 ? "No matching developers" : "Choose"}
+            options={cards.map((card) => ({
+              value: String(card.developer),
+              label: `${card.full_name} (${card.employee_number}) · ${card.balance ?? "-"} · ${card.has_pin ? "PIN ✓" : "no PIN"}${card.card_status !== "ACTIVE" ? ` · card ${card.card_status}` : ""}`,
+            }))}
+          />
         </div>
         <div className="grid gap-1">
           <Label htmlFor="sim-uid">…or any card UID (e.g. an unknown card)</Label>

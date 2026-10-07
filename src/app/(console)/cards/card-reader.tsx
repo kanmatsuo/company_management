@@ -1,5 +1,6 @@
 "use client";
 
+import { SearchSelect } from "@/components/search-select";
 import { LoaderCircle } from "lucide-react";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "@/components/app-link";
@@ -108,15 +109,16 @@ export function ReaderPicker({ readers, value, onChange }: { readers: Reader[]; 
   return (
     <label className="grid max-w-md gap-1.5 text-sm">
       {t(locale, "Reader")}
-      <select className="h-8 rounded-lg border border-input bg-transparent px-2" value={value} onChange={(event) => onChange(event.target.value)}>
-        <option value="">{t(locale, "Choose a reader")}</option>
-        {readers.map((reader) => (
-          <option key={reader.id} value={reader.id}>
-            {reader.name ? `${reader.name} · ${reader.code}` : reader.code}
-            {reader.is_online ? "" : ` (${t(locale, "offline")})`}
-          </option>
-        ))}
-      </select>
+      <SearchSelect
+        value={value}
+        onValueChange={onChange}
+        locale={locale}
+        placeholder="Choose a reader"
+        options={readers.map((reader) => ({
+          value: String(reader.id),
+          label: `${reader.name ? `${reader.name} · ${reader.code}` : reader.code}${reader.is_online ? "" : ` (${t(locale, "offline")})`}`,
+        }))}
+      />
     </label>
   );
 }

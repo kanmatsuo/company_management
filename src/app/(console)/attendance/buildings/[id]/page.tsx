@@ -1,7 +1,9 @@
-import { AutoText } from "@/components/auto-text";
+import { AutoText, Title } from "@/components/auto-text";
 import type { components } from "@/api/schema";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable } from "@/components/data-table";
+import { t } from "@/lib/i18n";
+import { getLocale } from "@/lib/locale";
 import { loadList, loadOne } from "@/lib/page-data";
 
 type Occupancy = components["schemas"]["Occupancy"];
@@ -42,17 +44,18 @@ export default async function BuildingPeoplePage({ params }: { params: Promise<{
     .filter((developer) => developer.status === "ACTIVE" && !insideIds.has(developer.id))
     .sort((left, right) => left.full_name.localeCompare(right.full_name));
   const error = occupancyLoaded.error || insideLoaded.error || staffLoaded.error;
+  const locale = await getLocale();
 
   return (
     <div className="flex flex-col gap-4 md:gap-6">
       <div>
-        <h1 className="font-semibold text-2xl tracking-tight">{title}</h1>
+        <Title>{title}</Title>
         <p className="text-muted-foreground text-sm">
           {error
-            ? "The list could not be loaded."
+            ? t(locale, "The list could not be loaded.")
             : id === "all"
-              ? `${inside.length.toLocaleString("en-US")} in · ${outside.length.toLocaleString("en-US")} out`
-              : `${inside.length.toLocaleString("en-US")} in this building`}
+              ? `${inside.length.toLocaleString()} ${t(locale, "In")} · ${outside.length.toLocaleString()} ${t(locale, "Out")}`
+              : `${inside.length.toLocaleString()} ${t(locale, "in this building")}`}
         </p>
       </div>
       {error ? <p className="text-destructive text-sm">{error}</p> : null}
@@ -68,6 +71,7 @@ export default async function BuildingPeoplePage({ params }: { params: Promise<{
             <p className="text-muted-foreground text-sm"><AutoText>Nobody is in.</AutoText></p>
           ) : (
             <DataTable
+              locale={locale}
               headers={id === "all" ? ["Person", "Department", "Building"] : ["Person", "Department"]}
               rows={inside.map((person) =>
                 id === "all"
@@ -89,6 +93,7 @@ export default async function BuildingPeoplePage({ params }: { params: Promise<{
             <p className="text-muted-foreground text-sm"><AutoText>Nobody is out.</AutoText></p>
           ) : (
             <DataTable
+              locale={locale}
               headers={["Person", "Department"]}
               rows={outside.map((developer) => [developer.full_name, developer.department || "—"])}
             />

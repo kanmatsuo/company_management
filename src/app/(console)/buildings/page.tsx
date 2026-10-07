@@ -5,8 +5,10 @@ import { NoAccess } from "@/components/no-access";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable } from "@/components/data-table";
-import { can, canManage, getSession } from "@/lib/current-user";
+import { can, getSession } from "@/lib/current-user";
 import { DjangoError, djangoFetch } from "@/lib/django";
+import { t } from "@/lib/i18n";
+import { getLocale } from "@/lib/locale";
 import { redirect } from "next/navigation";
 
 type Building = components["schemas"]["Building"];
@@ -14,10 +16,11 @@ type Building = components["schemas"]["Building"];
 export default async function BuildingsPage() {
   const session = await getSession();
   if (!session) redirect("/login");
-  if (!can(session.user, "rfid.view") && !canManage(session.user, ["rfid"])) {
+  if (!can(session.user, "reader.view") && !can(session.user, "building.manage")) {
     return <NoAccess description="Your account cannot open buildings." />;
   }
-  const manage = can(session.user, "rfid.device.manage") || canManage(session.user, ["rfid"]);
+  const locale = await getLocale();
+  const manage = can(session.user, "building.manage");
   let buildings: Building[] = [];
   let error: string | null = null;
   try {
@@ -30,9 +33,9 @@ export default async function BuildingsPage() {
       <div className="flex items-end justify-between gap-4">
         <div>
           <Title>Buildings</Title>
-          <p className="text-muted-foreground text-sm">{buildings.length} buildings</p>
+          <p className="text-muted-foreground text-sm">{buildings.length.toLocaleString()} {t(locale, "buildings")}</p>
         </div>
-        {manage ? <Button asChild><Link href="/buildings/new">New building</Link></Button> : null}
+        {manage ? <Button asChild><Link href="/buildings/new">{t(locale, "New building")}</Link></Button> : null}
       </div>
       <Card>
         <CardHeader>
@@ -44,6 +47,7 @@ export default async function BuildingsPage() {
             <Hint>No buildings yet.</Hint>
           ) : (
             <DataTable
+              locale={locale}
               headers={manage ? ["Code", "Name", ""] : ["Code", "Name"]}
               rows={buildings.map((building) => (manage ? [building.code, building.name, "Edit"] : [building.code, building.name]))}
               hrefs={buildings.map((building) => `/buildings/${building.id}`)}

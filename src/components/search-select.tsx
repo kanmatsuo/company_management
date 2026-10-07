@@ -7,26 +7,41 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { t, type Locale } from "@/lib/i18n";
 
+/** The app's one dropdown: a button that opens a list (with search when it is long).
+ * Uncontrolled (`defaultValue`, submits under `name`) or controlled (`value` +
+ * `onValueChange`). */
 export function SearchSelect({
   id,
   name,
   required,
   defaultValue = "",
+  value: controlled,
   options,
   locale,
   onValueChange,
+  placeholder = "Choose",
+  disabled,
+  className,
 }: {
   id?: string;
-  name: string;
+  name?: string;
   required?: boolean;
   defaultValue?: string;
-  options: { value: string; label: string }[];
+  value?: string;
+  options: { value: string; label: string; disabled?: boolean }[];
   locale: Locale;
   onValueChange?: (value: string) => void;
+  placeholder?: string;
+  disabled?: boolean;
+  className?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [value, setValue] = useState(defaultValue);
+  const [own, setOwn] = useState(defaultValue);
+  const value = controlled ?? own;
+  const setValue = (next: string) => {
+    if (controlled === undefined) setOwn(next);
+  };
   const selected = options.find((option) => option.value === value);
   const needle = query.trim().toLowerCase();
   const shown = options.filter((option) => {
@@ -44,10 +59,12 @@ export function SearchSelect({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <input className="sr-only" tabIndex={-1} name={name} value={value} required={required} onChange={() => undefined} onInvalid={() => setOpen(true)} />
+      {name ? (
+        <input className="sr-only" tabIndex={-1} name={name} value={value} required={required} onChange={() => undefined} onInvalid={() => setOpen(true)} />
+      ) : null}
       <PopoverTrigger asChild>
-        <Button id={id} type="button" variant="outline" className="h-8 w-full justify-between px-2.5 font-normal">
-          <span className="truncate">{selected ? selected.label : t(locale, "Choose")}</span>
+        <Button id={id} type="button" variant="outline" disabled={disabled} className={`h-8 w-full justify-between px-2.5 font-normal ${className ?? ""}`}>
+          <span className={`truncate ${selected ? "" : "text-muted-foreground"}`}>{selected ? selected.label : t(locale, placeholder)}</span>
           <ChevronsUpDown className="size-3.5 text-muted-foreground" />
         </Button>
       </PopoverTrigger>
@@ -59,9 +76,10 @@ export function SearchSelect({
             autoFocus
             onChange={(event) => setQuery(event.target.value)}
             onKeyDown={(event) => {
-              if (event.key === "Enter" && shown[0]) {
+              const first = shown.find((option) => !option.disabled);
+              if (event.key === "Enter" && first) {
                 event.preventDefault();
-                choose(shown[0].value);
+                choose(first.value);
               }
             }}
           />
@@ -74,7 +92,8 @@ export function SearchSelect({
               <button
                 key={option.value}
                 type="button"
-                className={`flex w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted ${option.value === value ? "bg-muted" : ""}`}
+                disabled={option.disabled}
+                className={`flex w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted disabled:pointer-events-none disabled:opacity-40 ${option.value === value ? "bg-muted" : ""}`}
                 onClick={() => choose(option.value)}
               >
                 {option.label}

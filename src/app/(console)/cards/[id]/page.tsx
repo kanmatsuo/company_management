@@ -19,10 +19,13 @@ export default async function CardDetailPage({ params }: { params: Promise<{ id:
   const loaded = await loadOne<CardRow>(`/api/v1/rfid/cards/${id}/`);
   if (!loaded.value) return <LoadError title="Card" message={loaded.error ?? "Not found."} />;
   const card = loaded.value;
-  const manage = canManage(loaded.session.user, ["rfid"]);
+  const user = loaded.session.user;
+  const manage = can(user, "card.register");
+  const assigns = can(user, "card.assign");
+  const blocks = can(user, "card.block");
   const holder = card.current_assignment?.developer?.full_name;
   const assigned = Boolean(card.current_assignment);
-  const [developers, buildings] = manage && !assigned
+  const [developers, buildings] = assigns && !assigned
     ? await Promise.all([developerChoices(loaded.session.token), buildingChoices(loaded.session.token)])
     : [[], []];
   return (
@@ -51,9 +54,9 @@ export default async function CardDetailPage({ params }: { params: Promise<{ id:
           )}
         </CardContent>
       </Card>
-      {manage ? (
+      {assigns || blocks ? (
         <div className="grid gap-4 xl:grid-cols-2">
-          {assigned ? (
+          {!assigns ? null : assigned ? (
             <Card>
               <CardHeader>
                 <CardTitle>Unassign</CardTitle>
@@ -83,6 +86,8 @@ export default async function CardDetailPage({ params }: { params: Promise<{ id:
               </CardContent>
             </Card>
           )}
+          {blocks ? (
+          <>
           <Card>
             <CardHeader>
               <CardTitle>Block</CardTitle>
@@ -100,6 +105,9 @@ export default async function CardDetailPage({ params }: { params: Promise<{ id:
               <FieldForm action={unblockCard.bind(null, card.id)} submitLabel="Unblock" fields={[{ name: "reason", label: "Reason" }]} />
             </CardContent>
           </Card>
+          </>
+          ) : null}
+          {assigns ? (
           <Card>
             <CardHeader>
               <CardTitle>Retire</CardTitle>
@@ -109,6 +117,8 @@ export default async function CardDetailPage({ params }: { params: Promise<{ id:
               <FieldForm action={retireCard.bind(null, card.id)} submitLabel="Retire" variant="destructive" fields={[{ name: "reason", label: "Reason" }]} />
             </CardContent>
           </Card>
+          ) : null}
+          {assigns ? (
           <Card>
             <CardHeader>
               <CardTitle>Replace</CardTitle>
@@ -126,9 +136,10 @@ export default async function CardDetailPage({ params }: { params: Promise<{ id:
               />
             </CardContent>
           </Card>
+          ) : null}
         </div>
       ) : null}
-      {can(loaded.session.user, "system.delete_records") ? (
+      {can(user, "system.delete_records") ? (
         <Card className="border-destructive/50">
           <CardHeader>
             <CardTitle>Delete for good</CardTitle>

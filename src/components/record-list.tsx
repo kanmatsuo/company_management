@@ -14,6 +14,8 @@ export async function RecordList({
   rows,
   hrefs,
   extra,
+  intro,
+  filters,
   struck,
 }: {
   title: string;
@@ -25,33 +27,36 @@ export async function RecordList({
   rows: string[][];
   hrefs?: Array<string | null>;
   extra?: ReactNode;
+  /** Shown between the page header and the list (e.g. a form that adds rows). */
+  intro?: ReactNode;
+  /** Filter chips and dropdowns, shown above the table inside its card. */
+  filters?: ReactNode;
   struck?: boolean[];
 }) {
   const locale = await getLocale();
-  const titleText = t(locale, title);
-  const descriptionText = t(locale, description);
-  const emptyText = t(locale, empty);
   return (
     <div className="flex flex-col gap-4 md:gap-6">
-      <div className="flex items-end justify-between gap-4">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-semibold text-2xl tracking-tight">{titleText}</h1>
+          <h1 className="font-semibold text-2xl tracking-tight">{t(locale, title)}</h1>
           <p className="text-muted-foreground text-sm">{error ? t(locale, "The list could not be loaded.") : summary}</p>
         </div>
         {extra}
       </div>
+      {intro}
       <Card>
         <CardHeader>
-          <CardTitle>{titleText}</CardTitle>
-          <CardDescription>{descriptionText}</CardDescription>
+          <CardTitle>{title}</CardTitle>
+          <CardDescription>{description}</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="grid gap-4">
+          {filters}
           {error ? (
             <p className="text-destructive text-sm">{error}</p>
           ) : rows.length === 0 ? (
-            <p className="text-muted-foreground text-sm">{emptyText}</p>
+            <p className="text-muted-foreground text-sm">{t(locale, empty)}</p>
           ) : (
-            <DataTable headers={headers.map((header) => t(locale, header))} rows={rows} hrefs={hrefs} struck={struck} locale={locale} />
+            <DataTable headers={headers} rows={rows} hrefs={hrefs} struck={struck} locale={locale} />
           )}
         </CardContent>
       </Card>

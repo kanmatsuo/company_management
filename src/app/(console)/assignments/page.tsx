@@ -1,16 +1,19 @@
 import type { components } from "@/api/schema";
 import { RecordList } from "@/components/record-list";
+import { t } from "@/lib/i18n";
 import { show, showTime } from "@/lib/load-all";
+import { getLocale } from "@/lib/locale";
 import { loadList } from "@/lib/page-data";
 
 type Assignment = components["schemas"]["RFIDCardAssignment"];
 
 export default async function AssignmentsPage() {
+  const locale = await getLocale();
   const data = await loadList<Assignment>("/api/v1/rfid/assignments/?ordering=-assigned_at");
   return (
     <RecordList
       title="Assignments"
-      summary={`${data.count.toLocaleString()} assignments`}
+      summary={`${data.count.toLocaleString()} ${t(locale, "assignments")}`}
       description="Who held which card, including returned and replaced cards."
       error={data.error}
       empty="No assignments yet."

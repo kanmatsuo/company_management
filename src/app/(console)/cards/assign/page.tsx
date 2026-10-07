@@ -12,7 +12,7 @@ export default async function AssignCardPage() {
   const session = await getSession();
   if (!session) redirect("/login");
   const locale = await getLocale();
-  if (!can(session.user, "rfid.assign")) return <NoAccess description="Your account cannot assign cards." />;
+  if (!can(session.user, "card.assign")) return <NoAccess description="Your account cannot assign cards." />;
   let readers: Reader[] = [];
   let error: string | null = null;
   try {

@@ -28,7 +28,7 @@ export default async function ScanPage({ params }: { params: Promise<{ id: strin
           <Facts
             items={[
               { label: "Reader", value: event.device_code },
-              { label: "Reader", value: event.device_code },
+              { label: "Direction", value: show((event as { direction?: string }).direction) },
               { label: "Person", value: show(event.developer?.full_name) },
               { label: "Card", value: event.card ? String(event.card) : "—" },
               { label: "Client event", value: show(event.client_event_id) },

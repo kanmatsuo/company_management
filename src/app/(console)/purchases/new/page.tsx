@@ -19,7 +19,7 @@ export default async function NewPurchasePage() {
       <Card>
         <CardHeader>
           <CardTitle>Till</CardTitle>
-          <CardDescription>The service position owns the goods that can be added. The till reader is one of its seller&apos;s readers.</CardDescription>
+          <CardDescription>The counter decides which goods can be added. The till reader is one of its seller&apos;s readers.</CardDescription>
         </CardHeader>
         <CardContent>
           <OpenTill positions={positions} />

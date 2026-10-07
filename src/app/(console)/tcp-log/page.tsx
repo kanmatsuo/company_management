@@ -1,4 +1,5 @@
 import Link from "@/components/app-link";
+import { SearchSelect } from "@/components/search-select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -93,12 +94,14 @@ export default async function TCPLogPage({ searchParams }: { searchParams: Promi
       <form className="flex flex-wrap items-end gap-2" method="get">
         <label className="grid gap-1 text-sm">
           {t(locale, "Outcome")}
-          <select name="outcome" defaultValue={query.outcome ?? ""} className="h-8 rounded-lg border border-input bg-transparent px-2">
-            <option value="">{t(locale, "All")}</option>
-            {Object.entries(OUTCOMES).map(([value, label]) => (
-              <option key={value} value={value}>{t(locale, label)}</option>
-            ))}
-          </select>
+          <div className="w-52">
+            <SearchSelect
+              name="outcome"
+              locale={locale}
+              defaultValue={query.outcome ?? ""}
+              options={[{ value: "", label: t(locale, "All") }, ...Object.entries(OUTCOMES).map(([value, label]) => ({ value, label: t(locale, label) }))]}
+            />
+          </div>
         </label>
         <label className="grid gap-1 text-sm">
           {t(locale, "From IP")}

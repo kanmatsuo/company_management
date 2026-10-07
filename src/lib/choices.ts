@@ -101,3 +101,32 @@ export function unassignedTillReaderChoices(token: string) {
     (row) => (row.name && row.name !== row.code ? `${row.code} · ${row.name}` : row.code),
   );
 }
+
+export type TillGood = { id: number; name: string; price: string; track_stock: boolean; quantity: number; image: string | null };
+
+/** The goods a counter sells (not rentals), with price, stock and the first picture. */
+export async function tillGoods(token: string, servicePosition: number): Promise<TillGood[]> {
+  try {
+    const page = await loadFlexible<{
+      id: number;
+      name?: string;
+      kind?: string;
+      price?: string;
+      track_stock?: boolean;
+      quantity?: number;
+      images?: { image?: string }[];
+    }>(token, `/api/v1/goods/?ordering=name&is_active=true&service_position=${servicePosition}`);
+    return page.results
+      .filter((row) => row.kind !== "RENTAL")
+      .map((row) => ({
+        id: row.id,
+        name: row.name || `Good ${row.id}`,
+        price: row.price ?? "0.00",
+        track_stock: Boolean(row.track_stock),
+        quantity: row.quantity ?? 0,
+        image: row.images?.[0]?.image ?? null,
+      }));
+  } catch {
+    return [];
+  }
+}

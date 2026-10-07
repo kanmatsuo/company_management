@@ -12,7 +12,7 @@ export default async function NewDeveloperPage() {
   if (!canManage(session.user, ["developer"])) {
     return <NoAccess description="Your account cannot create developers." />;
   }
-  const assignCards = can(session.user, "rfid.assign");
+  const assignCards = can(session.user, "card.assign");
   const [buildings, departments, readers] = await Promise.all([
     buildingChoices(session.token),
     departmentNames(session.token),

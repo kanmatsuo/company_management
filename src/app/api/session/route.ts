@@ -3,7 +3,7 @@ import type { components } from "@/api/schema";
 import { DjangoError, djangoFetch } from "@/lib/django";
 import { clearSession, getRefreshToken, setSession } from "@/lib/session";
 import { getLocale } from "@/lib/locale";
-import { t } from "@/lib/i18n";
+import { t, tMessage } from "@/lib/i18n";
 
 type TokenPair = components["schemas"]["TokenObtainPair"];
 type Me = components["schemas"]["Me"];
@@ -53,7 +53,7 @@ export async function POST(request: Request) {
     if (error instanceof DjangoError) {
       return NextResponse.json(
         {
-          message: error.message,
+          message: tMessage(locale, error.message),
           code: error.code,
           details: error.details,
           requestId: error.requestId,

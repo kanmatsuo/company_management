@@ -19,7 +19,7 @@ const DELETES: Record<string, string> = {
   purchases: "Purchases",
   bookings: "Bookings",
   tcp_log: "TCP log entries",
-  service_positions: "Service positions",
+  service_positions: "Counters",
   goods: "Goods",
   stock_movements: "Stock movements",
   roles: "Roles",

@@ -1,6 +1,8 @@
 import type { components } from "@/api/schema";
 import { RecordList } from "@/components/record-list";
+import { t } from "@/lib/i18n";
 import { listPath, one, show, showTime } from "@/lib/load-all";
+import { getLocale } from "@/lib/locale";
 import { loadList } from "@/lib/page-data";
 
 type Person = components["schemas"]["PersonInside"];
@@ -18,6 +20,7 @@ export default async function OccupancyPeoplePage({
   searchParams: Promise<{ building?: string; department?: string; search?: string }>;
 }) {
   const query = await searchParams;
+  const locale = await getLocale();
   const data = await loadList<Person>(
     listPath("/api/v1/attendance/occupancy/people/", {
       building: one(query.building),
@@ -28,7 +31,7 @@ export default async function OccupancyPeoplePage({
   return (
     <RecordList
       title="Inside now"
-      summary={`${data.count.toLocaleString()} people`}
+      summary={`${data.count.toLocaleString()} ${t(locale, "people")}`}
       description="Latest record is an in, and no later out has been recorded."
       error={data.error}
       empty="Nobody is inside this selection."

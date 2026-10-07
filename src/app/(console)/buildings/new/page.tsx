@@ -8,7 +8,7 @@ import { requireSession } from "@/lib/page-data";
 
 export default async function NewBuildingPage() {
   const session = await requireSession();
-  if (!can(session.user, "rfid.device.manage") && !canManage(session.user, ["rfid"])) {
+  if (!can(session.user, "building.manage")) {
     return <NoAccess description="Your account cannot create buildings." />;
   }
   return (

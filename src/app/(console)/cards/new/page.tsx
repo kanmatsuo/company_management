@@ -11,9 +11,9 @@ import { RegisterByReader } from "@/app/(console)/cards/new/register-by-reader";
 
 export default async function NewCardPage() {
   const session = await requireSession();
-  if (!canManage(session.user, ["rfid"])) return <NoAccess description="Your account cannot register cards." />;
+  if (!can(session.user, "card.register")) return <NoAccess description="Your account cannot register cards." />;
   let readers: Reader[] = [];
-  if (can(session.user, "rfid.assign")) {
+  if (can(session.user, "card.assign")) {
     try {
       readers = (await djangoFetch<{ devices: Reader[] }>("/api/v1/rfid/card-reads/", { accessToken: session.token })).devices;
     } catch {
@@ -26,7 +26,7 @@ export default async function NewCardPage() {
         <Title>New card</Title>
         <Hint>Cards are retired, not deleted, so scan history stays intact.</Hint>
       </div>
-      {can(session.user, "rfid.assign") ? <RegisterByReader readers={readers} /> : null}
+      {can(session.user, "card.assign") ? <RegisterByReader readers={readers} /> : null}
       <Card>
         <CardHeader>
           <CardTitle>{readers.length > 0 ? "Or type the UID" : "Card"}</CardTitle>

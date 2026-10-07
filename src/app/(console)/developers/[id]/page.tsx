@@ -56,11 +56,11 @@ export default async function DeveloperDetailPage({ params }: { params: Promise<
   const developer = loaded.value;
   const { user, token } = loaded.session;
   const manage = canManage(user, ["developer"]);
-  const assignCards = can(user, "rfid.assign");
+  const assignCards = can(user, "card.assign");
   const [buildings, departments, card, readers] = await Promise.all([
     manage ? buildingChoices(token) : Promise.resolve([]),
     manage ? departmentNames(token) : Promise.resolve([]),
-    can(user, "rfid.view") ? currentCard(token, developer.id) : Promise.resolve(null),
+    can(user, "card.view") ? currentCard(token, developer.id) : Promise.resolve(null),
     assignCards
       ? djangoFetch<{ devices: Reader[] }>("/api/v1/rfid/card-reads/", { accessToken: token })
           .then((body) => body.devices)
@@ -128,7 +128,7 @@ export default async function DeveloperDetailPage({ params }: { params: Promise<
           </CardContent>
         </Card>
 
-        {can(user, "rfid.view") ? (
+        {can(user, "card.view") ? (
           <Card>
             <CardHeader>
               <CardTitle>RFID card</CardTitle>

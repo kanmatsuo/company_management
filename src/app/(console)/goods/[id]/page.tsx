@@ -47,7 +47,7 @@ export default async function GoodPage({ params }: { params: Promise<{ id: strin
                   { value: "SERVICE", label: "Service" },
                   { value: "RENTAL", label: "Rental" },
                 ], defaultValue: good.kind },
-                { name: "service_position", label: "Service position", type: "select", options: positions, defaultValue: String(good.service_position) },
+                { name: "service_position", label: "Counter", type: "select", options: positions, defaultValue: String(good.service_position) },
                 { name: "description", label: "Description", type: "textarea", defaultValue: good.description ?? "" },
                 { name: "slot_minutes", label: "Rental slot minutes", type: "number", defaultValue: good.rental?.slot_minutes ? String(good.rental.slot_minutes) : "", visibleWhen: { name: "kind", value: "RENTAL" } },
                 { name: "opening_time", label: "Rental opens", defaultValue: good.rental?.opening_time ?? "", visibleWhen: { name: "kind", value: "RENTAL" } },

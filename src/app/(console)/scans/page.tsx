@@ -1,7 +1,9 @@
 import type { components } from "@/api/schema";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { RecordList } from "@/components/record-list";
+import { t } from "@/lib/i18n";
 import { listPath, one, show, showTime } from "@/lib/load-all";
+import { getLocale } from "@/lib/locale";
 import { loadRecords } from "@/lib/load-records";
 
 type Event = components["schemas"]["RFIDEvent"];
@@ -22,8 +24,9 @@ export default async function ScansPage({
   searchParams: Promise<{ result?: string }>;
 }) {
   const query = await searchParams;
+  const locale = await getLocale();
   const data = await loadRecords<Event>(
-    "rfid.view",
+    "scan.view",
     listPath("/api/v1/rfid/events/?ordering=-event_time", { result: one(query.result) }),
   );
   if (data.denied) {
@@ -39,7 +42,7 @@ export default async function ScansPage({
   return (
     <RecordList
       title="Scans"
-      summary={`${data.count.toLocaleString()} scans`}
+      summary={`${data.count.toLocaleString()} ${t(locale, "scans")}`}
       description="Newest card scans first."
       error={data.error}
       empty="No scans yet."

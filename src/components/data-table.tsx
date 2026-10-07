@@ -28,6 +28,9 @@ function compareCells(left: string, right: string) {
 const DOT: Record<string, string> = {
   Online: "bg-emerald-500 shadow-[0_0_6px] shadow-emerald-500/70",
   Offline: "bg-muted-foreground/50",
+  Paid: "bg-emerald-500",
+  Draft: "bg-amber-500",
+  Cancelled: "bg-muted-foreground/50",
 };
 
 export function DataTable({
@@ -95,7 +98,7 @@ export function DataTable({
                 return (
                   <TableHead key={`${header}-${index}`}>
                     <button type="button" className="inline-flex items-center gap-1" onClick={() => sortBy(index)}>
-                      {header}
+                      {t(locale, header)}
                       {active ? <Icon className="size-3.5" /> : null}
                     </button>
                   </TableHead>
@@ -108,17 +111,19 @@ export function DataTable({
               <TableRow key={index} className={struck?.[index] ? "text-muted-foreground line-through" : undefined}>
                 {row.map((cell, cellIndex) => (
                   <TableCell key={`${headers[cellIndex]}-${cellIndex}`} className={cellIndex === 0 ? "font-medium" : undefined}>
-                    {headers[cellIndex] === t(locale, "Status") || headers[cellIndex] === t(locale, "Result") ? (
+                    {headers[cellIndex] === "Status" || headers[cellIndex] === "Result" ? (
                       <Badge variant="secondary" className="gap-1.5">
                         {DOT[cell] ? <span aria-hidden className={`size-2 rounded-full ${DOT[cell]}`} /> : null}
                         {t(locale, cell)}
                       </Badge>
+                    ) : headers[cellIndex] === "Change" && /^[+-]\d/.test(cell) ? (
+                      <span className={`font-medium tabular-nums ${cell.startsWith("+") ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}>{cell}</span>
                     ) : cellIndex === 0 && hrefs?.[index] ? (
                       <Link href={hrefs[index]} className="underline-offset-4 hover:underline">
-                        {cell}
+                        {t(locale, cell)}
                       </Link>
                     ) : (
-                      cell
+                      t(locale, cell)
                     )}
                   </TableCell>
                 ))}

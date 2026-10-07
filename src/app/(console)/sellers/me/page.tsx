@@ -26,7 +26,6 @@ export default async function MySellerPage() {
           <Facts
             items={[
               { label: "Contact", value: show(seller.contact_name) },
-              { label: "Email", value: show(seller.email) },
               { label: "Phone", value: show(seller.phone) },
               { label: "Notes", value: show(seller.notes) },
             ]}

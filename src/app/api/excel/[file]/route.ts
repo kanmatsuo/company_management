@@ -8,6 +8,10 @@ const FILES: Record<string, string> = {
   developers: "/api/v1/exports/developers/",
   money: "/api/v1/exports/money/",
   goods: "/api/v1/exports/goods/",
+  "finance-stats": "/api/v1/exports/finance-stats/",
+  purchases: "/api/v1/purchases/export/",
+  cards: "/api/v1/rfid/cards/export/",
+  readers: "/api/v1/rfid/devices/export/",
   "template-developers": "/api/v1/imports/developers/template/",
   "template-cards": "/api/v1/imports/cards/template/",
   "template-balances": "/api/v1/imports/balances/template/",
@@ -19,9 +23,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const path = FILES[(await params).file];
   if (!path) return NextResponse.json({ message: "Not found." }, { status: 404 });
   const query = new URLSearchParams();
-  for (const name of ["date_from", "date_to"]) {
+  for (const name of ["date_from", "date_to", "out_after", "out_before"]) {
     const value = request.nextUrl.searchParams.get(name);
     if (value && /^\d{4}-\d{2}-\d{2}$/.test(value)) query.set(name, value);
+  }
+  // The lists' filters, so a list's download matches what it shows.
+  for (const name of ["status", "search", "birthday_month", "department", "building", "assigned", "purpose", "online", "is_active"]) {
+    const value = request.nextUrl.searchParams.get(name);
+    if (value) query.set(name, value.slice(0, 100));
   }
   let response: Response;
   try {

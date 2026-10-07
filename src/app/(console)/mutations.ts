@@ -409,18 +409,32 @@ export async function createGood(_prev: FormState, formData: FormData): Promise<
       is_active: checked(formData, "is_active"),
       track_stock: checked(formData, "track_stock"),
       initial_quantity: optionalInt(formData, "initial_quantity"),
-      rental: text(formData, "kind") === "RENTAL"
-        ? {
-            slot_minutes: optionalInt(formData, "slot_minutes"),
-            opening_time: optionalText(formData, "opening_time"),
-            closing_time: optionalText(formData, "closing_time"),
-            max_slots_per_booking: optionalInt(formData, "max_slots_per_booking"),
-            max_slots_per_day: optionalInt(formData, "max_slots_per_day"),
-            max_days_ahead: optionalInt(formData, "max_days_ahead"),
-          }
-        : undefined,
     },
     redirectTo: (data) => `/goods/${idFrom(data) ?? ""}`,
+  });
+}
+
+/** A court is a RENTAL good: booked by slot at the playground desk, never stocked. */
+export async function createCourt(_prev: FormState, formData: FormData): Promise<FormState> {
+  return commit({
+    path: "/api/v1/goods/",
+    body: {
+      name: text(formData, "name"),
+      description: optionalText(formData, "description"),
+      price: text(formData, "price"),
+      kind: "RENTAL",
+      is_active: checked(formData, "is_active"),
+      track_stock: false,
+      rental: {
+        slot_minutes: optionalInt(formData, "slot_minutes"),
+        opening_time: optionalText(formData, "opening_time"),
+        closing_time: optionalText(formData, "closing_time"),
+        max_slots_per_booking: optionalInt(formData, "max_slots_per_booking"),
+        max_slots_per_day: optionalInt(formData, "max_slots_per_day"),
+        max_days_ahead: optionalInt(formData, "max_days_ahead"),
+      },
+    },
+    redirectTo: (data) => `/rentals/${idFrom(data) ?? ""}`,
   });
 }
 
@@ -737,7 +751,6 @@ export async function updateSeller(id: number, _prev: FormState, formData: FormD
     body: {
       name: optionalText(formData, "name"),
       contact_name: text(formData, "contact_name"),
-      email: text(formData, "email"),
       phone: text(formData, "phone"),
       status: optionalText(formData, "status"),
       notes: text(formData, "notes"),
@@ -902,7 +915,7 @@ export async function deleteForGood(kind: string, id: number, redirectTo: string
 /** Assign a till reader to a seller, or unassign it (empty seller). */
 export async function assignReader(id: number, redirectTo: string, _prev: FormState, formData: FormData): Promise<FormState> {
   return commit({
-    permission: "rfid.device.manage",
+    permission: "reader.manage",
     path: `/api/v1/rfid/devices/${id}/assign-seller/`,
     body: { seller: optionalInt(formData, "seller") ?? null },
     redirectTo,
@@ -914,7 +927,7 @@ export async function assignReaderToSeller(sellerId: number, _prev: FormState, f
   const reader = optionalInt(formData, "reader");
   if (!reader) return { message: "Choose a till reader.", fields: { reader: ["Choose a till reader."] } };
   return commit({
-    permission: "rfid.device.manage",
+    permission: "reader.manage",
     path: `/api/v1/rfid/devices/${reader}/assign-seller/`,
     body: { seller: sellerId },
     redirectTo: `/sellers/${sellerId}`,
@@ -952,7 +965,7 @@ export async function assignTappedCard(developerId: number, _prev: FormState, fo
   const card = optionalInt(formData, "card");
   if (!card) return { message: "Tap a card on the card assign reader first." };
   return commit({
-    permission: "rfid.assign",
+    permission: "card.assign",
     path: `/api/v1/rfid/cards/${card}/assign/`,
     body: { developer: developerId, pin: String(formData.get("pin") ?? ""), pin_confirm: String(formData.get("pin_confirm") ?? "") },
     redirectTo: `/developers/${developerId}`,
@@ -961,7 +974,7 @@ export async function assignTappedCard(developerId: number, _prev: FormState, fo
 
 /** Developer's page: take the card back (it stays registered, unassigned). */
 export async function unassignDeveloperCard(developerId: number, cardId: number, _prev: FormState, _formData: FormData): Promise<FormState> {
-  return commit({ permission: "rfid.assign", path: `/api/v1/rfid/cards/${cardId}/unassign/`, redirectTo: `/developers/${developerId}` });
+  return commit({ permission: "card.assign", path: `/api/v1/rfid/cards/${cardId}/unassign/`, redirectTo: `/developers/${developerId}` });
 }
 
 /** Developer's page: replace a lost or broken card with one tapped on the reader (the PIN stays). */
@@ -969,7 +982,7 @@ export async function replaceDeveloperCard(developerId: number, cardId: number, 
   const uid = text(formData, "new_card_uid");
   if (!uid) return { message: "Tap the new card on the card assign reader first." };
   return commit({
-    permission: "rfid.assign",
+    permission: "card.assign",
     path: `/api/v1/rfid/cards/${cardId}/replace/`,
     body: { new_card_uid: uid, reason: optionalText(formData, "reason") },
     redirectTo: `/developers/${developerId}`,

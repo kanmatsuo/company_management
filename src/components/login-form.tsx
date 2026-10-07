@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { Locale } from "@/lib/i18n";
-import { t } from "@/lib/i18n";
+import { t, tMessage } from "@/lib/i18n";
 
 type FieldErrors = Record<string, string[]>;
 
@@ -34,7 +34,7 @@ export function LoginForm({ notice, locale }: { notice?: string; locale: Locale 
         details?: FieldErrors;
       } | null;
       if (!response.ok) {
-        setMessage(body?.message || t(locale, "Could not sign in."));
+        setMessage(tMessage(locale, body?.message || "Could not sign in."));
         setFields(body?.details ?? {});
         return;
       }
@@ -49,7 +49,7 @@ export function LoginForm({ notice, locale }: { notice?: string; locale: Locale 
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
-      {message ? <p className="text-destructive text-sm">{message}</p> : null}
+      {message ? <p className="text-destructive text-sm">{tMessage(locale, message)}</p> : null}
       <div className="grid gap-1.5">
         <Label htmlFor="username">{t(locale, "Username")}</Label>
         <Input

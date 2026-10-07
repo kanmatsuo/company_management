@@ -10,7 +10,9 @@ import { LoadError } from "@/components/no-access";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { can, canManage, getSession } from "@/lib/current-user";
 import { DjangoError, djangoFetch } from "@/lib/django";
+import { t } from "@/lib/i18n";
 import { show, showTime } from "@/lib/load-all";
+import { getLocale } from "@/lib/locale";
 import { loadOne } from "@/lib/page-data";
 import { sellerChoices } from "@/lib/choices";
 
@@ -24,7 +26,9 @@ export default async function ReaderPage({ params }: { params: Promise<{ id: str
   if (!loaded.value) return <LoadError title="Device" message={loaded.error ?? "Not found."} />;
   const device = loaded.value;
   const session = await getSession();
-  const manage = session ? canManage(session.user, ["rfid"]) || can(session.user, "rfid.device.manage") : false;
+  const locale = await getLocale();
+  const manage = session ? can(session.user, "reader.manage") : false;
+  const sellerName = (device as { seller_name?: string | null }).seller_name;
   let buildings: Building[] = [];
   if (session && manage) {
     try {
@@ -82,9 +86,9 @@ export default async function ReaderPage({ params }: { params: Promise<{ id: str
           <CardHeader>
             <CardTitle>Assigned to</CardTitle>
             <CardDescription>
-              {(device as { seller_name?: string | null }).seller_name
-                ? `Only ${(device as { seller_name?: string | null }).seller_name}'s purchases use this reader.`
-                : "Not assigned: no seller uses this reader yet."}
+              {sellerName
+                ? t(locale, "Only {seller}'s purchases use this reader.").replace("{seller}", sellerName)
+                : t(locale, "Not assigned: no seller uses this reader yet.")}
             </CardDescription>
           </CardHeader>
           {manage ? (

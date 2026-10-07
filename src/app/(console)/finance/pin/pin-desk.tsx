@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { t, type Locale } from "@/lib/i18n";
+import { t, tMessage, type Locale } from "@/lib/i18n";
 
 type Mode = "change" | "reset";
 
@@ -93,7 +93,7 @@ export function PinDesk({ locale, readers, canChange, canReset }: { locale: Loca
       : await resetPinAtDesk(account.id, pin, again);
     setSaving(false);
     if (result.message) {
-      setProblem(result.message);
+      setProblem(tMessage(locale, result.message));
       setCurrent("");
       return;
     }
@@ -127,9 +127,9 @@ export function PinDesk({ locale, readers, canChange, canReset }: { locale: Loca
           ) : null}
         </div>
         <p className="text-muted-foreground text-sm">
-          {t(locale, mode === "change"
-            ? "Change: the developer knows the current PIN. A wrong current PIN counts like at the till (5 wrong tries lock it)."
-            : "Forgot: check the person in front of you, then the developer chooses a new PIN. This also unlocks a locked PIN.")}
+          {mode === "change"
+            ? t(locale, "Change: the developer knows the current PIN. A wrong current PIN counts like at the till (5 wrong tries lock it).")
+            : t(locale, "Forgot: check the person in front of you, then the developer chooses a new PIN. This also unlocks a locked PIN.")}
         </p>
         {readers.length === 0 ? <NoReader /> : <ReaderPicker readers={readers} value={device} onChange={setDevice} />}
         {done ? <p className="font-medium text-emerald-700 text-sm dark:text-emerald-400">{done}</p> : null}

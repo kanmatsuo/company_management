@@ -33,7 +33,7 @@ const LABELS: Record<string, string> = {
   readers: "Readers",
   buildings: "Buildings",
   sellers: "Sellers",
-  counters: "Service positions",
+  counters: "Counters",
   goods: "Goods",
 };
 
@@ -109,7 +109,7 @@ export default async function DataResetPage({
               <CardHeader>
                 <CardTitle>{t(locale, "Kept")}</CardTitle>
                 <CardDescription>
-                  {t(locale, "Users and roles, readers, buildings, sellers and goods. Seller balances start at 0; each good keeps its current stock.")}
+                  {t(locale, "Users and roles, readers, buildings, sellers and goods. Each good keeps its current stock.")}
                 </CardDescription>
               </CardHeader>
               <CardContent>

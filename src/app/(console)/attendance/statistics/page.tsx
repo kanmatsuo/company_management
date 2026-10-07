@@ -1,3 +1,5 @@
+import { CalendarDays, LogIn, LogOut, Users } from "lucide-react";
+import Link from "@/components/app-link";
 import type { components } from "@/api/schema";
 import { SeriesChart } from "@/components/ui/chart";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,11 +15,6 @@ type Day = components["schemas"]["DailyAttendance"];
 type Record = components["schemas"]["AttendanceRecord"];
 type Occupancy = components["schemas"]["Occupancy"];
 type Device = { code: string; building?: number | null };
-
-
-
-
-
 
 export default async function StatisticsPage({
   searchParams,
@@ -109,92 +106,147 @@ export default async function StatisticsPage({
   const selectedBuilding = buildingId === "none" ? "No building" : buildingName.get(Number(buildingId)) ?? "All buildings";
   const truncated = days.count > days.results.length || scans.count > scans.results.length;
 
+  const perDay = periods.length ? Math.round(periods.reduce((sum, [, row]) => sum + row.size, 0) / periods.length) : 0;
+  const busiest = periods.reduce<[string, number] | null>((best, [period, row]) => (!best || row.size > best[1] ? [period, row.size] : best), null);
+  const empty = rangedDays.length === 0 && buildingScans.length === 0;
+  const link = (building: string) => `/attendance/statistics?from=${start}&to=${end}${building ? `&building=${building}` : ""}`;
+  const chips = [
+    { id: "", name: t(locale, "All buildings") },
+    ...(occupancyLoaded.value?.buildings ?? []).map((building) => ({ id: String(building.id), name: building.name })),
+    ...(byBuilding.has("none") ? [{ id: "none", name: t(locale, "No building") }] : []),
+  ];
+  const tiles = [
+    { label: "People", value: people.size.toLocaleString("en-US"), hint: "Different people recorded in this date range", icon: Users },
+    { label: weekly ? "Average per week" : "Average per day", value: perDay.toLocaleString("en-US"), hint: weekly ? "People on an average week" : "People on an average day", icon: CalendarDays },
+    { label: "In scans", value: ins.toLocaleString("en-US"), hint: "Door scans marked in", icon: LogIn },
+    { label: "Out scans", value: outs.toLocaleString("en-US"), hint: "Door scans marked out", icon: LogOut },
+  ];
+
   return (
     <div className="flex flex-col gap-4 md:gap-6">
       <div>
         <h1 className="font-semibold text-2xl tracking-tight">{t(locale, "Statistics")}</h1>
         <p className="text-muted-foreground text-sm">
-          {start} {t(locale, "to")} {end}.
-          {buildingId ? ` · ${selectedBuilding}` : ""}
-          {truncated ? " This range is larger than the page can load in full." : ""}
-          {days.error || scans.error ? ` ${days.error || scans.error}` : ""}
+          {start === end ? start : `${start} ${t(locale, "to")} ${end}`}
+          {buildingId ? ` · ${t(locale, selectedBuilding)}` : ""}
+          {truncated ? ` · ${t(locale, "This range is larger than the page can load in full.")}` : ""}
+          {days.error || scans.error ? ` · ${days.error || scans.error}` : ""}
         </p>
       </div>
-      <PeriodPicker path="/attendance/statistics" period={{ start, end }} today={today} locale={locale} keep={{ building: buildingId }} />
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {[
-          ["People", people.size, t(locale, "Different people recorded in this date range")],
-          ["In scans", ins, t(locale, "Door scans marked in")],
-          ["Out scans", outs, t(locale, "Door scans marked out")],
-        ].map(([label, value, hint]) => (
-          <Card key={String(label)}>
-            <CardHeader>
-              <CardDescription>{t(locale, String(label))}</CardDescription>
-              <CardTitle className="text-3xl tabular-nums">{Number(value).toLocaleString("en-US")}</CardTitle>
-              <p className="text-muted-foreground text-sm">{hint}</p>
-            </CardHeader>
+      <Card>
+        <CardContent className="grid gap-4">
+          <PeriodPicker path="/attendance/statistics" period={{ start, end }} today={today} locale={locale} keep={{ building: buildingId }} />
+          <div className="flex flex-wrap items-center gap-2 border-t pt-4">
+            <span className="mr-1 text-muted-foreground text-xs">{t(locale, "Building")}</span>
+            {chips.map((chip) => {
+              const active = (buildingId ?? "") === chip.id;
+              return (
+                <Link
+                  key={chip.id || "all"}
+                  href={link(chip.id)}
+                  className={`rounded-full border px-3 py-1 text-xs transition-colors ${active ? "border-primary bg-primary text-primary-foreground" : "hover:border-primary/50 hover:bg-muted"}`}
+                >
+                  {chip.name}
+                </Link>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+        {tiles.map((tile) => (
+          <Card key={tile.label} className="py-4">
+            <CardContent className="flex items-start justify-between gap-3 px-4">
+              <div className="min-w-0">
+                <p className="text-muted-foreground text-xs">{t(locale, tile.label)}</p>
+                <p className="font-semibold text-3xl tabular-nums tracking-tight">{tile.value}</p>
+                <p className="mt-1 text-muted-foreground text-xs">{t(locale, tile.hint)}</p>
+              </div>
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <tile.icon className="size-4" />
+              </span>
+            </CardContent>
           </Card>
         ))}
       </div>
-      <Card>
-        <CardHeader>
-          <CardTitle>{t(locale, "By building")}</CardTitle>
-          <CardDescription>
-            {t(locale, "Each bar is people who scanned at that building. A person who used two buildings is counted in both.")}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <SeriesChart
-            data={buildingRows.map(([id, row]) => ({
-              name: row.name,
-              people: row.people.size,
-              ins: row.ins,
-              outs: row.outs,
-              href: `/attendance/statistics?from=${start}&to=${end}&building=${id}`,
-            }))}
-            series={[
-              { key: "people", label: t(locale, "People"), color: "var(--chart-1)" },
-              { key: "ins", label: t(locale, "In"), color: "var(--chart-3)" },
-              { key: "outs", label: t(locale, "Out"), color: "var(--chart-4)" },
-            ]}
-            height={Math.max(240, buildingRows.length * 56)}
-          />
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>{weekly ? t(locale, "By week") : t(locale, "By day")}</CardTitle>
-          <CardDescription>
-            {weekly
-              ? t(locale, "Each bar is only that week. A person who came on more than one week is counted once above and once on each bar.")
-              : t(locale, "Each bar is only that day. A person who came on more than one day is counted once above and once on each bar.")}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <SeriesChart
-            data={periods.map(([period, row]) => ({
-              name: period.slice(5),
-              people: row.size,
-            }))}
-            series={[{ key: "people", label: t(locale, "People"), color: "var(--chart-1)" }]}
-            height={300}
-          />
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>{t(locale, "By department")}</CardTitle>
-          <CardDescription>{t(locale, "Each bar is the people in that department. A person has one department, so these bars add up to People above.")}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <SeriesChart
-            data={departments.map(([name, row]) => ({ name, people: row.size }))}
-            series={[{ key: "people", label: t(locale, "People"), color: "var(--chart-3)" }]}
-            layout="vertical"
-            height={Math.max(220, departments.length * 48)}
-          />
-        </CardContent>
-      </Card>
+
+      {empty ? (
+        <Card>
+          <CardContent className="flex flex-col items-center gap-2 py-10 text-center">
+            <span className="flex size-11 items-center justify-center rounded-full bg-muted text-muted-foreground">
+              <CalendarDays className="size-5" />
+            </span>
+            <p className="font-medium">{t(locale, "No attendance in this range")}</p>
+            <p className="max-w-md text-muted-foreground text-sm">{t(locale, "Nobody scanned at a door in these days. Pick a longer range, such as This month.")}</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          <Card>
+            <CardHeader>
+              <CardTitle>{weekly ? t(locale, "By week") : t(locale, "By day")}</CardTitle>
+              <CardDescription>
+                {weekly
+                  ? t(locale, "Each bar is only that week. A person who came on more than one week is counted once above and once on each bar.")
+                  : t(locale, "Each bar is only that day. A person who came on more than one day is counted once above and once on each bar.")}
+                {busiest ? ` ${t(locale, "Busiest")}: ${busiest[0]} (${busiest[1].toLocaleString("en-US")}).` : ""}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <SeriesChart
+                data={periods.map(([period, row]) => ({
+                  name: period.slice(5),
+                  people: row.size,
+                }))}
+                series={[{ key: "people", label: t(locale, "People"), color: "var(--chart-1)" }]}
+                height={300}
+              />
+            </CardContent>
+          </Card>
+          <div className="grid items-start gap-4 lg:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>{t(locale, "By building")}</CardTitle>
+                <CardDescription>
+                  {t(locale, "Each bar is people who scanned at that building. A person who used two buildings is counted in both.")}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <SeriesChart
+                  data={buildingRows.map(([id, row]) => ({
+                    name: row.name,
+                    people: row.people.size,
+                    ins: row.ins,
+                    outs: row.outs,
+                    href: link(id),
+                  }))}
+                  series={[
+                    { key: "people", label: t(locale, "People"), color: "var(--chart-1)" },
+                    { key: "ins", label: t(locale, "In"), color: "var(--chart-3)" },
+                    { key: "outs", label: t(locale, "Out"), color: "var(--chart-4)" },
+                  ]}
+                  height={Math.max(260, buildingRows.length * 56)}
+                />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>{t(locale, "By department")}</CardTitle>
+                <CardDescription>{t(locale, "Each bar is the people in that department. A person has one department, so these bars add up to People above.")}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <SeriesChart
+                  data={departments.map(([name, row]) => ({ name, people: row.size }))}
+                  series={[{ key: "people", label: t(locale, "People"), color: "var(--chart-3)" }]}
+                  layout="vertical"
+                  height={Math.max(260, departments.length * 40)}
+                />
+              </CardContent>
+            </Card>
+          </div>
+        </>
+      )}
     </div>
   );
 }

@@ -1,4 +1,6 @@
 import Link from "@/components/app-link";
+import { SearchSelect } from "@/components/search-select";
+import { DatePicker } from "@/components/date-picker";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import type { components } from "@/api/schema";
 import { parsePageSize, TablePager } from "@/components/table-pager";
@@ -147,25 +149,33 @@ export default async function AttendanceRecordsPage({
         <CardContent className="grid gap-4">
           <form className="flex flex-wrap items-end gap-2" method="get">
             <Input name="search" defaultValue={query.search ?? ""} placeholder={t(locale, "Name or employee number")} className="max-w-xs" />
-            <select name="event_type" defaultValue={query.event_type ?? ""} className="h-8 rounded-lg border border-input bg-transparent px-2 text-sm">
-              <option value="">{t(locale, "Any type")}</option>
-              <option value="IN">{t(locale, "In")}</option>
-              <option value="OUT">{t(locale, "Out")}</option>
-              <option value="SCAN">{t(locale, "Scan")}</option>
-            </select>
-            <select name="source" defaultValue={query.source ?? ""} className="h-8 rounded-lg border border-input bg-transparent px-2 text-sm">
-              <option value="">{t(locale, "Any source")}</option>
-              <option value="RFID">{t(locale, "Door scan")}</option>
-              <option value="MANUAL">{t(locale, "Manual")}</option>
-            </select>
-            <label className="grid gap-1 text-xs text-muted-foreground">
-              {t(locale, "From")}
-              <Input name="date_from" type="date" defaultValue={query.date_from ?? ""} />
-            </label>
-            <label className="grid gap-1 text-xs text-muted-foreground">
-              {t(locale, "To")}
-              <Input name="date_to" type="date" defaultValue={query.date_to ?? ""} />
-            </label>
+            <div className="w-36">
+              <SearchSelect
+                name="event_type"
+                locale={locale}
+                defaultValue={query.event_type ?? ""}
+                options={[
+                  { value: "", label: t(locale, "Any type") },
+                  { value: "IN", label: t(locale, "In") },
+                  { value: "OUT", label: t(locale, "Out") },
+                  { value: "SCAN", label: t(locale, "Scan") },
+                ]}
+              />
+            </div>
+            <div className="w-36">
+              <SearchSelect
+                name="source"
+                locale={locale}
+                defaultValue={query.source ?? ""}
+                options={[
+                  { value: "", label: t(locale, "Any source") },
+                  { value: "RFID", label: t(locale, "Door scan") },
+                  { value: "MANUAL", label: t(locale, "Manual") },
+                ]}
+              />
+            </div>
+            <DatePicker name="date_from" defaultValue={query.date_from ?? ""} placeholder="From" locale={locale} className="w-36" />
+            <DatePicker name="date_to" defaultValue={query.date_to ?? ""} placeholder="To" locale={locale} className="w-36" />
             {ordering !== "-event_time" ? <input type="hidden" name="ordering" value={ordering} /> : null}
             {pageSize !== 20 ? <input type="hidden" name="page_size" value={String(pageSize)} /> : null}
             <Button type="submit" variant="outline">{t(locale, "Apply")}</Button>

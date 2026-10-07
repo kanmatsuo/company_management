@@ -12,7 +12,7 @@ export default async function NewStorePage() {
   const session = await requireSession();
   if (!can(session.user, "seller.create")) return <NoAccess description="Your account cannot create stores." />;
   const makeLogin = can(session.user, "user.manage");
-  const assignReader = can(session.user, "rfid.device.manage");
+  const assignReader = can(session.user, "reader.manage");
   const [users, buildings, readers] = await Promise.all([
     sellerUserChoices(session.token),
     buildingChoices(session.token),

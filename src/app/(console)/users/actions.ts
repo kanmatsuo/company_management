@@ -28,8 +28,13 @@ export async function createUser(_prev: FormState, formData: FormData): Promise<
   const username = String(formData.get("username") ?? "").trim();
   const fullName = String(formData.get("full_name") ?? "").trim();
   const password = String(formData.get("password") ?? "");
+  const role = String(formData.get("role") ?? "").trim();
+  if (password !== String(formData.get("password_confirm") ?? "")) {
+    return { message: "The passwords don't match.", fields: { password_confirm: ["The passwords don't match."] } };
+  }
+  let id: number | undefined;
   try {
-    await djangoFetch("/api/v1/users/", {
+    const created = await djangoFetch<{ id?: number }>("/api/v1/users/", {
       method: "POST",
       accessToken: session.token,
       body: JSON.stringify({
@@ -38,10 +43,22 @@ export async function createUser(_prev: FormState, formData: FormData): Promise<
         ...(fullName ? { full_name: fullName } : {}),
       }),
     });
+    id = created?.id;
   } catch (error) {
     return formError(error);
   }
-  redirect("/users");
+  if (id && role && can(session.user, "role.assign")) {
+    try {
+      await djangoFetch(`/api/v1/users/${id}/roles/`, {
+        method: "POST",
+        accessToken: session.token,
+        body: JSON.stringify({ role }),
+      });
+    } catch {
+      // The account exists; the role can be added on its page, which opens next.
+    }
+  }
+  redirect(id ? `/users/${id}` : "/users");
 }
 
 export async function updateUser(id: number, _prev: FormState, formData: FormData): Promise<FormState> {

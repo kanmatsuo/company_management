@@ -1,9 +1,12 @@
 "use client";
 
+import { SearchSelect } from "@/components/search-select";
 import { AutoText } from "@/components/auto-text";
 import { useState } from "react";
 import { createReader, updateReader } from "@/app/(console)/mutations";
 import { FieldForm, type Field } from "@/components/field-form";
+import { useLocale } from "@/components/locale-context";
+import { t } from "@/lib/i18n";
 
 const PURPOSE = [
   { value: "ATTENDANCE", label: "Attendance door" },
@@ -37,6 +40,7 @@ export function DeviceForm({
   };
 }) {
   const [purpose, setPurpose] = useState(defaults?.purpose || "ATTENDANCE");
+  const locale = useLocale();
   const door = purpose === "ATTENDANCE";
   const fields: Field[] = [
     { name: "purpose", label: "Purpose", type: "hidden", defaultValue: purpose },
@@ -57,15 +61,12 @@ export function DeviceForm({
     <div className="grid gap-3">
       <label className="grid max-w-md gap-1.5 text-sm">
         <AutoText>Kind</AutoText>
-        <select
-          className="h-8 rounded-lg border border-input bg-transparent px-2"
+        <SearchSelect
           value={purpose}
-          onChange={(event) => setPurpose(event.target.value)}
-        >
-          {PURPOSE.map((option) => (
-            <option key={option.value} value={option.value}><AutoText>{option.label}</AutoText></option>
-          ))}
-        </select>
+          onValueChange={setPurpose}
+          locale={locale}
+          options={PURPOSE.map((option) => ({ value: option.value, label: t(locale, option.label) }))}
+        />
       </label>
       <p className="max-w-md text-muted-foreground text-sm">
         <AutoText>{HELP[purpose] ?? HELP.ATTENDANCE}</AutoText>

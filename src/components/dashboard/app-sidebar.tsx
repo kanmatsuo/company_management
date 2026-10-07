@@ -3,7 +3,7 @@
 import Link from "@/components/app-link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useState, type ComponentProps } from "react";
-import { ChevronRight, type LucideIcon, LayoutDashboard, UserRound, CreditCard, Radio, ScanLine, CalendarCheck, Users, ScrollText, Wallet, Package, Warehouse, ShoppingCart, Store, Briefcase, DatabaseZap, FileSpreadsheet } from "lucide-react";
+import { ChevronRight, type LucideIcon, LayoutDashboard, UserRound, CreditCard, Radio, ScanLine, CalendarCheck, Users, ScrollText, Wallet, Package, Warehouse, ShoppingCart, Store, DatabaseZap, FileSpreadsheet, LandPlot } from "lucide-react";
 import { AppLogo } from "@/components/app-logo";
 import { useShallow } from "zustand/react/shallow";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -48,9 +48,15 @@ const GROUPS: Group[] = [
       { title: "Dashboard", href: "/", permission: null, hiddenFor: NOT_BOSS },
       { title: "Company statistics", href: "/stats", permission: "stats.view" },
       { title: "Account", href: "/account", permission: null },
-      { title: "Rentals", href: "/rentals", permission: null, hiddenFor: NOT_BOSS },
-      { title: "My bookings", href: "/bookings/me", permission: null, hiddenFor: NOT_BOSS },
+    ],
+  },
+  {
+    title: "Playground",
+    icon: LandPlot,
+    children: [
+      { title: "Courts", href: "/rentals", permission: null, hiddenFor: NOT_BOSS },
       { title: "Playground desk", href: "/bookings", permission: null, hiddenFor: NOT_BOSS },
+      { title: "New court", href: "/rentals/new", permission: "court.manage", seller: true },
     ],
   },
   {
@@ -58,10 +64,6 @@ const GROUPS: Group[] = [
     icon: UserRound,
     children: [
       { title: "All", href: "/developers", permission: "developer.view" },
-      { title: "Active", href: "/developers?status=ACTIVE", permission: "developer.view" },
-      { title: "On leave", href: "/developers?status=ON_LEAVE", permission: "developer.view" },
-      { title: "Suspended", href: "/developers?status=SUSPENDED", permission: "developer.view" },
-      { title: "Terminated", href: "/developers?status=TERMINATED", permission: "developer.view" },
       { title: "Birthdays this month", href: `/developers?birthday_month=${new Date().getMonth() + 1}`, permission: "developer.view" },
       { title: "New", href: "/developers/new", permission: "developer.view", manage: ["developer"] },
     ],
@@ -70,38 +72,30 @@ const GROUPS: Group[] = [
     title: "Cards",
     icon: CreditCard,
     children: [
-      { title: "All", href: "/cards", permission: "rfid.view" },
-      { title: "Active", href: "/cards?status=ACTIVE", permission: "rfid.view" },
-      { title: "Blocked", href: "/cards?status=BLOCKED", permission: "rfid.view" },
-      { title: "Retired", href: "/cards?status=RETIRED", permission: "rfid.view" },
-      { title: "Unassigned", href: "/cards?assigned=false", permission: "rfid.view" },
-      { title: "Assign card", href: "/cards/assign", permission: "rfid.assign" },
-      { title: "Assignments", href: "/assignments", permission: "rfid.view" },
-      { title: "New", href: "/cards/new", permission: "rfid.view", manage: ["rfid"] },
+      { title: "All", href: "/cards", permission: "card.view" },
+      { title: "Assign card", href: "/cards/assign", permission: "card.assign" },
+      { title: "Assignments", href: "/assignments", permission: "card.view" },
+      { title: "New", href: "/cards/new", permission: "card.register" },
     ],
   },
   {
     title: "Readers",
     icon: Radio,
     children: [
-      { title: "All", href: "/readers", permission: "rfid.view" },
-      { title: "Offline", href: "/readers?online=false", permission: "rfid.view" },
-      { title: "Doors", href: "/readers?purpose=ATTENDANCE", permission: "rfid.view" },
-      { title: "Till readers", href: "/readers?purpose=TILL", permission: "rfid.view" },
-      { title: "Card assign readers", href: "/readers?purpose=ENROLL", permission: "rfid.view" },
+      { title: "All", href: "/readers", permission: "reader.view" },
       { title: "TCP log", href: "/tcp-log", permission: "system.tcp_log" },
-      { title: "Buildings", href: "/buildings", permission: "rfid.view" },
-      { title: "New device", href: "/readers/new", permission: "rfid.view", manage: ["rfid"] },
+      { title: "Buildings", href: "/buildings", anyOf: ["reader.view", "building.manage"] },
+      { title: "New device", href: "/readers/new", permission: "reader.manage" },
     ],
   },
   {
     title: "Scans",
     icon: ScanLine,
     children: [
-      { title: "All", href: "/scans", permission: "rfid.view" },
-      { title: "Accepted", href: "/scans?result=ACCEPTED", permission: "rfid.view" },
-      { title: "Unknown", href: "/scans?result=UNKNOWN_CARD", permission: "rfid.view" },
-      { title: "Blocked", href: "/scans?result=BLOCKED_CARD", permission: "rfid.view" },
+      { title: "All", href: "/scans", permission: "scan.view" },
+      { title: "Accepted", href: "/scans?result=ACCEPTED", permission: "scan.view" },
+      { title: "Unknown", href: "/scans?result=UNKNOWN_CARD", permission: "scan.view" },
+      { title: "Blocked", href: "/scans?result=BLOCKED_CARD", permission: "scan.view" },
     ],
   },
   {
@@ -137,7 +131,7 @@ const GROUPS: Group[] = [
       {
         title: "Import and export",
         href: "/excel",
-        anyOf: ["developer.view", "developer.create", "developer.update", "rfid.assign", "finance.view", "finance.deposit", "good.view"],
+        anyOf: ["excel.export", "excel.import"],
       },
     ],
   },
@@ -186,16 +180,9 @@ const GROUPS: Group[] = [
     title: "Sellers",
     icon: Store,
     children: [
-      { title: "All", href: "/sellers", permission: "seller" },
+      { title: "All stores", href: "/sellers", permission: "seller" },
+      { title: "Counters", href: "/positions", anyOf: ["seller.view", "counter.manage"], seller: true },
       { title: "New store", href: "/sellers/new", permission: "seller", manage: ["seller"] },
-    ],
-  },
-  {
-    title: "Positions",
-    icon: Briefcase,
-    children: [
-      { title: "All", href: "/positions", anyOf: ["service", "position", "seller"], seller: true },
-      { title: "New", href: "/positions/new", anyOf: ["service", "position", "seller"], manage: ["service", "position", "seller"], owner: true },
     ],
   },
 ];
@@ -257,7 +244,7 @@ function NavGroup({
     <Collapsible asChild open={open} onOpenChange={onOpenChange} className="group/collapsible">
       <SidebarMenuItem>
         <CollapsibleTrigger asChild>
-          <SidebarMenuButton tooltip={group.title}>
+          <SidebarMenuButton tooltip={t(locale, group.title)}>
             <Icon />
             <span>{t(locale, group.title)}</span>
             <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />

@@ -12,17 +12,17 @@ const SECTIONS: Record<string, { title: string; description: string; permission:
   cards: {
     title: "Cards",
     description: "RFID cards, assignments, and block or retire actions.",
-    permission: "rfid.view",
+    permission: "card.view",
   },
   readers: {
     title: "Readers",
     description: "Door readers and the one-time API key when a reader is created or rotated.",
-    permission: "rfid.view",
+    permission: "reader.view",
   },
   scans: {
     title: "Scans",
     description: "Recent card scans, including unknown cards that can be registered.",
-    permission: "rfid.view",
+    permission: "scan.view",
   },
   attendance: {
     title: "Attendance",

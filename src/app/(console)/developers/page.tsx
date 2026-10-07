@@ -1,5 +1,6 @@
 import Link from "@/components/app-link";
-import { ArrowDown, ArrowUp } from "lucide-react";
+import { SearchSelect } from "@/components/search-select";
+import { ArrowDown, ArrowUp, Download } from "lucide-react";
 import type { components } from "@/api/schema";
 import { parsePageSize, TablePager, type PageSize } from "@/components/table-pager";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ import { listPath, loadAll, one } from "@/lib/load-all";
 import { getLocale } from "@/lib/locale";
 import { t } from "@/lib/i18n";
 import { redirect } from "next/navigation";
+import { shift, todayIso } from "@/lib/period";
 
 // building_name is served by the API but missing from the generated schema types.
 type Developer = components["schemas"]["Developer"] & { building_name?: string | null };
@@ -28,6 +30,23 @@ type DeveloperPage = components["schemas"]["PaginatedDeveloperList"];
 const SORTS = ["full_name", "employee_number", "department", "start_date", "out_date", "birthday"] as const;
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/** "Last working day" choices: the day set on a person's page when they leave. */
+const LEFT: { value: string; label: string }[] = [
+  { value: "", label: "Any last working day" },
+  { value: "soon", label: "Leaving in the next 30 days" },
+  { value: "recent", label: "Left in the last 30 days" },
+  { value: "year", label: "Left this year" },
+  { value: "set", label: "Has a last working day" },
+];
+
+function leftRange(left: string | undefined, today: string): { out_after?: string; out_before?: string } {
+  if (left === "soon") return { out_after: today, out_before: shift(today, 30) };
+  if (left === "recent") return { out_after: shift(today, -30), out_before: shift(today, -1) };
+  if (left === "year") return { out_after: `${today.slice(0, 4)}-01-01`, out_before: today };
+  if (left === "set") return { out_after: "1900-01-01" };
+  return {};
+}
 
 const STATUS_LABEL: Record<string, string> = {
   ACTIVE: "Active",
@@ -40,6 +59,7 @@ type DeveloperQuery = {
   status?: string;
   search?: string;
   birthday_month?: string;
+  left?: string;
   out_after?: string;
   out_before?: string;
   ordering?: string;
@@ -52,6 +72,7 @@ function developersHref(query: DeveloperQuery) {
   if (query.status) params.set("status", query.status);
   if (query.search) params.set("search", query.search);
   if (query.birthday_month) params.set("birthday_month", query.birthday_month);
+  if (query.left) params.set("left", query.left);
   if (query.out_after) params.set("out_after", query.out_after);
   if (query.out_before) params.set("out_before", query.out_before);
   if (query.ordering && query.ordering !== "full_name") params.set("ordering", query.ordering);
@@ -74,6 +95,7 @@ export default async function DevelopersPage({
     status?: string;
     search?: string;
     birthday_month?: string;
+    left?: string;
     out_after?: string;
     out_before?: string;
     ordering?: string;
@@ -86,12 +108,16 @@ export default async function DevelopersPage({
   const ordering = requested && SORTS.some((field) => requested === field || requested === `-${field}`) ? requested : "full_name";
   const pageSize = parsePageSize(one(raw.page_size));
   const page = pageSize === "all" ? 1 : Math.max(1, Number(one(raw.page)) || 1);
+  const left = LEFT.some((option) => option.value === one(raw.left)) ? one(raw.left) : undefined;
+  // Old links may still carry out_after / out_before; a "left" choice wins.
+  const range = left ? leftRange(left, todayIso()) : { out_after: one(raw.out_after), out_before: one(raw.out_before) };
   const query = {
     status: one(raw.status),
     search: one(raw.search),
     birthday_month: one(raw.birthday_month),
-    out_after: one(raw.out_after),
-    out_before: one(raw.out_before),
+    left,
+    out_after: left ? undefined : range.out_after,
+    out_before: left ? undefined : range.out_before,
     ordering,
     page,
     pageSize,
@@ -120,8 +146,8 @@ export default async function DevelopersPage({
       status: query.status,
       search: query.search,
       birthday_month: query.birthday_month,
-      out_after: query.out_after,
-      out_before: query.out_before,
+      out_after: range.out_after,
+      out_before: range.out_before,
       ...(pageSize === "all" ? {} : { page: String(page), page_size: String(pageSize) }),
     });
     const loaded = pageSize === "all"
@@ -133,46 +159,76 @@ export default async function DevelopersPage({
     error = caught instanceof DjangoError ? caught.message : t(locale, "Could not load developers.");
   }
 
+  const excelQuery = new URLSearchParams(
+    Object.entries({ status: query.status, search: query.search, birthday_month: query.birthday_month, ...range }).filter(
+      (entry): entry is [string, string] => Boolean(entry[1]),
+    ),
+  ).toString();
+
   return (
     <div className="flex flex-col gap-4 md:gap-6">
-      <div className="flex items-end justify-between gap-4">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="font-semibold text-2xl tracking-tight">{t(locale, "Developers")}</h1>
           <p className="text-muted-foreground text-sm">
             {error ? t(locale, "The list could not be loaded.") : `${count.toLocaleString()} ${t(locale, "people")}`}
           </p>
         </div>
-        {manage ? (
-          <Button asChild>
-            <Link href="/developers/new">{t(locale, "New developer")}</Link>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline">
+            <a href={`/api/excel/developers?${excelQuery}`} download>
+              <Download />
+              {t(locale, "Download Excel")}
+            </a>
           </Button>
-        ) : null}
+          {manage ? (
+            <Button asChild>
+              <Link href="/developers/new">{t(locale, "New developer")}</Link>
+            </Button>
+          ) : null}
+        </div>
       </div>
       <Card>
         <CardHeader>
           <CardTitle>{t(locale, "All developers")}</CardTitle>
           <CardDescription>
-            {t(locale, "Search matches name, employee number, and phone. The address stays on each person's page. A last working day does not change status or release a card.")}
+            {t(locale, "Search matches name, employee number, and phone. Download Excel saves the list as filtered here.")}
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
+          <div className="flex flex-wrap gap-2">
+            {[["", "All"], ...Object.entries(STATUS_LABEL)].map(([value, label]) => (
+              <Link
+                key={value || "all"}
+                href={developersHref({ ...query, status: value || undefined, page: 1 })}
+                className={`rounded-full border px-3 py-1 text-xs transition-colors ${(query.status ?? "") === value ? "border-primary bg-primary text-primary-foreground" : "hover:border-primary/50 hover:bg-muted"}`}
+              >
+                {t(locale, label)}
+              </Link>
+            ))}
+          </div>
           <form className="flex flex-wrap items-end gap-2" method="get">
             {query.status ? <input type="hidden" name="status" value={query.status} /> : null}
             <Input name="search" defaultValue={query.search ?? ""} placeholder={t(locale, "Name, number, or phone")} className="max-w-xs" />
-            <select name="birthday_month" defaultValue={query.birthday_month ?? ""} className="h-8 rounded-lg border border-input bg-transparent px-2 text-sm">
-              <option value="">{t(locale, "Any birthday month")}</option>
-              {MONTHS.map((month, index) => (
-                <option key={month} value={String(index + 1)}>{t(locale, month)}</option>
-              ))}
-            </select>
-            <label className="grid gap-1 text-xs text-muted-foreground">
-              {t(locale, "Left after")}
-              <Input name="out_after" type="date" defaultValue={query.out_after ?? ""} />
-            </label>
-            <label className="grid gap-1 text-xs text-muted-foreground">
-              {t(locale, "Left before")}
-              <Input name="out_before" type="date" defaultValue={query.out_before ?? ""} />
-            </label>
+            <div className="w-44">
+              <SearchSelect
+                name="birthday_month"
+                locale={locale}
+                defaultValue={query.birthday_month ?? ""}
+                options={[
+                  { value: "", label: t(locale, "Any birthday month") },
+                  ...MONTHS.map((month, index) => ({ value: String(index + 1), label: t(locale, month) })),
+                ]}
+              />
+            </div>
+            <div className="w-64">
+              <SearchSelect
+                name="left"
+                locale={locale}
+                defaultValue={query.left ?? ""}
+                options={LEFT.map((option) => ({ value: option.value, label: t(locale, option.label) }))}
+              />
+            </div>
             {ordering !== "full_name" ? <input type="hidden" name="ordering" value={ordering} /> : null}
             {pageSize !== 20 ? <input type="hidden" name="page_size" value={String(pageSize)} /> : null}
             <Button type="submit" variant="outline">{t(locale, "Apply")}</Button>
@@ -180,7 +236,11 @@ export default async function DevelopersPage({
           {error ? (
             <p className="text-destructive text-sm">{error}</p>
           ) : developers.length === 0 ? (
-            <p className="text-muted-foreground text-sm">{t(locale, "No developers yet.")}</p>
+            <p className="text-muted-foreground text-sm">
+              {query.status || query.search || query.birthday_month || query.left || query.out_after || query.out_before
+                ? t(locale, "No developers match these filters.")
+                : t(locale, "No developers yet.")}
+            </p>
           ) : (
             <Table>
               <TableHeader>

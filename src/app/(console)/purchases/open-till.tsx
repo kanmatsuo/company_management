@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { createPurchase, tillReaders, type TillReader } from "@/app/(console)/mutations";
 import { FieldForm } from "@/components/field-form";
 import { AutoText } from "@/components/auto-text";
+import { useLocale } from "@/components/locale-context";
+import { SearchSelect } from "@/components/search-select";
 
 const REMEMBER = "till-reader:";
 
@@ -25,6 +27,7 @@ function remember(positionId: string, code: string) {
 
 /** Pick the counter, then one of its seller's till readers (readers are assigned to sellers). */
 export function OpenTill({ positions }: { positions: { value: string; label: string }[] }) {
+  const locale = useLocale();
   const [position, setPosition] = useState(positions.length === 1 ? positions[0].value : "");
   const [readers, setReaders] = useState<TillReader[] | null>(null);
   const [reader, setReader] = useState("");
@@ -47,20 +50,16 @@ export function OpenTill({ positions }: { positions: { value: string; label: str
   return (
     <div className="grid max-w-md gap-4">
       <label className="grid gap-1.5 text-sm">
-        <AutoText>Service position</AutoText>
-        <select
-          className="h-8 rounded-lg border border-input bg-transparent px-2"
+        <AutoText>Counter</AutoText>
+        <SearchSelect
           value={position}
-          onChange={(event) => {
+          onValueChange={(value) => {
             setReaders(null);
-            setPosition(event.target.value);
+            setPosition(value);
           }}
-        >
-          <option value="">—</option>
-          {positions.map((p) => (
-            <option key={p.value} value={p.value}>{p.label}</option>
-          ))}
-        </select>
+          locale={locale}
+          options={positions}
+        />
       </label>
       {position && readers !== null ? (
         list.length === 0 ? (
@@ -74,19 +73,15 @@ export function OpenTill({ positions }: { positions: { value: string; label: str
         ) : (
           <label className="grid gap-1.5 text-sm">
             <AutoText>Till reader</AutoText>
-            <select
-              className="h-8 rounded-lg border border-input bg-transparent px-2"
+            <SearchSelect
               value={reader}
-              onChange={(event) => {
-                setReader(event.target.value);
-                remember(position, event.target.value);
+              onValueChange={(value) => {
+                setReader(value);
+                remember(position, value);
               }}
-            >
-              <option value="">—</option>
-              {list.map((r) => (
-                <option key={r.code} value={r.code}>{r.name ? `${r.name} · ${r.code}` : r.code}</option>
-              ))}
-            </select>
+              locale={locale}
+              options={list.map((r) => ({ value: r.code, label: r.name ? `${r.name} · ${r.code}` : r.code }))}
+            />
           </label>
         )
       ) : null}

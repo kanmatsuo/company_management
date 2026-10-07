@@ -1,6 +1,7 @@
 "use client";
 
 import { CreatableSelect } from "@/components/creatable-select";
+import { DatePicker } from "@/components/date-picker";
 import { useLocale } from "@/components/locale-context";
 import { SearchSelect } from "@/components/search-select";
 import { Input } from "@/components/ui/input";
@@ -62,12 +63,19 @@ export function ProfileFields({
       {errors(name)}
     </div>
   );
+  const date = (name: keyof ProfileDefaults, label: string) => (
+    <div className="grid gap-1.5">
+      <Label htmlFor={name}>{t(locale, label)}</Label>
+      <DatePicker id={name} name={name} defaultValue={defaults[name] ?? ""} locale={locale} />
+      {errors(name)}
+    </div>
+  );
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       {field("employee_number", "Employee number", { required: true })}
       {field("full_name", "Full name", { required: true })}
       {field("phone", "Phone")}
-      {field("birthday", "Birthday", { type: "date" })}
+      {date("birthday", "Birthday")}
       {field("home_address", "Home address", {}, true)}
       <div className="grid gap-1.5">
         <Label htmlFor="department">{t(locale, "Department")}</Label>
@@ -91,8 +99,8 @@ export function ProfileFields({
         />
         {errors("status")}
       </div>
-      {field("start_date", "Start date", { type: "date" })}
-      {field("out_date", "Last working day", { type: "date" })}
+      {date("start_date", "Start date")}
+      {date("out_date", "Last working day")}
     </div>
   );
 }
