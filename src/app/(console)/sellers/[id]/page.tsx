@@ -1,3 +1,4 @@
+import { DeleteForGood } from "@/components/delete-for-good";
 import { AutoText } from "@/components/auto-text";
 import { redirect } from "next/navigation";
 import { updateSeller } from "@/app/(console)/mutations";
@@ -6,7 +7,7 @@ import { Facts } from "@/components/facts";
 import { FieldForm } from "@/components/field-form";
 import { LoadError } from "@/components/no-access";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { canManage } from "@/lib/current-user";
+import { can, canManage } from "@/lib/current-user";
 import { show, showTime } from "@/lib/load-all";
 import { loadOne } from "@/lib/page-data";
 import { sellerUserChoices } from "@/lib/choices";
@@ -75,6 +76,17 @@ export default async function SellerPage({ params }: { params: Promise<{ id: str
           )}
         </CardContent>
       </Card>
+      {can(loaded.session.user, "system.delete_records") ? (
+        <Card className="border-destructive/50">
+          <CardHeader>
+            <CardTitle>Delete for good</CardTitle>
+            <CardDescription>Deletes the seller with its service positions, goods, stock history, purchases and bookings. Developers&apos; money stays as it is.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DeleteForGood kind="seller" id={seller.id} redirectTo="/sellers" />
+          </CardContent>
+        </Card>
+      ) : null}
     </div>
   );
 }

@@ -19,11 +19,17 @@ type SellerRow = {
   sales_count: number;
   bookings_total: string;
   bookings_count: number;
-  // null: the store spans buildings outside a building owner's view.
-  earnings: string | null;
-  payouts_paid: string | null;
-  payouts_pending: string | null;
-  balance: string | null;
+};
+type DeveloperRow = {
+  id: number;
+  employee_number: string;
+  full_name: string;
+  building: string | null;
+  deposits: string;
+  deposit_count: number;
+  spending: string;
+  spending_count: number;
+  balance: string;
 };
 type FinanceStats = {
   period?: { date_from?: string; date_to?: string; days?: number };
@@ -33,19 +39,19 @@ type FinanceStats = {
     deposits?: { total?: string; count?: number };
     spending?: { total?: string; count?: number };
     daily?: { date: string; deposits?: string; spending?: string }[];
-    sellers?: { total_balance?: string; earnings?: string; payouts_paid?: string; payouts_pending?: { count?: number; amount?: string } };
   };
   sellers?: SellerRow[];
+  developers?: DeveloperRow[];
 };
 
 function amount(value: string | null | undefined) {
   return value == null ? "—" : Number(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-export default async function FinanceStatsPage({ searchParams }: { searchParams: Promise<{ from?: string; to?: string }> }) {
+export default async function FinanceStatsPage({ searchParams }: { searchParams: Promise<{ from?: string; to?: string; rank?: string }> }) {
   const session = await requireSession();
   const locale = await getLocale();
-  if (!can(session.user, "finance.view") || !can(session.user, "seller_finance.view")) {
+  if (!can(session.user, "finance.view")) {
     return <NoAccess description="Your account cannot open finance statistics." />;
   }
   const query = await searchParams;
@@ -68,15 +74,14 @@ export default async function FinanceStatsPage({ searchParams }: { searchParams:
     sales: Number(row.sales_total),
     bookings: Number(row.bookings_total),
   }));
-  const sellerMoney = sellers
-    .filter((row) => row.earnings !== null)
-    .map((row) => ({
-      name: row.name,
-      href: `/sellers/${row.id}`,
-      earnings: Number(row.earnings),
-      payouts: Number(row.payouts_paid),
-      balance: Number(row.balance),
-    }));
+  const rank = query.rank === "count" ? "count" : "total";
+  const developers = [...(stats?.developers ?? [])].sort((a, b) =>
+    rank === "count"
+      ? b.deposit_count - a.deposit_count || Number(b.deposits) - Number(a.deposits)
+      : Number(b.deposits) - Number(a.deposits) || b.deposit_count - a.deposit_count,
+  );
+  const rankHref = (value: string) =>
+    `/finance/statistics?${new URLSearchParams({ from: period.start, to: period.end, rank: value })}`;
   const daily = (money?.daily ?? []).map((day) => ({ name: day.date.slice(5), deposits: Number(day.deposits ?? 0), spending: Number(day.spending ?? 0) }));
 
   return (
@@ -88,15 +93,13 @@ export default async function FinanceStatsPage({ searchParams }: { searchParams:
           {scope ? ` · ${scope.map((building) => building.name || building.code).filter(Boolean).join(", ")}` : ""}
         </p>
       </div>
-      <PeriodPicker path="/finance/statistics" period={period} today={today} locale={locale} />
+      <PeriodPicker path="/finance/statistics" period={period} today={today} locale={locale} keep={{ rank: rank === "count" ? "count" : undefined }} />
       {error ? <p className="text-destructive text-sm">{error}</p> : null}
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="grid gap-3 sm:grid-cols-3">
         {[
           ["Deposits", amount(money?.deposits?.total), `${money?.deposits?.count ?? 0} ${t(locale, "deposits")}`],
           ["Spending", amount(money?.spending?.total), `${money?.spending?.count ?? 0} ${t(locale, "payments")}`],
           ["Money held", amount(money?.developer_accounts?.total_balance), t(locale, "Developer balances now")],
-          ["Seller balances", amount(money?.sellers?.total_balance), t(locale, "Owed to sellers now")],
-          ["Payouts pending", amount(money?.sellers?.payouts_pending?.amount), `${money?.sellers?.payouts_pending?.count ?? 0} ${t(locale, "requests")}`],
         ].map(([label, value, hint]) => (
           <Card key={label}>
             <CardHeader>
@@ -128,18 +131,15 @@ export default async function FinanceStatsPage({ searchParams }: { searchParams:
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>{t(locale, "Seller money")}</CardTitle>
-            <CardDescription>{t(locale, "Earnings and payouts in the period, and each seller's balance now.")}</CardDescription>
+            <CardTitle>{t(locale, "Developer money")}</CardTitle>
+            <CardDescription>{t(locale, "Deposits and spending each day.")}</CardDescription>
           </CardHeader>
           <CardContent>
             <SeriesChart
-              data={sellerMoney}
-              layout="vertical"
-              height={Math.max(200, sellerMoney.length * 64 + 80)}
+              data={daily}
               series={[
-                { key: "earnings", label: t(locale, "Earnings"), color: "var(--chart-1)" },
-                { key: "payouts", label: t(locale, "Payouts paid"), color: "var(--chart-2)" },
-                { key: "balance", label: t(locale, "Balance"), color: "var(--chart-3)" },
+                { key: "deposits", label: t(locale, "Deposits"), color: "var(--chart-3)" },
+                { key: "spending", label: t(locale, "Spending"), color: "var(--chart-1)" },
               ]}
             />
           </CardContent>
@@ -150,7 +150,7 @@ export default async function FinanceStatsPage({ searchParams }: { searchParams:
           <CardTitle>{t(locale, "Sellers")}</CardTitle>
           <CardDescription>
             {scope
-              ? t(locale, "Sales count only counters in your buildings. A seller's money shows only if all their counters are in your buildings.")
+              ? t(locale, "Sales count only counters in your buildings.")
               : t(locale, "Sorted by sales and bookings in the period.")}
           </CardDescription>
         </CardHeader>
@@ -164,10 +164,6 @@ export default async function FinanceStatsPage({ searchParams }: { searchParams:
                   <TableHead>{t(locale, "Seller")}</TableHead>
                   <TableHead className="text-right">{t(locale, "Till sales")}</TableHead>
                   <TableHead className="text-right">{t(locale, "Court bookings")}</TableHead>
-                  <TableHead className="text-right">{t(locale, "Earnings")}</TableHead>
-                  <TableHead className="text-right">{t(locale, "Payouts paid")}</TableHead>
-                  <TableHead className="text-right">{t(locale, "Payouts pending")}</TableHead>
-                  <TableHead className="text-right">{t(locale, "Balance")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -178,10 +174,6 @@ export default async function FinanceStatsPage({ searchParams }: { searchParams:
                     </TableCell>
                     <TableCell className="text-right tabular-nums">{amount(row.sales_total)} <span className="text-muted-foreground">({row.sales_count})</span></TableCell>
                     <TableCell className="text-right tabular-nums">{amount(row.bookings_total)} <span className="text-muted-foreground">({row.bookings_count})</span></TableCell>
-                    <TableCell className="text-right tabular-nums">{amount(row.earnings)}</TableCell>
-                    <TableCell className="text-right tabular-nums">{amount(row.payouts_paid)}</TableCell>
-                    <TableCell className="text-right tabular-nums">{amount(row.payouts_pending)}</TableCell>
-                    <TableCell className="text-right tabular-nums">{amount(row.balance)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -190,18 +182,65 @@ export default async function FinanceStatsPage({ searchParams }: { searchParams:
         </CardContent>
       </Card>
       <Card>
-        <CardHeader>
-          <CardTitle>{t(locale, "Developer money")}</CardTitle>
-          <CardDescription>{t(locale, "Deposits and spending each day.")}</CardDescription>
+        <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3">
+          <div className="grid gap-1.5">
+            <CardTitle>{t(locale, "Developers by deposits")}</CardTitle>
+            <CardDescription>
+              {t(locale, "Developers with deposits or spending in the period. Balance is now.")}
+            </CardDescription>
+          </div>
+          <div className="flex gap-1 rounded-lg border p-1 text-sm">
+            {[
+              ["total", "By deposit total"],
+              ["count", "By deposit count"],
+            ].map(([value, label]) => (
+              <Link
+                key={value}
+                href={rankHref(value)}
+                className={`rounded-md px-3 py-1 ${rank === value ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+              >
+                {t(locale, label)}
+              </Link>
+            ))}
+          </div>
         </CardHeader>
-        <CardContent>
-          <SeriesChart
-            data={daily}
-            series={[
-              { key: "deposits", label: t(locale, "Deposits"), color: "var(--chart-3)" },
-              { key: "spending", label: t(locale, "Spending"), color: "var(--chart-1)" },
-            ]}
-          />
+        <CardContent className="max-h-[36rem] overflow-auto">
+          {developers.length === 0 ? (
+            <p className="text-muted-foreground text-sm">{t(locale, "No deposits or spending in this period.")}</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-12 text-right">#</TableHead>
+                  <TableHead>{t(locale, "Employee number")}</TableHead>
+                  <TableHead>{t(locale, "Name")}</TableHead>
+                  <TableHead>{t(locale, "Building")}</TableHead>
+                  <TableHead className="text-right">{t(locale, "Deposits")}</TableHead>
+                  <TableHead className="text-right">{t(locale, "Deposit count")}</TableHead>
+                  <TableHead className="text-right">{t(locale, "Spending")}</TableHead>
+                  <TableHead className="text-right">{t(locale, "Balance")}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {developers.map((row, index) => (
+                  <TableRow key={row.id}>
+                    <TableCell className="text-right text-muted-foreground tabular-nums">{index + 1}</TableCell>
+                    <TableCell className="tabular-nums">{row.employee_number}</TableCell>
+                    <TableCell className="font-medium">
+                      <Link href={`/developers/${row.id}`} className="underline-offset-4 hover:underline">{row.full_name}</Link>
+                    </TableCell>
+                    <TableCell>{row.building ?? "—"}</TableCell>
+                    <TableCell className={`text-right tabular-nums ${rank === "total" ? "font-semibold" : ""}`}>{amount(row.deposits)}</TableCell>
+                    <TableCell className={`text-right tabular-nums ${rank === "count" ? "font-semibold" : ""}`}>{row.deposit_count}</TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {amount(row.spending)} <span className="text-muted-foreground">({row.spending_count})</span>
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">{amount(row.balance)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>

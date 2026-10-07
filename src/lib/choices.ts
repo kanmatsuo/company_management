@@ -15,9 +15,10 @@ async function asChoices<T extends { id: number }>(token: string, path: string, 
 
 type Named = { id: number; full_name: string; employee_number?: string; username?: string; name?: string };
 
+/** "E1001 · Kim Chol", sorted by employee number (search finds either part). */
 export function developerChoices(token: string) {
-  return asChoices<Named>(token, "/api/v1/developers/?ordering=full_name", (row) =>
-    row.employee_number ? `${row.full_name} · ${row.employee_number}` : row.full_name,
+  return asChoices<Named>(token, "/api/v1/developers/?ordering=employee_number", (row) =>
+    row.employee_number ? `${row.employee_number} · ${row.full_name}` : row.full_name,
   );
 }
 

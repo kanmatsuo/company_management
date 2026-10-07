@@ -1,3 +1,4 @@
+import { DeleteForGood } from "@/components/delete-for-good";
 import { redirect } from "next/navigation";
 import { deletePosition, updatePosition } from "@/app/(console)/mutations";
 import type { components } from "@/api/schema";
@@ -5,7 +6,7 @@ import { Facts } from "@/components/facts";
 import { FieldForm } from "@/components/field-form";
 import { LoadError } from "@/components/no-access";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { canManage, runsStore } from "@/lib/current-user";
+import { can, canManage, runsStore } from "@/lib/current-user";
 import { show } from "@/lib/load-all";
 import { loadOne } from "@/lib/page-data";
 import { buildingChoices, sellerChoices, sellerUserChoices } from "@/lib/choices";
@@ -75,6 +76,17 @@ export default async function PositionPage({ params }: { params: Promise<{ id: s
           </CardHeader>
           <CardContent>
             <FieldForm action={deletePosition.bind(null, position.id)} submitLabel="Delete position" variant="destructive" fields={[]} />
+          </CardContent>
+        </Card>
+      ) : null}
+      {can(loaded.session.user, "system.delete_records") ? (
+        <Card className="border-destructive/50">
+          <CardHeader>
+            <CardTitle>Delete for good</CardTitle>
+            <CardDescription>Deletes the service position with its goods, stock history, purchases and bookings.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DeleteForGood kind="position" id={position.id} redirectTo="/positions" />
           </CardContent>
         </Card>
       ) : null}

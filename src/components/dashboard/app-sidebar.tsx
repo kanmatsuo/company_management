@@ -3,7 +3,7 @@
 import Link from "@/components/app-link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useState, type ComponentProps } from "react";
-import { ChevronRight, type LucideIcon, LayoutDashboard, UserRound, CreditCard, Radio, ScanLine, CalendarCheck, Users, ScrollText, Wallet, Package, Warehouse, ShoppingCart, Store, Landmark, Briefcase } from "lucide-react";
+import { ChevronRight, type LucideIcon, LayoutDashboard, UserRound, CreditCard, Radio, ScanLine, CalendarCheck, Users, ScrollText, Wallet, Package, Warehouse, ShoppingCart, Store, Briefcase, DatabaseZap, FileSpreadsheet } from "lucide-react";
 import { AppLogo } from "@/components/app-logo";
 import { useShallow } from "zustand/react/shallow";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -131,10 +131,29 @@ const GROUPS: Group[] = [
     children: [{ title: "Log", href: "/audit", permission: "audit.view" }],
   },
   {
+    title: "Excel",
+    icon: FileSpreadsheet,
+    children: [
+      {
+        title: "Import and export",
+        href: "/excel",
+        anyOf: ["developer.view", "developer.create", "developer.update", "rfid.assign", "finance.view", "finance.deposit", "good.view"],
+      },
+    ],
+  },
+  {
+    title: "System",
+    icon: DatabaseZap,
+    children: [
+      { title: "Backups", href: "/backups", permission: "system.backup" },
+      { title: "Data reset", href: "/data-reset", permission: "system.data_reset" },
+    ],
+  },
+  {
     title: "Finance",
     icon: Wallet,
     children: [
-      { title: "Statistics", href: "/finance/statistics", permission: "seller_finance.view" },
+      { title: "Statistics", href: "/finance/statistics", permission: "finance.view" },
       { title: "Wallets", href: "/finance/accounts", permission: "finance" },
       { title: "Transactions", href: "/finance/transactions", permission: "finance" },
       { title: "Deposit", href: "/finance/deposits", permission: "finance", manage: ["finance"] },
@@ -177,17 +196,6 @@ const GROUPS: Group[] = [
     children: [
       { title: "All", href: "/positions", anyOf: ["service", "position", "seller"], seller: true },
       { title: "New", href: "/positions/new", anyOf: ["service", "position", "seller"], manage: ["service", "position", "seller"], owner: true },
-    ],
-  },
-  {
-    title: "Seller finance",
-    icon: Landmark,
-    children: [
-      { title: "Balances", href: "/seller-finance/accounts", anyOf: ["seller", "finance"], seller: true },
-      { title: "Transactions", href: "/seller-finance/transactions", anyOf: ["seller", "finance"], seller: true },
-      { title: "Payouts", href: "/seller-finance/payouts", anyOf: ["seller", "finance"], seller: true },
-      { title: "Request payout", href: "/seller-finance/payouts/new", anyOf: ["seller", "finance"], seller: true },
-      { title: "Adjustment", href: "/seller-finance/adjustments", anyOf: ["seller", "finance"], manage: ["seller", "finance"] },
     ],
   },
 ];

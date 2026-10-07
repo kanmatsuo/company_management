@@ -147,7 +147,7 @@ export default async function UsersPage({
                     <TableCell>{showTime(user.last_login)}</TableCell>
                     {canManage ? (
                       <TableCell>
-                        <UserRowActions id={user.id} active={user.is_active} nextPath={here} locale={locale} />
+                        <UserRowActions id={user.id} active={user.is_active} nextPath={here} locale={locale} canDelete={can(session.user, "system.delete_records") && user.id !== session.user.id} />
                       </TableCell>
                     ) : null}
                   </TableRow>

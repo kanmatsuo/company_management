@@ -794,56 +794,119 @@ export async function deletePosition(id: number, _prev: FormState, _formData: Fo
   return commit({ path: `/api/v1/service-positions/${id}/`, method: "DELETE", redirectTo: "/positions" });
 }
 
-export async function requestPayout(_prev: FormState, formData: FormData): Promise<FormState> {
+export async function resetData(_prev: FormState, formData: FormData): Promise<FormState> {
   return commit({
-    path: "/api/v1/seller-finance/payouts/",
-    body: {
-      seller: optionalInt(formData, "seller"),
-      amount: text(formData, "amount"),
-      note: optionalText(formData, "note"),
+    permission: "system.data_reset",
+    path: "/api/v1/system/data-reset/",
+    body: { confirm: String(formData.get("confirm") ?? "") },
+    redirectTo: (data) => {
+      const result = (data ?? {}) as { backup?: string | null; deleted?: Record<string, number> };
+      const deleted = Object.values(result.deleted ?? {}).reduce((sum, n) => sum + n, 0);
+      const params = new URLSearchParams({ done: "1", deleted: String(deleted), backup: result.backup ?? "" });
+      return `/data-reset?${params}`;
     },
-    redirectTo: (data) => `/seller-finance/payouts/${idFrom(data) ?? ""}`,
   });
 }
 
-export async function adjustSeller(_prev: FormState, formData: FormData): Promise<FormState> {
-  return commit({
-    path: "/api/v1/seller-finance/adjustments/",
-    body: {
-      seller: optionalInt(formData, "seller"),
-      amount: text(formData, "amount"),
-      reason: text(formData, "reason"),
-    },
-    redirectTo: (data) => `/seller-finance/transactions/${idFrom(data) ?? ""}`,
-  });
-}
+export type ImportResult = {
+  rows: number;
+  created: number;
+  updated: number;
+  unchanged: number;
+  errors: { row: number; column: string | null; message: string }[];
+  dry_run: boolean;
+  saved: boolean;
+};
+export type ImportState = { result?: ImportResult; message?: string } | null;
 
-function payoutAction(id: number, action: string, withBody: "none" | "pay" | "reject") {
-  return async (_prev: FormState, formData: FormData): Promise<FormState> =>
-    commit({
-      path: `/api/v1/seller-finance/payouts/${id}/${action}/`,
-      body:
-        withBody === "pay"
-          ? { payment_reference: text(formData, "payment_reference") }
-          : withBody === "reject"
-            ? { reason: text(formData, "reason") }
-            : undefined,
-      redirectTo: `/seller-finance/payouts/${id}`,
+/** Check (dry run) or import an Excel file; the pressed button decides (`mode`). */
+export async function importSpreadsheet(kind: string, _prev: ImportState, formData: FormData): Promise<ImportState> {
+  const session = await getSession();
+  if (!session) redirect("/login");
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) return { message: "Choose an Excel file (.xlsx)." };
+  const body = new FormData();
+  body.set("file", file);
+  body.set("dry_run", formData.get("mode") === "import" ? "false" : "true");
+  try {
+    const result = await djangoFetch<ImportResult>(`/api/v1/imports/${kind}/`, {
+      method: "POST",
+      accessToken: session.token,
+      body,
     });
+    return { result };
+  } catch (error) {
+    if (error instanceof DjangoError) return { message: error.message };
+    throw error;
+  }
 }
 
-export async function approvePayout(id: number, prev: FormState, formData: FormData) {
-  return payoutAction(id, "approve", "none")(prev, formData);
+export async function runBackup(_prev: FormState, _formData: FormData): Promise<FormState> {
+  return commit({
+    permission: "system.backup",
+    path: "/api/v1/system/backups/run/",
+    notice: "The backup has started. This page updates when it has finished.",
+  });
 }
-export async function cancelPayout(id: number, prev: FormState, formData: FormData) {
-  return payoutAction(id, "cancel", "none")(prev, formData);
+
+export async function updateBackupSettings(_prev: FormState, formData: FormData): Promise<FormState> {
+  return commit({
+    permission: "system.backup",
+    path: "/api/v1/system/backups/",
+    method: "PATCH",
+    body: {
+      backup_time: text(formData, "backup_time"),
+      keep_daily_days: optionalInt(formData, "keep_daily_days"),
+      keep_base_backups: optionalInt(formData, "keep_base_backups"),
+      offsite_dir: text(formData, "offsite_dir"),
+      offsite_rsync: text(formData, "offsite_rsync"),
+    },
+    redirectTo: "/backups?saved=1",
+  });
 }
-export async function processingPayout(id: number, prev: FormState, formData: FormData) {
-  return payoutAction(id, "processing", "none")(prev, formData);
+
+export async function restoreBackup(file: string, _prev: FormState, formData: FormData): Promise<FormState> {
+  return commit({
+    permission: "system.backup",
+    path: "/api/v1/system/backups/restore/",
+    body: { file, confirm: text(formData, "confirm") },
+    redirectTo: "/restoring",
+  });
 }
-export async function payPayout(id: number, prev: FormState, formData: FormData) {
-  return payoutAction(id, "pay", "pay")(prev, formData);
+
+export async function deleteKeptDatabase(name: string, _prev: FormState, _formData: FormData): Promise<FormState> {
+  return commit({
+    permission: "system.backup",
+    path: `/api/v1/system/backups/kept/${encodeURIComponent(name)}/`,
+    method: "DELETE",
+    redirectTo: "/backups",
+  });
 }
-export async function rejectPayout(id: number, prev: FormState, formData: FormData) {
-  return payoutAction(id, "reject", "reject")(prev, formData);
+
+export type DeletePreview = {
+  label?: string;
+  deletes?: Record<string, number>;
+  keeps?: Record<string, number>;
+  message?: string;
+};
+
+/** What deleting this record for good takes with it (counts), for the dialog. */
+export async function previewDelete(kind: string, id: number): Promise<DeletePreview> {
+  const session = await getSession();
+  if (!session) redirect("/login");
+  try {
+    return await djangoFetch<DeletePreview>(`/api/v1/system/records/${kind}/${id}/`, { accessToken: session.token });
+  } catch (error) {
+    if (error instanceof DjangoError) return { message: error.message };
+    throw error;
+  }
+}
+
+export async function deleteForGood(kind: string, id: number, redirectTo: string, _prev: FormState, formData: FormData): Promise<FormState> {
+  return commit({
+    permission: "system.delete_records",
+    path: `/api/v1/system/records/${kind}/${id}/`,
+    body: { confirm: text(formData, "confirm") },
+    redirectTo,
+  });
 }

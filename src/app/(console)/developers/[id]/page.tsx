@@ -1,3 +1,4 @@
+import { DeleteForGood } from "@/components/delete-for-good";
 import { redirect } from "next/navigation";
 import { deleteDeveloper, updateDeveloper } from "@/app/(console)/mutations";
 import type { components } from "@/api/schema";
@@ -5,7 +6,7 @@ import { Facts } from "@/components/facts";
 import { FieldForm } from "@/components/field-form";
 import { LoadError } from "@/components/no-access";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { canManage } from "@/lib/current-user";
+import { can, canManage } from "@/lib/current-user";
 import { show, showTime } from "@/lib/load-all";
 import { loadOne } from "@/lib/page-data";
 import { buildingChoices, departmentNames } from "@/lib/choices";
@@ -87,6 +88,17 @@ export default async function DeveloperDetailPage({ params }: { params: Promise<
           </CardHeader>
           <CardContent>
             <FieldForm action={deleteDeveloper.bind(null, developer.id)} submitLabel="Delete developer" variant="destructive" fields={[]} />
+          </CardContent>
+        </Card>
+      ) : null}
+      {can(loaded.session.user, "system.delete_records") ? (
+        <Card className="border-destructive/50">
+          <CardHeader>
+            <CardTitle>Delete for good</CardTitle>
+            <CardDescription>Deletes this person and everything recorded about them: scans, attendance, money and purchases. Their login and card stay.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DeleteForGood kind="developer" id={developer.id} redirectTo="/developers" />
           </CardContent>
         </Card>
       ) : null}

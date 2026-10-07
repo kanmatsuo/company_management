@@ -96,25 +96,6 @@ export async function deactivateUser(id: number, nextPath: string, prev: FormSta
   redirect(nextPath.startsWith("/users") ? nextPath : "/users");
 }
 
-export async function deleteUser(id: number, prev: FormState, formData: FormData): Promise<FormState> {
-  void prev;
-  void formData;
-  const session = await sessionOrLogin();
-  if (!can(session.user, "user.manage")) return { message: "You don't have access." };
-  try {
-    await djangoFetch(`/api/v1/users/${id}/`, {
-      method: "DELETE",
-      accessToken: session.token,
-    });
-  } catch (error) {
-    if (error instanceof DjangoError && (error.status === 405 || error.status === 403)) {
-      return { message: "The server does not permanently delete users. Deactivate the account instead." };
-    }
-    return formError(error);
-  }
-  redirect("/users");
-}
-
 export async function removeRole(id: number, roleCode: string): Promise<void> {
   const session = await sessionOrLogin();
   if (!can(session.user, "role.assign")) return;

@@ -1,3 +1,4 @@
+import { DeleteForGood } from "@/components/delete-for-good";
 import { AutoText } from "@/components/auto-text";
 import { redirect } from "next/navigation";
 import { changeStock, deleteGood, deleteImage, updateGood, uploadImage } from "@/app/(console)/mutations";
@@ -5,7 +6,7 @@ import type { components } from "@/api/schema";
 import { FieldForm } from "@/components/field-form";
 import { LoadError } from "@/components/no-access";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { canManage, runsStore } from "@/lib/current-user";
+import { can, canManage, runsStore } from "@/lib/current-user";
 import { show } from "@/lib/load-all";
 import { loadOne } from "@/lib/page-data";
 import { positionChoices } from "@/lib/choices";
@@ -127,6 +128,17 @@ export default async function GoodPage({ params }: { params: Promise<{ id: strin
             </CardContent>
           </Card>
         </div>
+      ) : null}
+      {can(loaded.session.user, "system.delete_records") ? (
+        <Card className="border-destructive/50">
+          <CardHeader>
+            <CardTitle>Delete for good</CardTitle>
+            <CardDescription>Deletes the good, its stock history and the purchases that include it.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DeleteForGood kind="good" id={good.id} redirectTo="/goods" />
+          </CardContent>
+        </Card>
       ) : null}
     </div>
   );

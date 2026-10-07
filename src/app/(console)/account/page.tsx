@@ -79,7 +79,6 @@ export default async function AccountPage() {
           <Button asChild variant="outline" size="sm"><Link href="/finance/transactions/me">My transactions</Link></Button>
           <Button asChild variant="outline" size="sm"><Link href="/purchases/me">My purchases</Link></Button>
           <Button asChild variant="outline" size="sm"><Link href="/sellers/me">My seller profile</Link></Button>
-          <Button asChild variant="outline" size="sm"><Link href="/seller-finance/accounts/me">My seller balance</Link></Button>
         </CardContent>
       </Card>
     </div>

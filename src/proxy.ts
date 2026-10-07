@@ -67,6 +67,9 @@ function cookieHeader(request: NextRequest, access: string, refresh: string) {
 }
 
 export async function proxy(request: NextRequest) {
+  // The "Restoring" page waits while the backend is stopped: no token refresh there
+  // (it would fail and sign the user out).
+  if (request.nextUrl.pathname === "/restoring") return NextResponse.next();
   const access = request.cookies.get(ACCESS_COOKIE)?.value;
   const refresh = request.cookies.get(REFRESH_COOKIE)?.value;
   const path = `${request.nextUrl.pathname}${request.nextUrl.search}`;

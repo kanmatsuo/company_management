@@ -1,3 +1,4 @@
+import { DeleteForGood } from "@/components/delete-for-good";
 import { redirect } from "next/navigation";
 import { assignCard, blockCard, replaceCard, retireCard, unassignCard, unblockCard, updateCard } from "@/app/(console)/mutations";
 import type { components } from "@/api/schema";
@@ -5,7 +6,7 @@ import { Facts } from "@/components/facts";
 import { FieldForm } from "@/components/field-form";
 import { LoadError } from "@/components/no-access";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { canManage } from "@/lib/current-user";
+import { can, canManage } from "@/lib/current-user";
 import { show, showTime } from "@/lib/load-all";
 import { loadOne } from "@/lib/page-data";
 import { buildingChoices, developerChoices } from "@/lib/choices";
@@ -126,6 +127,17 @@ export default async function CardDetailPage({ params }: { params: Promise<{ id:
             </CardContent>
           </Card>
         </div>
+      ) : null}
+      {can(loaded.session.user, "system.delete_records") ? (
+        <Card className="border-destructive/50">
+          <CardHeader>
+            <CardTitle>Delete for good</CardTitle>
+            <CardDescription>Deletes the card, its scans and the attendance made from them. Purchases paid with it stay.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DeleteForGood kind="card" id={card.id} redirectTo="/cards" />
+          </CardContent>
+        </Card>
       ) : null}
     </div>
   );

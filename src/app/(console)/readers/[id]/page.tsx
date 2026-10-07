@@ -1,3 +1,4 @@
+import { DeleteForGood } from "@/components/delete-for-good";
 import { redirect } from "next/navigation";
 import { DeviceForm } from "@/app/(console)/readers/device-form";
 import { rotateReaderKey } from "@/app/(console)/mutations";
@@ -85,6 +86,17 @@ export default async function ReaderPage({ params }: { params: Promise<{ id: str
           </CardHeader>
           <CardContent>
             <FieldForm action={rotateReaderKey.bind(null, device.id)} submitLabel="Rotate key" variant="outline" fields={[]} />
+          </CardContent>
+        </Card>
+      ) : null}
+      {session?.user && can(session?.user, "system.delete_records") ? (
+        <Card className="border-destructive/50">
+          <CardHeader>
+            <CardTitle>Delete for good</CardTitle>
+            <CardDescription>Deletes the reader, its scans, the attendance made from them and its TCP log. Purchases through it stay.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DeleteForGood kind="reader" id={device.id} redirectTo="/readers" />
           </CardContent>
         </Card>
       ) : null}

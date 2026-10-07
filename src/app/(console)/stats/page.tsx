@@ -24,7 +24,6 @@ type Stats = {
     deposits?: { total?: string; count?: number };
     spending?: { total?: string; count?: number };
     daily?: DayCount[];
-    sellers?: { total_balance?: string; earnings?: string; payouts_paid?: string; payouts_pending?: { count?: number; amount?: string } };
     store_sales?: { sales_total?: string; sales_count?: number; bookings_total?: string; bookings_count?: number };
   };
 };
