@@ -67,15 +67,15 @@ export default async function OverviewPage() {
         <Hint>Live totals from the company API. Charts will sit under them.</Hint>
       </div>
       {visible.length > 0 ? (
-        <div className="grid grid-cols-1 gap-4 *:data-[slot=card]:bg-linear-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 *:data-[slot=card]:bg-linear-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:transition-transform *:data-[slot=card]:hover:-translate-y-0.5 sm:grid-cols-2 xl:grid-cols-4">
           {visible.map((stat, index) => {
             const Icon = stat.icon;
             return (
               <Card key={stat.label}>
                 <CardHeader>
                   <CardTitle>
-                    <div className="flex size-7 items-center justify-center rounded-lg border bg-muted text-muted-foreground">
-                      <Icon className="size-4" />
+                    <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-primary to-[color-mix(in_oklch,var(--primary),var(--brand-2)_55%)] text-primary-foreground shadow-md shadow-primary/25">
+                      <Icon className="size-4.5" />
                     </div>
                   </CardTitle>
                   <CardDescription>{stat.label}</CardDescription>

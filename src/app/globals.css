@@ -47,79 +47,83 @@
   --font-sans: var(--font-sans);
 }
 
-/* Default theme styles (used when no data-theme-preset is set or when 'default' is selected).
-These serve as the fallback; there is no separate default.css file. */
+/* Peak IT theme: brand blue with a cyan accent on cool neutrals; navy brand sidebar in
+both modes. Fonts are unchanged (fonts.ts). */
 :root {
-  --radius: 0.625rem;
+  --radius: 0.75rem;
+  --brand: oklch(0.56 0.21 262);
+  --brand-2: oklch(0.74 0.14 215);
+  --background: oklch(0.982 0.005 255);
+  --foreground: oklch(0.2 0.03 265);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.2 0.03 265);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.72 0.17 155);
-  --chart-2: oklch(0.62 0.03 255);
-  --chart-3: oklch(0.65 0.15 250);
-  --chart-4: oklch(0.78 0.14 85);
-  --chart-5: oklch(0.65 0.16 320);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --popover-foreground: oklch(0.2 0.03 265);
+  --primary: var(--brand);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.955 0.013 255);
+  --secondary-foreground: oklch(0.25 0.04 265);
+  --muted: oklch(0.962 0.009 255);
+  --muted-foreground: oklch(0.5 0.03 260);
+  --accent: oklch(0.945 0.03 255);
+  --accent-foreground: oklch(0.25 0.06 265);
+  --destructive: oklch(0.58 0.22 25);
+  --border: oklch(0.905 0.014 255);
+  --input: oklch(0.89 0.016 255);
+  --ring: oklch(0.6 0.18 262);
+  --chart-1: oklch(0.58 0.2 262);
+  --chart-2: oklch(0.74 0.14 215);
+  --chart-3: oklch(0.62 0.19 300);
+  --chart-4: oklch(0.78 0.15 75);
+  --chart-5: oklch(0.7 0.16 160);
+  --sidebar: oklch(0.21 0.05 266);
+  --sidebar-foreground: oklch(0.88 0.025 255);
+  --sidebar-primary: oklch(0.7 0.15 230);
+  --sidebar-primary-foreground: oklch(0.16 0.04 266);
+  --sidebar-accent: oklch(0.29 0.07 264);
+  --sidebar-accent-foreground: oklch(0.98 0.005 255);
+  --sidebar-border: oklch(1 0 0 / 9%);
+  --sidebar-ring: oklch(0.7 0.15 230);
 
   /* fonts — both map to the single face in fonts.ts */
   --font-sans: var(--font-app);
   --font-mono: var(--font-app);
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.72 0.17 155);
-  --chart-2: oklch(0.62 0.03 255);
-  --chart-3: oklch(0.65 0.15 250);
-  --chart-4: oklch(0.78 0.14 85);
-  --chart-5: oklch(0.65 0.16 320);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --brand: oklch(0.64 0.19 258);
+  --brand-2: oklch(0.78 0.13 212);
+  --background: oklch(0.155 0.028 266);
+  --foreground: oklch(0.955 0.01 255);
+  --card: oklch(0.198 0.035 266);
+  --card-foreground: oklch(0.955 0.01 255);
+  --popover: oklch(0.21 0.038 266);
+  --popover-foreground: oklch(0.955 0.01 255);
+  --primary: var(--brand);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.25 0.04 266);
+  --secondary-foreground: oklch(0.95 0.01 255);
+  --muted: oklch(0.24 0.035 266);
+  --muted-foreground: oklch(0.72 0.03 255);
+  --accent: oklch(0.27 0.055 262);
+  --accent-foreground: oklch(0.97 0.01 255);
+  --destructive: oklch(0.68 0.19 24);
+  --border: oklch(0.85 0.05 255 / 11%);
+  --input: oklch(0.85 0.05 255 / 16%);
+  --ring: oklch(0.68 0.16 250);
+  --chart-1: oklch(0.66 0.19 258);
+  --chart-2: oklch(0.78 0.13 212);
+  --chart-3: oklch(0.7 0.17 300);
+  --chart-4: oklch(0.82 0.14 80);
+  --chart-5: oklch(0.74 0.15 160);
+  --sidebar: oklch(0.13 0.03 266);
+  --sidebar-foreground: oklch(0.86 0.025 255);
+  --sidebar-primary: oklch(0.74 0.14 225);
+  --sidebar-primary-foreground: oklch(0.15 0.04 266);
+  --sidebar-accent: oklch(0.23 0.055 264);
+  --sidebar-accent-foreground: oklch(0.98 0.005 255);
+  --sidebar-border: oklch(1 0 0 / 7%);
+  --sidebar-ring: oklch(0.74 0.14 225);
 }
 
 @layer base {
@@ -173,6 +177,40 @@ These serve as the fallback; there is no separate default.css file. */
 
 html {
   overscroll-behavior: none;
+}
+
+/* The content area: a faint brand glow in the corners. */
+.app-surface {
+  background-image:
+    radial-gradient(70rem 28rem at 100% -8rem, color-mix(in oklch, var(--brand) 9%, transparent), transparent 70%),
+    radial-gradient(50rem 24rem at -10% 105%, color-mix(in oklch, var(--brand-2) 7%, transparent), transparent 70%);
+  background-attachment: fixed;
+}
+
+/* Page titles get a short brand bar above them. */
+.app-surface h1::before {
+  content: "";
+  display: block;
+  width: 2.25rem;
+  height: 0.25rem;
+  margin-bottom: 0.6rem;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, var(--brand), var(--brand-2));
+}
+
+/* The logo in the brand sidebar sits on a soft glow. */
+.brand-glow {
+  position: relative;
+  isolation: isolate;
+}
+.brand-glow::after {
+  content: "";
+  position: absolute;
+  inset: -0.35rem;
+  z-index: -1;
+  border-radius: 9999px;
+  background: radial-gradient(circle, color-mix(in oklch, var(--brand-2) 45%, transparent), transparent 70%);
+  filter: blur(6px);
 }
 
 /* Native menus ignore the page background and keep a light popup, so dark-theme text disappears. */

@@ -315,13 +315,18 @@ export function AppSidebar({ user, locale, isSeller = false, isOwner = false, ..
 
   return (
     <Sidebar {...props} variant={variant} collapsible={collapsible}>
-      <SidebarHeader>
+      <SidebarHeader className="border-sidebar-border border-b">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild size="lg" tooltip={t(locale, "Management")} className="group-data-[collapsible=icon]:justify-center">
               <Link href="/">
-                <AppLogo className="size-9! shrink-0 text-sidebar-foreground" />
-                <span className="font-semibold text-base group-data-[collapsible=icon]:hidden">{t(locale, "Management")}</span>
+                <span className="brand-glow grid size-9! shrink-0 place-items-center">
+                  <AppLogo tone="light" className="size-9" />
+                </span>
+                <span className="grid leading-tight group-data-[collapsible=icon]:hidden">
+                  <span className="font-semibold text-base text-sidebar-accent-foreground">{t(locale, "Management")}</span>
+                  <span className="text-sidebar-foreground/60 text-xs">{t(locale, "Company management")}</span>
+                </span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

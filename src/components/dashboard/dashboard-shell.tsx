@@ -51,7 +51,8 @@ export function DashboardShell({
         <header
           className={cn(
             "flex h-12 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12",
-            "[html[data-navbar-style=sticky]_&]:sticky [html[data-navbar-style=sticky]_&]:top-0 [html[data-navbar-style=sticky]_&]:z-50 [html[data-navbar-style=sticky]_&]:bg-background/50 [html[data-navbar-style=sticky]_&]:backdrop-blur-md",
+            "[html[data-navbar-style=sticky]_&]:sticky [html[data-navbar-style=sticky]_&]:top-0 [html[data-navbar-style=sticky]_&]:z-50 [html[data-navbar-style=sticky]_&]:bg-background/70 [html[data-navbar-style=sticky]_&]:backdrop-blur-md",
+            "shadow-[0_1px_0_color-mix(in_oklch,var(--brand)_8%,transparent)]",
           )}
         >
           <div className="flex w-full items-center justify-between px-4 lg:px-6">
@@ -70,7 +71,7 @@ export function DashboardShell({
             </div>
           </div>
         </header>
-        <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden p-4 md:p-6">{children}</div>
+        <div className="app-surface min-h-0 min-w-0 flex-1 overflow-x-hidden p-4 md:p-6">{children}</div>
       </SidebarInset>
     </SidebarProvider>
     </LocaleContext.Provider>
