@@ -40,6 +40,10 @@ export async function createDeveloper(_prev: FormState, formData: FormData): Pro
       start_date: optionalText(formData, "start_date"),
       out_date: optionalText(formData, "out_date"),
       status: optionalText(formData, "status"),
+      // A card tapped on a card assign reader: assigned with the PIN in the same step.
+      ...(optionalInt(formData, "card")
+        ? { card: optionalInt(formData, "card"), pin: String(formData.get("pin") ?? ""), pin_confirm: String(formData.get("pin_confirm") ?? "") }
+        : {}),
     },
     redirectTo: (data) => {
       const id = idFrom(data);
@@ -180,7 +184,7 @@ function devicePayload(formData: FormData, patch: boolean) {
   if (purpose === "TILL" || purpose === "ENROLL") {
     return {
       ...shared,
-      seller: purpose === "TILL" ? optionalInt(formData, "seller") ?? null : null,
+      // The seller is not set here: till readers are assigned separately (assignReader).
       ...(patch ? { building: null, allowed_ip: null, service_position: null } : {}),
     };
   }
@@ -726,22 +730,6 @@ export async function changeBooking(id: number, _prev: FormState, formData: Form
   });
 }
 
-export async function createSeller(_prev: FormState, formData: FormData): Promise<FormState> {
-  return commit({
-    path: "/api/v1/sellers/",
-    body: {
-      name: text(formData, "name"),
-      contact_name: optionalText(formData, "contact_name"),
-      email: optionalText(formData, "email"),
-      phone: optionalText(formData, "phone"),
-      status: optionalText(formData, "status"),
-      notes: optionalText(formData, "notes"),
-      user: optionalInt(formData, "user"),
-    },
-    redirectTo: (data) => `/sellers/${idFrom(data) ?? ""}`,
-  });
-}
-
 export async function updateSeller(id: number, _prev: FormState, formData: FormData): Promise<FormState> {
   return commit({
     path: `/api/v1/sellers/${id}/`,
@@ -908,5 +896,82 @@ export async function deleteForGood(kind: string, id: number, redirectTo: string
     path: `/api/v1/system/records/${kind}/${id}/`,
     body: { confirm: text(formData, "confirm") },
     redirectTo,
+  });
+}
+
+/** Assign a till reader to a seller, or unassign it (empty seller). */
+export async function assignReader(id: number, redirectTo: string, _prev: FormState, formData: FormData): Promise<FormState> {
+  return commit({
+    permission: "rfid.device.manage",
+    path: `/api/v1/rfid/devices/${id}/assign-seller/`,
+    body: { seller: optionalInt(formData, "seller") ?? null },
+    redirectTo,
+  });
+}
+
+/** From the seller's page: assign the chosen unassigned till reader to this seller. */
+export async function assignReaderToSeller(sellerId: number, _prev: FormState, formData: FormData): Promise<FormState> {
+  const reader = optionalInt(formData, "reader");
+  if (!reader) return { message: "Choose a till reader.", fields: { reader: ["Choose a till reader."] } };
+  return commit({
+    permission: "rfid.device.manage",
+    path: `/api/v1/rfid/devices/${reader}/assign-seller/`,
+    body: { seller: sellerId },
+    redirectTo: `/sellers/${sellerId}`,
+  });
+}
+
+/** New store in one step: login, seller, first counter, till reader (POST /sellers/onboard/). */
+export async function createStore(_prev: FormState, formData: FormData): Promise<FormState> {
+  const login = text(formData, "login") || "new";
+  return commit({
+    permission: "seller.create",
+    path: "/api/v1/sellers/onboard/",
+    body: {
+      name: text(formData, "name"),
+      contact_name: text(formData, "contact_name"),
+      phone: text(formData, "phone"),
+      notes: text(formData, "notes"),
+      login,
+      ...(login === "new" ? { username: text(formData, "username"), password: String(formData.get("password") ?? "") } : {}),
+      ...(login === "existing" ? { user: optionalInt(formData, "user") ?? null } : {}),
+      counter_name: text(formData, "counter_name"),
+      building: optionalInt(formData, "building") ?? null,
+      location: text(formData, "location"),
+      till_reader: optionalInt(formData, "till_reader") ?? null,
+    },
+    redirectTo: (data) => {
+      const seller = data && typeof data === "object" && "seller" in data ? String(data.seller) : "";
+      return `/sellers/${seller}`;
+    },
+  });
+}
+
+/** Developer's page: assign the card tapped on the card assign reader, with the PIN. */
+export async function assignTappedCard(developerId: number, _prev: FormState, formData: FormData): Promise<FormState> {
+  const card = optionalInt(formData, "card");
+  if (!card) return { message: "Tap a card on the card assign reader first." };
+  return commit({
+    permission: "rfid.assign",
+    path: `/api/v1/rfid/cards/${card}/assign/`,
+    body: { developer: developerId, pin: String(formData.get("pin") ?? ""), pin_confirm: String(formData.get("pin_confirm") ?? "") },
+    redirectTo: `/developers/${developerId}`,
+  });
+}
+
+/** Developer's page: take the card back (it stays registered, unassigned). */
+export async function unassignDeveloperCard(developerId: number, cardId: number, _prev: FormState, _formData: FormData): Promise<FormState> {
+  return commit({ permission: "rfid.assign", path: `/api/v1/rfid/cards/${cardId}/unassign/`, redirectTo: `/developers/${developerId}` });
+}
+
+/** Developer's page: replace a lost or broken card with one tapped on the reader (the PIN stays). */
+export async function replaceDeveloperCard(developerId: number, cardId: number, _prev: FormState, formData: FormData): Promise<FormState> {
+  const uid = text(formData, "new_card_uid");
+  if (!uid) return { message: "Tap the new card on the card assign reader first." };
+  return commit({
+    permission: "rfid.assign",
+    path: `/api/v1/rfid/cards/${cardId}/replace/`,
+    body: { new_card_uid: uid, reason: optionalText(formData, "reason") },
+    redirectTo: `/developers/${developerId}`,
   });
 }

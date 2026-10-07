@@ -8,7 +8,6 @@ import { NoAccess } from "@/components/no-access";
 import { can, canManage, getSession } from "@/lib/current-user";
 import { DjangoError, djangoFetch } from "@/lib/django";
 import { redirect } from "next/navigation";
-import { sellerChoices } from "@/lib/choices";
 
 type Building = components["schemas"]["Building"];
 
@@ -41,7 +40,6 @@ export default async function NewReaderPage() {
         <CardContent>
           <DeviceForm
             buildings={buildings.map((building) => ({ id: building.id, label: `${building.code} · ${building.name}` }))}
-            sellers={await sellerChoices(session.token)}
           />
         </CardContent>
       </Card>

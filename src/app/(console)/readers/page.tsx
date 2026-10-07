@@ -42,17 +42,17 @@ export default async function ReadersPage({
       description="Door units, till readers and card assign readers. Online means the device sent a tap in the last two minutes."
       error={data.error}
       empty="No devices yet."
-      headers={["Code", "Name", "Kind", "Place", "Seller", "Door IP", "Online", "Active", "Last seen"]}
+      headers={["Code", "Name", "Status", "Kind", "Place", "Seller", "Door IP", "Active", "Last seen"]}
       extra={manage ? <Button asChild><Link href="/readers/new">New device</Link></Button> : null}
       hrefs={data.results.map((device) => `/readers/${device.id}`)}
       rows={data.results.map((device) => [
         device.code,
         show(device.name),
+        device.online ? "Online" : "Offline",
         show(device.purpose),
         device.purpose === "TILL" ? "Till" : String(device.purpose) === "ENROLL" ? "Card assign" : (device.building ? `Building ${device.building}` : "—"),
         show((device as { seller_name?: string | null }).seller_name),
         show(device.allowed_ip),
-        device.online ? "Yes" : "No",
         device.is_active ? "Yes" : "No",
         showTime(device.last_seen_at),
       ])}

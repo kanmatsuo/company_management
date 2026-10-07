@@ -1,7 +1,7 @@
 import { DeleteForGood } from "@/components/delete-for-good";
 import { AutoText } from "@/components/auto-text";
 import { redirect } from "next/navigation";
-import { updateSeller } from "@/app/(console)/mutations";
+import { assignReader, assignReaderToSeller, updateSeller } from "@/app/(console)/mutations";
 import type { components } from "@/api/schema";
 import { Facts } from "@/components/facts";
 import { FieldForm } from "@/components/field-form";
@@ -10,7 +10,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { can, canManage } from "@/lib/current-user";
 import { show, showTime } from "@/lib/load-all";
 import { loadOne } from "@/lib/page-data";
-import { sellerUserChoices } from "@/lib/choices";
+import { sellerUserChoices, unassignedTillReaderChoices } from "@/lib/choices";
+import { djangoFetch } from "@/lib/django";
 
 type Seller = components["schemas"]["Seller"] & { user_username?: string | null };
 
@@ -28,6 +29,14 @@ export default async function SellerPage({ params }: { params: Promise<{ id: str
   const seller = loaded.value;
   const manage = canManage(loaded.session.user, ["seller"]);
   const users = manage ? await sellerUserChoices(loaded.session.token) : [];
+  const manageReaders = can(loaded.session.user, "rfid.device.manage");
+  const readers = await djangoFetch<{ results: { id: number; code: string; name?: string; is_active?: boolean }[] }>(
+    `/api/v1/rfid/devices/?purpose=TILL&seller=${seller.id}&ordering=code`,
+    { accessToken: loaded.session.token },
+  )
+    .then((page) => page.results)
+    .catch(() => []);
+  const spare = manageReaders ? await unassignedTillReaderChoices(loaded.session.token) : [];
   return (
     <div className="flex flex-col gap-4 md:gap-6">
       <div>
@@ -74,6 +83,39 @@ export default async function SellerPage({ params }: { params: Promise<{ id: str
               ]}
             />
           )}
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Till readers</CardTitle>
+          <CardDescription>The card readers at this store&apos;s tills. Only this store&apos;s purchases use them.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-3">
+          {readers.length === 0 ? <p className="text-muted-foreground text-sm">No till reader assigned yet.</p> : null}
+          {readers.map((reader) => (
+            <div key={reader.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2">
+              <a href={`/readers/${reader.id}`} className="font-medium underline-offset-4 hover:underline">
+                {reader.code}
+                {reader.name && reader.name !== reader.code ? <span className="text-muted-foreground"> · {reader.name}</span> : null}
+              </a>
+              {manageReaders ? (
+                <FieldForm action={assignReader.bind(null, reader.id, `/sellers/${seller.id}`)} submitLabel="Unassign" variant="outline" fields={[]} />
+              ) : null}
+            </div>
+          ))}
+          {manageReaders ? (
+            spare.length ? (
+              <FieldForm
+                action={assignReaderToSeller.bind(null, seller.id)}
+                submitLabel="Assign"
+                fields={[{ name: "reader", label: "Assign a till reader", type: "select", required: true, options: spare }]}
+              />
+            ) : (
+              <p className="text-muted-foreground text-sm">
+                Every till reader is assigned. Register a new one under Readers → New device.
+              </p>
+            )
+          ) : null}
         </CardContent>
       </Card>
       {can(loaded.session.user, "system.delete_records") ? (

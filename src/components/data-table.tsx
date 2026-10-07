@@ -24,6 +24,12 @@ function compareCells(left: string, right: string) {
   return left.localeCompare(right, undefined, { numeric: true, sensitivity: "base" });
 }
 
+/** Status values that get a coloured dot in their badge. */
+const DOT: Record<string, string> = {
+  Online: "bg-emerald-500 shadow-[0_0_6px] shadow-emerald-500/70",
+  Offline: "bg-muted-foreground/50",
+};
+
 export function DataTable({
   headers,
   rows,
@@ -103,7 +109,10 @@ export function DataTable({
                 {row.map((cell, cellIndex) => (
                   <TableCell key={`${headers[cellIndex]}-${cellIndex}`} className={cellIndex === 0 ? "font-medium" : undefined}>
                     {headers[cellIndex] === t(locale, "Status") || headers[cellIndex] === t(locale, "Result") ? (
-                      <Badge variant="secondary">{t(locale, cell)}</Badge>
+                      <Badge variant="secondary" className="gap-1.5">
+                        {DOT[cell] ? <span aria-hidden className={`size-2 rounded-full ${DOT[cell]}`} /> : null}
+                        {t(locale, cell)}
+                      </Badge>
                     ) : cellIndex === 0 && hrefs?.[index] ? (
                       <Link href={hrefs[index]} className="underline-offset-4 hover:underline">
                         {cell}

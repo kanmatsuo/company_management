@@ -13,19 +13,17 @@ const PURPOSE = [
 
 const HELP: Record<string, string> = {
   ATTENDANCE: "Register every unit of a door separately: the same code (the door's ID, e.g. Door1), its own name (e.g. Door1-1) and its own fixed IP. The unit is recognised by its ID and IP.",
-  TILL: "A till reader belongs to one seller (a seller can have several); only that seller's purchases use it. It is recognised by its ID alone. Each ID can be used once.",
+  TILL: "Register the till reader here, then assign it to a seller (on the reader's page, the seller's page or New store). Only that seller's purchases use it. It is recognised by its ID alone. Each ID can be used once.",
   ENROLL: "A card assign reader is recognised by its ID alone (e.g. Master1). Tapping a card on it fills the New card and Assign card pages. Each ID can be used once.",
 };
 
 export function DeviceForm({
   id,
   buildings,
-  sellers = [],
   defaults,
 }: {
   id?: number;
   buildings: { id: number; label: string }[];
-  sellers?: { value: string; label: string }[];
   defaults?: {
     code: string;
     name: string;
@@ -34,7 +32,6 @@ export function DeviceForm({
     building: string;
     servicePosition: string;
     allowedIp: string;
-    seller?: string;
     direction: string;
     active: boolean;
   };
@@ -53,9 +50,6 @@ export function DeviceForm({
       { name: "allowed_ip", label: "Fixed IP of this unit", required: true, defaultValue: defaults?.allowedIp, placeholder: "192.168.100.151" },
       { name: "direction", label: "Direction", type: "select", options: [{ value: "IN", label: "In" }, { value: "OUT", label: "Out" }, { value: "BOTH", label: "Both" }], defaultValue: defaults?.direction || "BOTH" },
     );
-  }
-  if (purpose === "TILL") {
-    fields.push({ name: "seller", label: "Seller (whose purchases use this reader)", type: "select", required: true, options: sellers, defaultValue: defaults?.seller });
   }
   fields.push({ name: "is_active", label: "Active", type: "checkbox", defaultValue: defaults ? (defaults.active ? "on" : "") : "on" });
 

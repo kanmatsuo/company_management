@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import type { FormState } from "@/lib/form";
 import { t } from "@/lib/i18n";
 import { useLocale } from "@/components/locale-context";
+import { CreatableSelect } from "@/components/creatable-select";
 import { SearchSelect } from "@/components/search-select";
 import { UserMultiSelect } from "@/components/user-multi-select";
 
@@ -18,7 +19,7 @@ export type Field = {
   defaultValue?: string;
   placeholder?: string;
   options?: { value: string; label: string }[];
-  /** Text fields: values to pick from while typing (any other text is still accepted). */
+  /** A dropdown of these values that also takes a new one (CreatableSelect). */
   suggestions?: string[];
   /** Hide this field until another field (usually a select) has this value. */
   visibleWhen?: { name: string; value: string };
@@ -107,26 +108,25 @@ export function FieldForm({
                 options={(field.options ?? []).map((option) => ({ value: option.value, label: t(locale, option.label) }))}
                 onValueChange={watched.has(field.name) ? (value) => setValues((prev) => ({ ...prev, [field.name]: value })) : undefined}
               />
+            ) : field.suggestions ? (
+              <CreatableSelect
+                id={field.name}
+                name={field.name}
+                required={field.required}
+                defaultValue={field.defaultValue}
+                values={field.suggestions}
+                placeholder={field.placeholder ?? "Choose"}
+                locale={locale}
+              />
             ) : (
-              <>
-                <Input
-                  id={field.name}
-                  name={field.name}
-                  type={field.type ?? "text"}
-                  required={field.required}
-                  defaultValue={field.defaultValue}
-                  placeholder={field.placeholder ? t(locale, field.placeholder) : undefined}
-                  list={field.suggestions?.length ? `${field.name}-suggestions` : undefined}
-                  autoComplete={field.suggestions?.length ? "off" : undefined}
-                />
-                {field.suggestions?.length ? (
-                  <datalist id={`${field.name}-suggestions`}>
-                    {field.suggestions.map((value) => (
-                      <option key={value} value={value} />
-                    ))}
-                  </datalist>
-                ) : null}
-              </>
+              <Input
+                id={field.name}
+                name={field.name}
+                type={field.type ?? "text"}
+                required={field.required}
+                defaultValue={field.defaultValue}
+                placeholder={field.placeholder ? t(locale, field.placeholder) : undefined}
+              />
             )}
             {errors?.map((error) => (
               <p key={error} className="text-destructive text-xs">{error}</p>

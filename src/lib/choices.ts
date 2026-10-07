@@ -92,3 +92,12 @@ export function stockGoodChoices(token: string) {
     (row) => `${row.name}${row.position_detail?.name ? ` · ${row.position_detail.name}` : ""} · ${row.quantity ?? 0} in stock`,
   );
 }
+
+/** Till readers not assigned to any seller yet: "Reader3 · Spare till". */
+export function unassignedTillReaderChoices(token: string) {
+  return asChoices<{ id: number; code: string; name?: string }>(
+    token,
+    "/api/v1/rfid/devices/?purpose=TILL&assigned=false&ordering=code",
+    (row) => (row.name && row.name !== row.code ? `${row.code} · ${row.name}` : row.code),
+  );
+}

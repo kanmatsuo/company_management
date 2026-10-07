@@ -1,3 +1,4 @@
+import { assignReader } from "@/app/(console)/mutations";
 import { DeleteForGood } from "@/components/delete-for-good";
 import { redirect } from "next/navigation";
 import { DeviceForm } from "@/app/(console)/readers/device-form";
@@ -50,7 +51,6 @@ export default async function ReaderPage({ params }: { params: Promise<{ id: str
             <DeviceForm
               id={device.id}
               buildings={buildings.map((building) => ({ id: building.id, label: `${building.code} · ${building.name}` }))}
-              sellers={await sellerChoices(loaded.session.token)}
               defaults={{
                 code: device.code,
                 name: device.name ?? "",
@@ -59,7 +59,6 @@ export default async function ReaderPage({ params }: { params: Promise<{ id: str
                 building: device.building ? String(device.building) : "",
                 servicePosition: device.service_position ? String(device.service_position) : "",
                 allowedIp: device.allowed_ip ?? "",
-                seller: (device as { seller?: number | null }).seller ? String((device as { seller?: number | null }).seller) : "",
                 direction: device.direction ?? "BOTH",
                 active: Boolean(device.is_active),
               }}
@@ -78,6 +77,35 @@ export default async function ReaderPage({ params }: { params: Promise<{ id: str
           )}
         </CardContent>
       </Card>
+      {device.purpose === "TILL" ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Assigned to</CardTitle>
+            <CardDescription>
+              {(device as { seller_name?: string | null }).seller_name
+                ? `Only ${(device as { seller_name?: string | null }).seller_name}'s purchases use this reader.`
+                : "Not assigned: no seller uses this reader yet."}
+            </CardDescription>
+          </CardHeader>
+          {manage ? (
+            <CardContent>
+              <FieldForm
+                action={assignReader.bind(null, device.id, `/readers/${device.id}`)}
+                submitLabel="Save assignment"
+                fields={[
+                  {
+                    name: "seller",
+                    label: "Seller",
+                    type: "select",
+                    options: [{ value: "", label: "Not assigned" }, ...(await sellerChoices(loaded.session.token))],
+                    defaultValue: (device as { seller?: number | null }).seller ? String((device as { seller?: number | null }).seller) : "",
+                  },
+                ]}
+              />
+            </CardContent>
+          ) : null}
+        </Card>
+      ) : null}
       {manage ? (
         <Card>
           <CardHeader>

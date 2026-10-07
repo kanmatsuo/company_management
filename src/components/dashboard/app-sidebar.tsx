@@ -187,7 +187,7 @@ const GROUPS: Group[] = [
     icon: Store,
     children: [
       { title: "All", href: "/sellers", permission: "seller" },
-      { title: "New", href: "/sellers/new", permission: "seller", manage: ["seller"] },
+      { title: "New store", href: "/sellers/new", permission: "seller", manage: ["seller"] },
     ],
   },
   {
