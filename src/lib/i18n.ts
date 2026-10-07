@@ -34,5 +34,12 @@ export function tMessage(locale: Locale, message: string) {
       .replace("{balance}", match[1])
       .replace("{required}", match[2]);
   }
+  // Text the server writes into records.
+  if ((match = /^Purchase at (.+)$/.exec(message))) {
+    return t(locale, "Purchase at {store}").replace("{store}", match[1]);
+  }
+  if ((match = /^Registered by tapping on (.+)$/.exec(message))) {
+    return t(locale, "Registered by tapping on {reader}").replace("{reader}", match[1]);
+  }
   return message;
 }

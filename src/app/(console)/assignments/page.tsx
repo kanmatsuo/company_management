@@ -4,6 +4,7 @@ import { t } from "@/lib/i18n";
 import { show, showTime } from "@/lib/load-all";
 import { getLocale } from "@/lib/locale";
 import { loadList } from "@/lib/page-data";
+import { codeLabel } from "@/lib/codes";
 
 type Assignment = components["schemas"]["RFIDCardAssignment"];
 
@@ -24,7 +25,7 @@ export default async function AssignmentsPage() {
         show(row.developer?.full_name),
         showTime(row.assigned_at),
         showTime(row.unassigned_at),
-        show(row.end_reason),
+        codeLabel(locale, row.end_reason),
       ])}
     />
   );

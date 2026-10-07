@@ -10,10 +10,14 @@ import { can, canManage } from "@/lib/current-user";
 import { show, showTime } from "@/lib/load-all";
 import { loadOne } from "@/lib/page-data";
 import { buildingChoices, developerChoices } from "@/lib/choices";
+import { getLocale } from "@/lib/locale";
+import { codeLabel } from "@/lib/codes";
+import { t, tMessage } from "@/lib/i18n";
 
 type CardRow = components["schemas"]["RFIDCard"];
 
 export default async function CardDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const locale = await getLocale();
   const id = Number((await params).id);
   if (!Number.isInteger(id)) redirect("/cards");
   const loaded = await loadOne<CardRow>(`/api/v1/rfid/cards/${id}/`);
@@ -32,7 +36,7 @@ export default async function CardDetailPage({ params }: { params: Promise<{ id:
     <div className="flex flex-col gap-4 md:gap-6">
       <div>
         <h1 className="font-semibold text-2xl tracking-tight">{card.uid}</h1>
-        <p className="text-muted-foreground text-sm">{card.status} · {show(holder)} · Updated {showTime(card.updated_at)}</p>
+        <p className="text-muted-foreground text-sm">{codeLabel(locale, card.status)} · {show(holder)} · {t(locale, "Updated")} {showTime(card.updated_at)}</p>
       </div>
       <Card>
         <CardHeader>
@@ -50,7 +54,7 @@ export default async function CardDetailPage({ params }: { params: Promise<{ id:
               ]}
             />
           ) : (
-            <Facts items={[{ label: "Label", value: show(card.label) }, { label: "Notes", value: show(card.notes) }]} />
+            <Facts items={[{ label: "Label", value: show(card.label) }, { label: "Notes", value: card.notes ? tMessage(locale, card.notes) : "—" }]} />
           )}
         </CardContent>
       </Card>

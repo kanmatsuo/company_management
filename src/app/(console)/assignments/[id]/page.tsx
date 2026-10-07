@@ -5,10 +5,13 @@ import { LoadError } from "@/components/no-access";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { show, showTime } from "@/lib/load-all";
 import { loadOne } from "@/lib/page-data";
+import { getLocale } from "@/lib/locale";
+import { codeLabel } from "@/lib/codes";
 
 type Assignment = components["schemas"]["RFIDCardAssignment"];
 
 export default async function AssignmentPage({ params }: { params: Promise<{ id: string }> }) {
+  const locale = await getLocale();
   const id = Number((await params).id);
   if (!Number.isInteger(id)) redirect("/assignments");
   const loaded = await loadOne<Assignment>(`/api/v1/rfid/assignments/${id}/`);
@@ -32,7 +35,7 @@ export default async function AssignmentPage({ params }: { params: Promise<{ id:
               { label: "Assigned by", value: row.assigned_by ? String(row.assigned_by) : "—" },
               { label: "Returned", value: showTime(row.unassigned_at) },
               { label: "Returned by", value: row.unassigned_by ? String(row.unassigned_by) : "—" },
-              { label: "End reason", value: show(row.end_reason) },
+              { label: "End reason", value: codeLabel(locale, row.end_reason) },
             ]}
           />
         </CardContent>

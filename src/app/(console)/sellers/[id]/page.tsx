@@ -16,6 +16,8 @@ import { show, showTime } from "@/lib/load-all";
 import { loadOne } from "@/lib/page-data";
 import { sellerUserChoices, unassignedTillReaderChoices } from "@/lib/choices";
 import { djangoFetch } from "@/lib/django";
+import { getLocale } from "@/lib/locale";
+import { t } from "@/lib/i18n";
 
 type Seller = components["schemas"]["Seller"] & { user_username?: string | null };
 type Counter = {
@@ -34,6 +36,7 @@ const STATUS = [
 ];
 
 export default async function SellerPage({ params }: { params: Promise<{ id: string }> }) {
+  const locale = await getLocale();
   const id = Number((await params).id);
   if (!Number.isInteger(id)) redirect("/sellers");
   const loaded = await loadOne<Seller>(`/api/v1/sellers/${id}/`);
@@ -75,7 +78,7 @@ export default async function SellerPage({ params }: { params: Promise<{ id: str
           ) : (
             <AutoText>No store login yet</AutoText>
           )}
-          {" · "}Updated {showTime(seller.updated_at)}
+          {" · "}{t(locale, "Updated")} {showTime(seller.updated_at)}
         </p>
       </div>
       <Card>

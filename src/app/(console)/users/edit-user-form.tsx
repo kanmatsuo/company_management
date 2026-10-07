@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useLocale } from "@/components/locale-context";
+import { codeLabel } from "@/lib/codes";
 import { t } from "@/lib/i18n";
 
 export function EditUserForm({
@@ -22,12 +23,13 @@ export function EditUserForm({
   fullName: string;
   isActive: boolean;
 }) {
+  const locale = useLocale();
   const action = updateUser.bind(null, id);
   const [state, formAction, pending] = useActionState(action, null as FormState);
 
   return (
     <form action={formAction} className="grid max-w-md gap-4">
-      {state?.message ? <p className="text-destructive text-sm">{state.message}</p> : null}
+      {state?.message ? <p className="text-destructive text-sm">{t(locale, state.message)}</p> : null}
       <div className="grid gap-1.5">
         <Label htmlFor="username">Username</Label>
         <Input id="username" name="username" defaultValue={username} required autoComplete="off" pattern="[A-Za-z0-9._\-]{3,150}" />
@@ -44,7 +46,7 @@ export function EditUserForm({
       </div>
       <label className="flex items-center gap-2 text-sm">
         <input name="is_active" type="checkbox" defaultChecked={isActive} className="size-4" />
-        Active
+        {t(locale, "Active")}
       </label>
       {state?.fields?.is_active?.map((error) => (
         <p key={error} className="text-destructive text-xs">{error}</p>
@@ -75,7 +77,7 @@ export function RoleForm({
         {current.map((code) => (
           <form key={code} action={removeRole.bind(null, id, code)}>
             <Button type="submit" size="sm" variant="outline">
-              {code} · {t(locale, "Remove")}
+              {codeLabel(locale, code)} · {t(locale, "Remove")}
             </Button>
           </form>
         ))}
@@ -83,17 +85,17 @@ export function RoleForm({
       {available.length > 0 ? (
         <form action={formAction} className="flex flex-wrap items-end gap-2">
           <div className="grid w-64 gap-1.5">
-            <Label htmlFor="role">Add role</Label>
+            <Label htmlFor="role">{t(locale, "Add role")}</Label>
             <SearchSelect
               id="role"
               name="role"
               locale={locale}
               defaultValue={available[0]?.code ?? ""}
-              options={available.map((role) => ({ value: role.code, label: `${role.name} (${role.code})` }))}
+              options={available.map((role) => ({ value: role.code, label: t(locale, role.name) }))}
             />
           </div>
           <Button type="submit" size="sm" disabled={pending}>{t(locale, "Add")}</Button>
-          {state?.message ? <p className="text-destructive text-sm">{state.message}</p> : null}
+          {state?.message ? <p className="text-destructive text-sm">{t(locale, state.message)}</p> : null}
         </form>
       ) : null}
     </div>

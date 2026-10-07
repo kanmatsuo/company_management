@@ -15,6 +15,8 @@ import { djangoFetch } from "@/lib/django";
 import { show, showTime } from "@/lib/load-all";
 import { loadOne } from "@/lib/page-data";
 import { buildingChoices, departmentNames } from "@/lib/choices";
+import { getLocale } from "@/lib/locale";
+import { t } from "@/lib/i18n";
 
 type Developer = components["schemas"]["Developer"] & { building?: number | null; building_name?: string | null };
 
@@ -49,6 +51,7 @@ async function currentCard(token: string, developerId: number): Promise<CurrentC
 }
 
 export default async function DeveloperDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const locale = await getLocale();
   const id = Number((await params).id);
   if (!Number.isInteger(id)) redirect("/developers");
   const loaded = await loadOne<Developer>(`/api/v1/developers/${id}/`);
@@ -79,7 +82,7 @@ export default async function DeveloperDetailPage({ params }: { params: Promise<
             <Badge variant={status === "ACTIVE" ? "secondary" : "outline"}>{STATUS_LABEL[status] ?? status}</Badge>
             {developer.department ? <span>· {developer.department}</span> : null}
             {developer.building_name ? <span>· {developer.building_name}</span> : null}
-            <span>· Updated {showTime(developer.updated_at)}</span>
+            <span>· {t(locale, "Updated")} {showTime(developer.updated_at)}</span>
           </div>
         </div>
       </div>

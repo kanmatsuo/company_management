@@ -8,6 +8,7 @@ import { getSession } from "@/lib/current-user";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";
 import { loadCatalog } from "@/lib/permission-catalog";
+import { codeLabel } from "@/lib/codes";
 
 export default async function AccountPage() {
   const session = await getSession();
@@ -34,7 +35,7 @@ export default async function AccountPage() {
         <CardContent className="grid gap-4 text-sm">
           <div>
             <p className="text-muted-foreground"><AutoText>Roles</AutoText></p>
-            <p className="mt-1">{user.roles.length > 0 ? user.roles.join(", ") : <AutoText>None</AutoText>}</p>
+            <p className="mt-1">{user.roles.length > 0 ? user.roles.map((code) => codeLabel(locale, code)).join(", ") : <AutoText>None</AutoText>}</p>
           </div>
           <div>
             <p className="text-muted-foreground"><AutoText>Last sign-in</AutoText></p>

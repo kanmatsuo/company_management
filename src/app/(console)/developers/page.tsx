@@ -21,7 +21,6 @@ import { listPath, loadAll, one } from "@/lib/load-all";
 import { getLocale } from "@/lib/locale";
 import { t } from "@/lib/i18n";
 import { redirect } from "next/navigation";
-import { shift, todayIso } from "@/lib/period";
 
 // building_name is served by the API but missing from the generated schema types.
 type Developer = components["schemas"]["Developer"] & { building_name?: string | null };
@@ -30,23 +29,6 @@ type DeveloperPage = components["schemas"]["PaginatedDeveloperList"];
 const SORTS = ["full_name", "employee_number", "department", "start_date", "out_date", "birthday"] as const;
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-/** "Last working day" choices: the day set on a person's page when they leave. */
-const LEFT: { value: string; label: string }[] = [
-  { value: "", label: "Any last working day" },
-  { value: "soon", label: "Leaving in the next 30 days" },
-  { value: "recent", label: "Left in the last 30 days" },
-  { value: "year", label: "Left this year" },
-  { value: "set", label: "Has a last working day" },
-];
-
-function leftRange(left: string | undefined, today: string): { out_after?: string; out_before?: string } {
-  if (left === "soon") return { out_after: today, out_before: shift(today, 30) };
-  if (left === "recent") return { out_after: shift(today, -30), out_before: shift(today, -1) };
-  if (left === "year") return { out_after: `${today.slice(0, 4)}-01-01`, out_before: today };
-  if (left === "set") return { out_after: "1900-01-01" };
-  return {};
-}
 
 const STATUS_LABEL: Record<string, string> = {
   ACTIVE: "Active",
@@ -59,9 +41,6 @@ type DeveloperQuery = {
   status?: string;
   search?: string;
   birthday_month?: string;
-  left?: string;
-  out_after?: string;
-  out_before?: string;
   ordering?: string;
   page?: number;
   pageSize?: PageSize;
@@ -72,9 +51,6 @@ function developersHref(query: DeveloperQuery) {
   if (query.status) params.set("status", query.status);
   if (query.search) params.set("search", query.search);
   if (query.birthday_month) params.set("birthday_month", query.birthday_month);
-  if (query.left) params.set("left", query.left);
-  if (query.out_after) params.set("out_after", query.out_after);
-  if (query.out_before) params.set("out_before", query.out_before);
   if (query.ordering && query.ordering !== "full_name") params.set("ordering", query.ordering);
   if (query.pageSize && query.pageSize !== 20) params.set("page_size", String(query.pageSize));
   if (query.page && query.page > 1) params.set("page", String(query.page));
@@ -95,9 +71,6 @@ export default async function DevelopersPage({
     status?: string;
     search?: string;
     birthday_month?: string;
-    left?: string;
-    out_after?: string;
-    out_before?: string;
     ordering?: string;
     page?: string;
     page_size?: string;
@@ -108,16 +81,10 @@ export default async function DevelopersPage({
   const ordering = requested && SORTS.some((field) => requested === field || requested === `-${field}`) ? requested : "full_name";
   const pageSize = parsePageSize(one(raw.page_size));
   const page = pageSize === "all" ? 1 : Math.max(1, Number(one(raw.page)) || 1);
-  const left = LEFT.some((option) => option.value === one(raw.left)) ? one(raw.left) : undefined;
-  // Old links may still carry out_after / out_before; a "left" choice wins.
-  const range = left ? leftRange(left, todayIso()) : { out_after: one(raw.out_after), out_before: one(raw.out_before) };
   const query = {
     status: one(raw.status),
     search: one(raw.search),
     birthday_month: one(raw.birthday_month),
-    left,
-    out_after: left ? undefined : range.out_after,
-    out_before: left ? undefined : range.out_before,
     ordering,
     page,
     pageSize,
@@ -146,8 +113,6 @@ export default async function DevelopersPage({
       status: query.status,
       search: query.search,
       birthday_month: query.birthday_month,
-      out_after: range.out_after,
-      out_before: range.out_before,
       ...(pageSize === "all" ? {} : { page: String(page), page_size: String(pageSize) }),
     });
     const loaded = pageSize === "all"
@@ -160,7 +125,7 @@ export default async function DevelopersPage({
   }
 
   const excelQuery = new URLSearchParams(
-    Object.entries({ status: query.status, search: query.search, birthday_month: query.birthday_month, ...range }).filter(
+    Object.entries({ status: query.status, search: query.search, birthday_month: query.birthday_month }).filter(
       (entry): entry is [string, string] => Boolean(entry[1]),
     ),
   ).toString();
@@ -221,14 +186,6 @@ export default async function DevelopersPage({
                 ]}
               />
             </div>
-            <div className="w-64">
-              <SearchSelect
-                name="left"
-                locale={locale}
-                defaultValue={query.left ?? ""}
-                options={LEFT.map((option) => ({ value: option.value, label: t(locale, option.label) }))}
-              />
-            </div>
             {ordering !== "full_name" ? <input type="hidden" name="ordering" value={ordering} /> : null}
             {pageSize !== 20 ? <input type="hidden" name="page_size" value={String(pageSize)} /> : null}
             <Button type="submit" variant="outline">{t(locale, "Apply")}</Button>
@@ -237,7 +194,7 @@ export default async function DevelopersPage({
             <p className="text-destructive text-sm">{error}</p>
           ) : developers.length === 0 ? (
             <p className="text-muted-foreground text-sm">
-              {query.status || query.search || query.birthday_month || query.left || query.out_after || query.out_before
+              {query.status || query.search || query.birthday_month
                 ? t(locale, "No developers match these filters.")
                 : t(locale, "No developers yet.")}
             </p>

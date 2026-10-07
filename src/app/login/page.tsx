@@ -3,7 +3,7 @@ import { BrandMark } from "@/components/brand-mark";
 import { redirect } from "next/navigation";
 import { LanguageSwitcher } from "@/components/dashboard/language-switcher";
 import { LoginForm } from "@/components/login-form";
-import { LocaleContext } from "@/components/locale-context";
+import { LocaleProvider } from "@/components/locale-context";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";
 import { getAccessToken } from "@/lib/session";
@@ -14,7 +14,7 @@ export default async function LoginPage() {
 
   // Login stays night mode even when the rest of the app is set to light.
   return (
-    <LocaleContext.Provider value={locale}>
+    <LocaleProvider locale={locale}>
       <div className="dark relative flex min-h-dvh items-center justify-center overflow-hidden bg-slate-950 px-4 py-10 text-foreground">
         <Image
           src="/images/login-bg.jpg"
@@ -49,6 +49,6 @@ export default async function LoginPage() {
           </div>
         </div>
       </div>
-    </LocaleContext.Provider>
+    </LocaleProvider>
   );
 }

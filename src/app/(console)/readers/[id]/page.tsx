@@ -15,6 +15,7 @@ import { show, showTime } from "@/lib/load-all";
 import { getLocale } from "@/lib/locale";
 import { loadOne } from "@/lib/page-data";
 import { sellerChoices } from "@/lib/choices";
+import { codeLabel } from "@/lib/codes";
 
 type Device = components["schemas"]["RFIDDevice"];
 type Building = components["schemas"]["Building"];
@@ -42,7 +43,7 @@ export default async function ReaderPage({ params }: { params: Promise<{ id: str
       <div>
         <h1 className="font-semibold text-2xl tracking-tight">{device.code}</h1>
         <p className="text-muted-foreground text-sm">
-          {device.purpose} · {device.online ? "Online" : "Offline"} · Key prefix {show(device.api_key_prefix)} · Last seen {showTime(device.last_seen_at)}
+          {codeLabel(locale, device.purpose)} · {t(locale, device.online ? "Online" : "Offline")} · {t(locale, "Key prefix")} {show(device.api_key_prefix)} · {t(locale, "Last seen")} {showTime(device.last_seen_at)}
         </p>
       </div>
       <Card>

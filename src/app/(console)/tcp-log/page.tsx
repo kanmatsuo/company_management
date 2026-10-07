@@ -9,9 +9,10 @@ import { NoAccess } from "@/components/no-access";
 import { can } from "@/lib/current-user";
 import { DjangoError, djangoFetch } from "@/lib/django";
 import { getLocale } from "@/lib/locale";
-import { t } from "@/lib/i18n";
+import { t, tMessage } from "@/lib/i18n";
 import { requireSession } from "@/lib/page-data";
 import { LiveRefresh } from "@/app/(console)/tcp-log/live-refresh";
+import { codeLabel } from "@/lib/codes";
 
 type Entry = {
   id: number;
@@ -157,7 +158,7 @@ export default async function TCPLogPage({ searchParams }: { searchParams: Promi
                     <TableCell className="max-w-sm break-all font-mono text-xs">{visible(entry.response) || "—"}</TableCell>
                     <TableCell className="text-xs">
                       <Badge variant={entry.outcome === "OK" ? "secondary" : "destructive"}>{t(locale, OUTCOMES[entry.outcome] ?? entry.outcome)}</Badge>
-                      {entry.note ? <p className="mt-1 max-w-xs break-words text-muted-foreground">{entry.note}</p> : null}
+                      {entry.note ? <p className="mt-1 max-w-xs break-words text-muted-foreground">{/^[A-Z_]+$/.test(entry.note) ? codeLabel(locale, entry.note) : tMessage(locale, entry.note)}</p> : null}
                       {entry.event ? (
                         <Link href={`/scans/${entry.event}`} className="mt-1 block underline-offset-4 hover:underline">{t(locale, "Scan")} #{entry.event}</Link>
                       ) : null}

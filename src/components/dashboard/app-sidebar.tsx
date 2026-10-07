@@ -66,6 +66,7 @@ const GROUPS: Group[] = [
       { title: "All", href: "/developers", permission: "developer.view" },
       { title: "Birthdays this month", href: `/developers?birthday_month=${new Date().getMonth() + 1}`, permission: "developer.view" },
       { title: "New", href: "/developers/new", permission: "developer.view", manage: ["developer"] },
+      { title: "PIN desk", href: "/finance/pin", permission: "finance", manage: ["finance"] },
     ],
   },
   {
@@ -149,7 +150,6 @@ const GROUPS: Group[] = [
       { title: "Wallets", href: "/finance/accounts", permission: "finance" },
       { title: "Transactions", href: "/finance/transactions", permission: "finance" },
       { title: "Deposit", href: "/finance/deposits", permission: "finance", manage: ["finance"] },
-      { title: "PIN desk", href: "/finance/pin", permission: "finance", manage: ["finance"] },
       { title: "Adjustment", href: "/finance/adjustments", permission: "finance", manage: ["finance"] },
     ],
   },

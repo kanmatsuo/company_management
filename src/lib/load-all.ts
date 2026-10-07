@@ -60,7 +60,6 @@ export function show(value: string | number | null | undefined) {
   return String(value);
 }
 
-/** UTC timestamp shown in the viewer's local time. Date-only strings stay as-is. */
 export function listPath(path: string, filters: Record<string, string | undefined>) {
   const [base, existing] = path.split("?");
   const params = new URLSearchParams(existing ?? "");
@@ -75,11 +74,16 @@ export function one(value: string | string[] | undefined) {
   return typeof value === "string" ? value : undefined;
 }
 
-/** UTC timestamp shown in the viewer's local time. Date-only strings stay as-is. */
+/** A timestamp as "2026-10-07 16:30". Date-only strings stay as-is. */
 export function showTime(value: string | null | undefined) {
   if (!value) return "—";
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString();
+  return clock(date);
+}
+
+/** "2026-10-07 16:30": the same in every language (server time zone). */
+export function clock(date: Date) {
+  return date.toLocaleString("sv-SE", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
 }

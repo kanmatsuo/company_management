@@ -4,6 +4,7 @@ import { t } from "@/lib/i18n";
 import { show } from "@/lib/load-all";
 import { getLocale } from "@/lib/locale";
 import { loadList } from "@/lib/page-data";
+import { codeLabel } from "@/lib/codes";
 
 type Account = components["schemas"]["DeveloperAccount"];
 
@@ -23,7 +24,7 @@ export default async function FinanceAccountsPage() {
         show(account.developer?.full_name),
         account.balance,
         account.currency,
-        account.status,
+        codeLabel(locale, account.status),
         account.has_pin ? "Set" : "Missing",
         show(account.status_reason),
       ])}

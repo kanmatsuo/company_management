@@ -3,10 +3,11 @@ import type { components } from "@/api/schema";
 import { Button } from "@/components/ui/button";
 import { RecordList } from "@/components/record-list";
 import { canManage, getSession } from "@/lib/current-user";
-import { t } from "@/lib/i18n";
+import { t, tMessage } from "@/lib/i18n";
 import { show, showTime } from "@/lib/load-all";
 import { getLocale } from "@/lib/locale";
 import { loadList } from "@/lib/page-data";
+import { codeLabel } from "@/lib/codes";
 
 type Row = components["schemas"]["AccountTransaction"];
 
@@ -33,10 +34,10 @@ export default async function TransactionsPage() {
       rows={data.results.map((row) => [
         showTime(row.created_at),
         show(row.developer?.full_name),
-        row.kind,
+        codeLabel(locale, row.kind),
         row.amount,
         row.balance_after,
-        show(row.description),
+        row.description ? tMessage(locale, row.description) : "—",
       ])}
     />
   );

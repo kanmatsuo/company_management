@@ -4,6 +4,7 @@ import { t } from "@/lib/i18n";
 import { show, showTime } from "@/lib/load-all";
 import { getLocale } from "@/lib/locale";
 import { loadList } from "@/lib/page-data";
+import { codeLabel } from "@/lib/codes";
 
 type Record = components["schemas"]["AttendanceRecord"];
 
@@ -21,8 +22,8 @@ export default async function MyAttendanceRecordsPage() {
       hrefs={data.results.map((record) => `/attendance/records/${record.id}`)}
       rows={data.results.map((record) => [
         showTime(record.event_time),
-        record.event_type,
-        record.source,
+        codeLabel(locale, record.event_type),
+        codeLabel(locale, record.source),
         show(record.device_code),
         record.is_void ? "Yes" : "No",
         show(record.note),

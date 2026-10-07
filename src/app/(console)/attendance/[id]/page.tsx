@@ -5,10 +5,13 @@ import { LoadError } from "@/components/no-access";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { show, showTime } from "@/lib/load-all";
 import { loadOne } from "@/lib/page-data";
+import { getLocale } from "@/lib/locale";
+import { codeLabel } from "@/lib/codes";
 
 type Day = components["schemas"]["DailyAttendance"];
 
 export default async function AttendanceDayPage({ params }: { params: Promise<{ id: string }> }) {
+  const locale = await getLocale();
   const id = Number((await params).id);
   if (!Number.isInteger(id)) redirect("/attendance");
   const loaded = await loadOne<Day>(`/api/v1/attendance/daily/${id}/`);
@@ -29,7 +32,7 @@ export default async function AttendanceDayPage({ params }: { params: Promise<{ 
             items={[
               { label: "Person", value: show(day.developer?.full_name) },
               { label: "Department", value: show(day.developer?.department) },
-              { label: "Status", value: show(day.status) },
+              { label: "Status", value: codeLabel(locale, day.status) },
               { label: "Hours", value: show(day.worked_hours) },
               { label: "Records", value: String(day.record_count) },
               { label: "Worked seconds", value: String(day.worked_seconds) },

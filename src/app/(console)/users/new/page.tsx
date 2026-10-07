@@ -14,7 +14,7 @@ export default async function NewUserPage() {
     ? await djangoFetch<{ code: string; name: string }[] | { results: { code: string; name: string }[] }>("/api/v1/roles/", {
         accessToken: session.token,
       })
-        .then((body) => (Array.isArray(body) ? body : body.results).map((role) => ({ value: role.code, label: `${role.name} (${role.code})` })))
+        .then((body) => (Array.isArray(body) ? body : body.results).map((role) => ({ value: role.code, label: role.name })))
         .catch(() => [])
     : null;
   return (

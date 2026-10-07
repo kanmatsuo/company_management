@@ -34,7 +34,7 @@ function LocalTime({ value }: { value: string }) {
   const inBrowser = useInBrowser();
   const date = new Date(value);
   if (!inBrowser || Number.isNaN(date.getTime())) return null;
-  return ` · ${date.toLocaleTimeString()}`;
+  return ` · ${date.toLocaleTimeString("sv-SE")}`;
 }
 
 export function OccupancyBoard({
@@ -319,6 +319,7 @@ function ScanTime({ value }: { value: string }) {
   const inBrowser = useInBrowser();
   const date = new Date(value);
   if (!inBrowser || Number.isNaN(date.getTime())) return null;
-  const time = date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  return date.toDateString() === new Date().toDateString() ? time : `${date.toLocaleDateString([], { month: "short", day: "numeric" })} ${time}`;
+  const time = date.toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" });
+  const day = `${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  return date.toDateString() === new Date().toDateString() ? time : `${day} ${time}`;
 }

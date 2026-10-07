@@ -8,8 +8,10 @@ import { requireSession } from "@/lib/page-data";
 import { djangoFetch } from "@/lib/django";
 import type { Reader } from "@/app/(console)/cards/card-reader";
 import { RegisterByReader } from "@/app/(console)/cards/new/register-by-reader";
+import { getLocale } from "@/lib/locale";
 
 export default async function NewCardPage() {
+  const locale = await getLocale();
   const session = await requireSession();
   if (!can(session.user, "card.register")) return <NoAccess description="Your account cannot register cards." />;
   let readers: Reader[] = [];

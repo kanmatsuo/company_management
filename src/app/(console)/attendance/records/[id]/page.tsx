@@ -8,10 +8,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { canManage } from "@/lib/current-user";
 import { show, showTime } from "@/lib/load-all";
 import { loadOne } from "@/lib/page-data";
+import { getLocale } from "@/lib/locale";
+import { codeLabel } from "@/lib/codes";
+import { t } from "@/lib/i18n";
 
 type Record = components["schemas"]["AttendanceRecord"];
 
 export default async function AttendanceRecordPage({ params }: { params: Promise<{ id: string }> }) {
+  const locale = await getLocale();
   const id = Number((await params).id);
   if (!Number.isInteger(id)) redirect("/attendance/records");
   const loaded = await loadOne<Record>(`/api/v1/attendance/records/${id}/`);
@@ -31,12 +35,12 @@ export default async function AttendanceRecordPage({ params }: { params: Promise
         <CardContent>
           <Facts
             items={[
-              { label: "Type", value: show(record.event_type) },
-              { label: "Source", value: show(record.source) },
+              { label: "Type", value: codeLabel(locale, record.event_type) },
+              { label: "Source", value: codeLabel(locale, record.source) },
               { label: "Device", value: show(record.device_code) },
               { label: "Scan", value: record.rfid_event ? String(record.rfid_event) : "—" },
               { label: "Note", value: show(record.note) },
-              { label: "Void", value: record.is_void ? `Yes · ${show(record.void_reason)}` : "No" },
+              { label: "Void", value: record.is_void ? `${t(locale, "Yes")} · ${show(record.void_reason)}` : t(locale, "No") },
               { label: "Voided at", value: showTime(record.voided_at) },
             ]}
           />

@@ -8,10 +8,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { canManage } from "@/lib/current-user";
 import { show, showTime } from "@/lib/load-all";
 import { loadOne } from "@/lib/page-data";
+import { getLocale } from "@/lib/locale";
+import { t } from "@/lib/i18n";
 
 type Account = components["schemas"]["DeveloperAccount"];
 
 export default async function FinanceAccountPage({ params }: { params: Promise<{ id: string }> }) {
+  const locale = await getLocale();
   const id = Number((await params).id);
   if (!Number.isInteger(id)) redirect("/finance/accounts");
   const loaded = await loadOne<Account>(`/api/v1/finance/accounts/${id}/`);
@@ -31,7 +34,7 @@ export default async function FinanceAccountPage({ params }: { params: Promise<{
         <CardContent>
           <Facts
             items={[
-              { label: "PIN", value: account.has_pin ? "Set" : "Not set" },
+              { label: "PIN", value: t(locale, account.has_pin ? "Set" : "Not set") },
               { label: "PIN locked until", value: showTime(account.pin_locked_until) },
               { label: "Reason", value: show(account.status_reason) },
               { label: "Updated", value: showTime(account.updated_at) },

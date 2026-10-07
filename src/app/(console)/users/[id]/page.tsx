@@ -64,7 +64,7 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
           {user.username} · {t(locale, "Joined")} {showTime(user.date_joined)} · {t(locale, "Last sign-in")} {showTime(user.last_login)}
         </p>
       </div>
-      {canManage ? <UserRowActions id={user.id} active={user.is_active} nextPath="/users" showEdit={false} canDelete={can(session.user, "system.delete_records") && user.id !== session.user.id} /> : null}
+      {canManage ? <UserRowActions id={user.id} active={user.is_active} nextPath="/users" showEdit={false} locale={locale} canDelete={can(session.user, "system.delete_records") && user.id !== session.user.id} /> : null}
       <Card>
         <CardHeader>
           <CardTitle>Profile</CardTitle>
@@ -78,7 +78,7 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
           {canManage ? (
             <EditUserForm id={user.id} username={user.username} fullName={user.full_name} isActive={user.is_active} />
           ) : (
-            <p className="text-sm">{user.is_active ? "Active" : "Inactive"}</p>
+            <p className="text-sm">{t(locale, user.is_active ? "Active" : "Inactive")}</p>
           )}
         </CardContent>
       </Card>

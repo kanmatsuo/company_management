@@ -4,6 +4,7 @@ import { t } from "@/lib/i18n";
 import { show, showTime } from "@/lib/load-all";
 import { getLocale } from "@/lib/locale";
 import { loadList } from "@/lib/page-data";
+import { codeLabel } from "@/lib/codes";
 
 type Day = components["schemas"]["DailyAttendance"];
 
@@ -21,7 +22,7 @@ export default async function MyAttendancePage() {
       hrefs={data.results.map((day) => `/attendance/${day.id}`)}
       rows={data.results.map((day) => [
         day.work_date,
-        show(day.status),
+        codeLabel(locale, day.status),
         show(day.worked_hours),
         String(day.record_count),
         showTime(day.first_seen),
